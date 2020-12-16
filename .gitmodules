@@ -1,0 +1,6 @@
+[submodule "edgelessrt"]
+	path = edgelessrt
+	url = https://github.com/edgelesssys/edgelessrt-private
+[submodule "ertgo"]
+	path = ertgo
+	url = https://github.com/edgelesssys/ertgo
