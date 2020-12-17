@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Get path of the ertgo script
+# (refer to the debugger/oegdb script for details)
+OE_GO_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+
+# Get the path to the go compiler relative to the ertgo path.
+OE_GO_COMPILER_DIR=$(cd "$OE_GO_DIR/../go" || exit; pwd -P)
+
+GOROOT="$OE_GO_COMPILER_DIR" "$OE_GO_COMPILER_DIR/bin/go" "$@"
