@@ -4,8 +4,7 @@ git clone https://github.com/hashicorp/vault
 cd vault
 
 # either
-sed -i 's GO_VERSION_MIN=.* GO_VERSION_MIN=1.14.6 ' Makefile
-ego-env make
+ego-env make GO_VERSION_MIN=1.14.6
 
 # or
 ego-go build -o bin/vault
