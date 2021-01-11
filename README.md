@@ -1,5 +1,5 @@
 # ego
-Prerequisite: `ego` branch of edgelessrt-private is installed and sourced.
+Prerequisite: edgelessrt is installed and sourced.
 
 ```sh
 mkdir build

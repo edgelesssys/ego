@@ -15,10 +15,14 @@ execute_process(
   COMMAND git submodule update --init ertgo
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
-add_executable(ego-enclave src/enc.cpp)
+add_library(ego-enclave-lib src/enc.cpp)
+target_link_libraries(ego-enclave-lib PRIVATE openenclave::oe_includes)
+
+add_executable(ego-enclave src/empty.c)
 target_link_libraries(ego-enclave
   openenclave::oeenclave
   openenclave::ertdeventry
+  ego-enclave-lib
   openenclave::ertlibc
   -Wl,--whole-archive
   openenclave::oelibc
