@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-CGO_ENABLED=1 PATH=`ego path` GOROOT=`ego root` "$@"

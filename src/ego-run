@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-OE_GO_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
-EGO_PAYLOAD=$1
-shift
-ego-host "$OE_GO_DIR/../share/ego-enclave:$EGO_PAYLOAD" "$@"
