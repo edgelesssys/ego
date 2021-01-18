@@ -51,8 +51,8 @@ func signWithJSON(path string) {
 		cDebug = "Debug=0\n"
 	}
 
-	// calculate number of pages: Heapsize[MiB], pageSize is 4096KiB
-	heapPages := int(math.Ceil(float64(conf.Heapsize*1024) / float64(4096)))
+	// calculate number of pages: Heapsize[MiB], pageSize is 4096B
+	heapPages := int(math.Ceil(float64(conf.Heapsize*1024*1024) / float64(4096)))
 	cNumHeapPages := "NumHeapPages=" + strconv.Itoa(heapPages) + "\n"
 
 	cStackPages := "NumStackPages=1024\n"
