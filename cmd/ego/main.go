@@ -16,14 +16,17 @@ var egoPath = func() string {
 }()
 
 func main() {
+
+	if len(os.Args) > 1 && os.Args[1] == "sign" {
+		sign(os.Args)
+	}
+
 	if len(os.Args) < 3 {
 		help("")
 		return
 	}
 
 	switch os.Args[1] {
-	case "sign":
-		sign(os.Args[2])
 	case "run":
 		run(os.Args[2], os.Args[3:])
 	case "env":
@@ -41,7 +44,7 @@ func help(cmd string) {
 
 	switch cmd {
 	case "sign":
-		s = `sign <executable>
+		s = `sign [executable|json]
 
 Sign an executable built with ego-go. Executables must be signed before they can be run in an enclave.`
 	case "run":
@@ -70,18 +73,6 @@ Use "` + me + ` help <command>" for more information about a command.`
 	}
 
 	fmt.Println("Usage: " + me + " " + s)
-}
-
-func sign(filename string) {
-	// SGX requires the RSA exponent to be 3. Go's API does not support this.
-	if err := exec.Command("openssl", "genrsa", "-out", "private.pem", "-3", "3072").Run(); err != nil {
-		panic(err)
-	}
-
-	enclavePath := filepath.Join(egoPath, "share", "ego-enclave")
-	confPath := filepath.Join(egoPath, "share", "enclave.conf")
-	cmd := exec.Command("ego-oesign", "sign", "-e", enclavePath, "-c", confPath, "-k", "private.pem", "--payload", filename)
-	runAndExit(cmd)
 }
 
 func run(filename string, args []string) {
