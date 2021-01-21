@@ -1,62 +1,41 @@
 #!/bin/bash
+set -e
 
-. /opt/edgelessrt/share/openenclave/openenclaverc
-egoPath=$GOPATH/src/github.com/edgelesssys/ego
+onexit()
+{
+    if [ $? -ne 0 ]; then
+        echo "failed"
+    else
+        echo "All tests passed!"
+    fi
+    rm -r $tPath
+}
+
+trap onexit EXIT
+
+run()
+{
+    echo "run test: $@"
+    $@
+}
+
+
+parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+egoPath=$parent_path/../../..
 
 tPath=$(mktemp -d)
-cd $tPath 
+cd $tPath
 
-cmake -DCMAKE_INSTALL_PREFIX=$tPath $egoPath 
+cmake -DCMAKE_INSTALL_PREFIX=$tPath/install $egoPath
 make
 make install
-export PATH="$PATH:$tPath/bin"
-
+export PATH="$tPath/install/bin:$PATH"
 cp $egoPath/samples/helloworld/helloworld.go .
 
+run ego-go build helloworld.go
+run ego sign helloworld
+run ego sign
+run ego sign enclave.json
 
-./bin/ego-go build helloworld.go
-
-./bin/ego sign helloworld
-retVal=$?
-if [ $retVal -ne 0 ]; then
-    echo "Error when executing ./bin/ego sign helloworld"
-    cd $egoPath
-    rm -r $tPath
-    exit 1
-fi
-
-
-./bin/ego sign 
-retVal=$?
-if [ $retVal -ne 0 ]; then
-    echo "Error when executing ./bin/ego sign"
-    cd $egoPath
-    rm -r $tPath
-    exit 1
-fi
-
-
-./bin/ego sign enclave.json
-retVal=$?
-if [ $retVal -ne 0 ]; then
-    echo "Error when executing ./bin/ego sign enclave.json"
-    cd $egoPath
-    rm -r $tPath
-    exit 1
-fi
-
-
-
-OE_SIMULATION=1 ./bin/ego run helloworld
-retVal=$?
-if [ $retVal -ne 0 ]; then
-    echo "Error when executing 'OE_SIMULATION=1 ./bin/ego run helloworld'"
-    cd $egoPath
-    rm -r $tPath
-    exit 1
-fi
-
-cd $egoPath
-rm -r $tPath
-
-echo "All tests passed!"
+export OE_SIMULATION=1
+run "ego run helloworld"
