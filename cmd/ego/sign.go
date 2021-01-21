@@ -25,13 +25,13 @@ type config struct {
 // Validate Exe, Key, Heapsize
 func (c *config) validate() {
 	if c.Heapsize == 0 {
-		panic(fmt.Errorf("heapsize not set in enclave.json"))
+		panic(fmt.Errorf("heapsize not set in config file"))
 	}
 	if c.Exe == "" {
-		panic(fmt.Errorf("exe not set in enclave.json"))
+		panic(fmt.Errorf("exe not set in config file"))
 	}
 	if c.Key == "" {
-		panic(fmt.Errorf("key not set in enclave.json"))
+		panic(fmt.Errorf("key not set in config file"))
 	}
 }
 
@@ -55,9 +55,12 @@ func signWithJSON(conf *config) {
 	cNumTCS := "NumTCS=32\n"
 
 	file, err := ioutil.TempFile("", "")
+	if err != nil {
+		panic(err)
+	}
 	defer os.Remove(file.Name())
-	_, err = file.Write([]byte(cProduct + cSecurityVersion + cDebug + cNumHeapPages + cStackPages + cNumTCS))
 
+	_, err = file.Write([]byte(cProduct + cSecurityVersion + cDebug + cNumHeapPages + cStackPages + cNumTCS))
 	if err != nil {
 		panic(err)
 	}
@@ -112,11 +115,7 @@ func signExecutable(path string) {
 		}
 	}
 
-	c, err = readJSONtoStruct(defaultConfigFilename)
-	if err != nil {
-		panic(err)
-	}
-	signWithJSON(c)
+	signWithJSON(&conf)
 }
 
 // Reads the provided File and turns it into a struct

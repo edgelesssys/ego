@@ -69,7 +69,6 @@ Searches in the current directory for enclave.json and signs the therein provide
 2. ego sign <executable>
 Searches in the current directory for enclave.json.
 If no such file is found, create one with default parameters for the executable.
-If a file already exists, check if the executable matches the parameter. 
 Use enclave.json to sign the executable.
 
 3. ego sign <json>
