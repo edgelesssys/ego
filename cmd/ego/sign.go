@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 )
+
+const defaultConfigFilename = "enclave.json"
+const defaultKeyFilename = "private.pem"
 
 type config struct {
 	Exe             string `json:"exe"`
@@ -22,7 +23,7 @@ type config struct {
 }
 
 // Validate Exe, Key, Heapsize
-func validateJSON(c *config) {
+func (c *config) validate() {
 	if c.Heapsize == 0 {
 		panic(fmt.Errorf("heapsize not set in enclave.json"))
 	}
@@ -34,12 +35,7 @@ func validateJSON(c *config) {
 	}
 }
 
-func signWithJSON(path string) {
-	conf, err := readJSONtoStruct(path)
-	if err != nil {
-		panic(err)
-	}
-
+func signWithJSON(conf *config) {
 	//write temp .conf file
 	cProduct := "ProductID=" + strconv.Itoa(conf.ProductID) + "\n"
 	cSecurityVersion := "SecurityVersion=" + strconv.Itoa(conf.SecurityVersion) + "\n"
@@ -52,35 +48,46 @@ func signWithJSON(path string) {
 	}
 
 	// calculate number of pages: Heapsize[MiB], pageSize is 4096B
-	heapPages := int(math.Ceil(float64(conf.Heapsize*1024*1024) / float64(4096)))
+	heapPages := conf.Heapsize * 1024 * 1024 / 4096
 	cNumHeapPages := "NumHeapPages=" + strconv.Itoa(heapPages) + "\n"
 
 	cStackPages := "NumStackPages=1024\n"
 	cNumTCS := "NumTCS=32\n"
 
-	err = ioutil.WriteFile("config.conf.tmp", []byte(cProduct+cSecurityVersion+cDebug+cNumHeapPages+cStackPages+cNumTCS), 0644)
+	file, err := ioutil.TempFile("", "")
+	defer os.Remove(file.Name())
+	_, err = file.Write([]byte(cProduct + cSecurityVersion + cDebug + cNumHeapPages + cStackPages + cNumTCS))
+
 	if err != nil {
 		panic(err)
 	}
 
+	if err := file.Close(); err != nil {
+		panic(err)
+	}
+
 	enclavePath := filepath.Join(egoPath, "share", "ego-enclave")
-	cmd := exec.Command("ego-oesign", "sign", "-e", enclavePath, "-c", "config.conf.tmp", "-k", conf.Key, "--payload", conf.Exe)
+	cmd := exec.Command("ego-oesign", "sign", "-e", enclavePath, "-c", file.Name(), "-k", conf.Key, "--payload", conf.Exe)
 	runAndExit(cmd)
 }
 
 func signExecutable(path string) {
-	c, err := readJSONtoStruct("enclave.json")
+	c, err := readJSONtoStruct(defaultConfigFilename)
 
-	if c != nil && c.Exe == path {
-		signWithJSON("enclave.json")
-	} else if c != nil && c.Exe != path {
+	if err != nil {
+		if !os.IsNotExist(err) {
+			panic(err)
+		}
+	} else if c.Exe == path {
+		signWithJSON(c)
+	} else {
 		panic(fmt.Errorf("Provided path to executable does not match the one in enclave.json"))
 	}
 
 	//sane default values
 	conf := config{
 		Exe:             path,
-		Key:             "private.pem",
+		Key:             defaultKeyFilename,
 		Debug:           true,
 		Heapsize:        512, //[MB]
 		ProductID:       1,
@@ -91,24 +98,31 @@ func signExecutable(path string) {
 	if err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile("enclave.json", jsonData, 0644)
-	if err != nil {
+	if err := ioutil.WriteFile(defaultConfigFilename, jsonData, 0644); err != nil {
 		panic(err)
 	}
 
-	_, err = os.Stat("private.pem")
-	if err != nil {
+	if _, err := os.Stat(defaultKeyFilename); err != nil {
+		if !os.IsNotExist(err) {
+			panic(err)
+		}
 		// SGX requires the RSA exponent to be 3. Go's API does not support this.
-		if err := exec.Command("openssl", "genrsa", "-out", "private.pem", "-3", "3072").Run(); err != nil {
+		if err := exec.Command("openssl", "genrsa", "-out", defaultKeyFilename, "-3", "3072").Run(); err != nil {
 			panic(err)
 		}
 	}
-	signWithJSON("enclave.json")
+
+	c, err = readJSONtoStruct(defaultConfigFilename)
+	if err != nil {
+		panic(err)
+	}
+	signWithJSON(c)
 }
 
 // Reads the provided File and turns it into a struct
 // after some basic sanity check are performed it is returned
-// err != nil indicates that the file could not be read
+// err != nil indicates that the file could not be read or the
+// JSON could not be unmarshalled
 func readJSONtoStruct(path string) (*config, error) {
 	data, err := ioutil.ReadFile(path)
 
@@ -117,20 +131,27 @@ func readJSONtoStruct(path string) (*config, error) {
 	}
 
 	var conf config
-	err = json.Unmarshal(data, &conf)
-	if err != nil {
-		panic(err)
+	if err := json.Unmarshal(data, &conf); err != nil {
+		return nil, err
 	}
-	validateJSON(&conf)
+	conf.validate()
 	return &conf, nil
 }
 
-func sign(args []string) {
-	if len(args) < 3 {
-		signWithJSON("enclave.json")
+func sign(filename string) {
+	if filename == "" {
+		c, err := readJSONtoStruct(defaultConfigFilename)
+		if err != nil {
+			panic(err)
+		}
+		signWithJSON(c)
 	}
-	if strings.HasSuffix(args[2], "enclave.json") {
-		signWithJSON(args[2])
+	if filepath.Ext(filename) == ".json" {
+		c, err := readJSONtoStruct(filename)
+		if err != nil {
+			panic(err)
+		}
+		signWithJSON(c)
 	}
-	signExecutable(args[2])
+	signExecutable(filename)
 }
