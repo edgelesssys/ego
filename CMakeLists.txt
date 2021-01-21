@@ -48,5 +48,4 @@ install(
   PROGRAMS ${OpenEnclave_DIR}/../../../bin/oesign
   RENAME ego-oesign
   DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES src/enclave.conf DESTINATION ${CMAKE_INSTALL_DATADIR})
 install(DIRECTORY ertgo/ DESTINATION go USE_SOURCE_PERMISSIONS)
