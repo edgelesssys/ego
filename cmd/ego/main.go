@@ -16,23 +16,40 @@ var egoPath = func() string {
 }()
 
 func main() {
-	if len(os.Args) < 3 {
+	if len(os.Args) < 2 {
 		help("")
 		return
 	}
 
-	switch os.Args[1] {
+	cmd := os.Args[1]
+	args := os.Args[2:]
+
+	switch cmd {
 	case "sign":
-		sign(os.Args[2])
+		var filename string
+		if len(args) > 0 {
+			filename = args[0]
+		}
+		sign(filename)
+		return
 	case "run":
-		run(os.Args[2], os.Args[3:])
+		if len(args) > 0 {
+			run(args[0], args[1:])
+			return
+		}
 	case "env":
-		env(os.Args[2], os.Args[3:])
+		if len(args) > 0 {
+			env(args[0], args[1:])
+			return
+		}
 	case "help":
-		help(os.Args[2])
-	default:
-		help("")
+		if len(args) == 1 {
+			help(args[0])
+			return
+		}
 	}
+
+	help(cmd)
 }
 
 func help(cmd string) {
@@ -41,9 +58,22 @@ func help(cmd string) {
 
 	switch cmd {
 	case "sign":
-		s = `sign <executable>
+		s = `sign [executable|json]
 
-Sign an executable built with ego-go. Executables must be signed before they can be run in an enclave.`
+Sign an executable built with ego-go. Executables must be signed before they can be run in an enclave.
+There are 3 different ways of signing an executable:
+
+1. ego sign 
+Searches in the current directory for enclave.json and signs the therein provided executable.
+
+2. ego sign <executable>
+Searches in the current directory for enclave.json.
+If no such file is found, create one with default parameters for the executable.
+Use enclave.json to sign the executable.
+
+3. ego sign <json>
+Reads json and signs the therein provided executable.`
+
 	case "run":
 		s = `run <executable> [args...]
 
@@ -70,18 +100,6 @@ Use "` + me + ` help <command>" for more information about a command.`
 	}
 
 	fmt.Println("Usage: " + me + " " + s)
-}
-
-func sign(filename string) {
-	// SGX requires the RSA exponent to be 3. Go's API does not support this.
-	if err := exec.Command("openssl", "genrsa", "-out", "private.pem", "-3", "3072").Run(); err != nil {
-		panic(err)
-	}
-
-	enclavePath := filepath.Join(egoPath, "share", "ego-enclave")
-	confPath := filepath.Join(egoPath, "share", "enclave.conf")
-	cmd := exec.Command("ego-oesign", "sign", "-e", enclavePath, "-c", confPath, "-k", "private.pem", "--payload", filename)
-	runAndExit(cmd)
 }
 
 func run(filename string, args []string) {
