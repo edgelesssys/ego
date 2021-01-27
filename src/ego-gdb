@@ -18,5 +18,33 @@ OE_GDB_LIB_DIR=$(cd "$OE_GDB_DIR/../lib/openenclave/debugger" || exit; pwd -P)
 OE_GDB_PLUGIN_DIR=$OE_GDB_LIB_DIR/gdb-sgx-plugin
 OE_GDB_PTRACE_PATH=$OE_GDB_LIB_DIR/liboe_ptrace.so
 
+# get all args to gdb preceding the payload executable
+while [ $1 ]; do
+    case $1 in
+        -ix | -ex | -iex)
+            # these flags are followed by an argument
+            ERT_GDB_ARGS+=($1)
+            shift
+            ;;
+        --args)
+            shift
+            break
+            ;;
+        -*)
+            # other flags are expected to have no argument
+            ;;
+        *)
+            # this is expected to be the executable
+            break
+    esac
+    ERT_GDB_ARGS+=("$1")
+    shift
+done
+
+# get the executable and shift such that $@ will be the remaining args
+ERT_PAYLOAD=$1
+shift
+
 export PYTHONPATH=$OE_GDB_PLUGIN_DIR
-LD_PRELOAD=$OE_GDB_PTRACE_PATH gdb -iex "directory $OE_GDB_PLUGIN_DIR" -iex "source $OE_GDB_PLUGIN_DIR/gdb_sgx_plugin.py" -iex "set environment LD_PRELOAD" -iex "add-auto-load-safe-path /usr/lib" "$@"
+LD_PRELOAD=$OE_GDB_PTRACE_PATH gdb -iex "directory $OE_GDB_PLUGIN_DIR" -iex "source $OE_GDB_PLUGIN_DIR/gdb_sgx_plugin.py" -iex "set environment LD_PRELOAD" -iex "add-auto-load-safe-path /usr/lib" \
+    "${ERT_GDB_ARGS[@]}" --args "$OE_GDB_DIR/ego-host" "$OE_GDB_DIR/../share/ego-enclave:$ERT_PAYLOAD" "$@"
