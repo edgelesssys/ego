@@ -47,6 +47,11 @@ func main() {
 			run(args[0], args[1:])
 			return
 		}
+	case "marblerun":
+		if len(args) == 1 {
+			marblerun(args[0])
+			return
+		}
 	case "env":
 		if len(args) > 0 {
 			env(args[0], args[1:])
@@ -92,6 +97,22 @@ Run a signed executable in an enclave. You can pass arbitrary arguments to the e
 Environment variables are only readable from within the enclave if they start with "EDG_".
 
 Set OE_SIMULATION=1 to run in simulation mode.`
+
+	case "marblerun":
+		s = `marblerun <executable>
+
+Run a signed executable as a Marblerun marble.
+Requires a running Marblerun Coordinator instance.
+Environment variables are only readable from within the enclave if they start with "EDG_".
+Environment variables will be extended/overwritten with the ones specified in the manifest.
+Requires the following configuration environment variables:
+		- EDG_MARBLE_COORDINATOR_ADDR: The Coordinator address
+		- EDG_MARBLE_TYPE: The type of this marble (as specified in the manifest)
+		- EDG_MARBLE_DNS_NAMES: The alternative DNS names for this marble's TLS certificate
+		- EDG_MARBLE_UUID_FILE: The location where this marble will store its UUID
+
+Set OE_SIMULATION=1 to run in simulation mode.`
+
 	case "env":
 		s = `env ...
 
@@ -117,6 +138,7 @@ Commands:
   sign       Sign an executable built with ego-go.
   run        Run a signed executable.
   env        Run a command in the ego environment.
+  marblerun    Run a signed Marblerun marble.
   signerid   Print the signerID of an executable.
   uniqueid   Print the uniqueID of an executable.
 
@@ -129,7 +151,15 @@ Use "` + me + ` help <command>" for more information about a command.`
 func run(filename string, args []string) {
 	enclaves := filepath.Join(egoPath, "share", "ego-enclave") + ":" + filename
 	args = append([]string{enclaves}, args...)
+	os.Setenv("EDG_EGO_PREMAIN", "0")
 	cmd := exec.Command("ego-host", args...)
+	runAndExit(cmd)
+}
+
+func marblerun(filename string) {
+	enclaves := filepath.Join(egoPath, "share", "ego-enclave") + ":" + filename
+	os.Setenv("EDG_EGO_PREMAIN", "1")
+	cmd := exec.Command("ego-host", enclaves)
 	runAndExit(cmd)
 }
 
