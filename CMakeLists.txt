@@ -30,8 +30,13 @@ target_link_libraries(reserved_tls_last INTERFACE reserved_tls)
 add_executable(ego-enclave src/empty.c)
 target_link_libraries(ego-enclave
   openenclave::oeenclave
-  openenclave::ertdeventry
+  openenclave::ertcalls
   ego-enclave-lib
+  openenclave::oehostepoll
+  openenclave::oehostfs
+  openenclave::oehostresolver
+  openenclave::oehostsock
+  openenclave::ertmeshpremain
   openenclave::ertlibc
   -Wl,--whole-archive
   openenclave::oelibc
