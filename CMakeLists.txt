@@ -38,6 +38,7 @@ add_custom_target(egobuild ALL DEPENDS ego)
 install(TARGETS ego-enclave DESTINATION ${CMAKE_INSTALL_DATADIR})
 install(
   PROGRAMS
+  src/ego-gdb
   src/ego-go
   ${CMAKE_BINARY_DIR}/ego
   DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -49,4 +50,5 @@ install(
   PROGRAMS ${OpenEnclave_DIR}/../../../bin/oesign
   RENAME ego-oesign
   DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(DIRECTORY ${OpenEnclave_DIR}/../debugger DESTINATION ${CMAKE_INSTALL_LIBDIR}/openenclave)
 install(DIRECTORY ertgo/ DESTINATION go USE_SOURCE_PERMISSIONS)
