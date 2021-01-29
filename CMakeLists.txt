@@ -18,6 +18,15 @@ execute_process(
 add_library(ego-enclave-lib src/enc.cpp)
 target_link_libraries(ego-enclave-lib PRIVATE openenclave::oe_includes)
 
+# Both ego-enclave and the payload use the local-exec TLS model. This means that TLS memory
+# will overlap. Quick fix is to reserve space in ego-enclave that we won't touch.
+# The Go language does not have TLS and the implementation only stores one pointer in TLS.
+# We still reserve a bit more.
+# The reserved space must be at the end of the TLS block, so the lib must be linked last.
+add_library(reserved_tls src/reserved_tls.c)
+add_library(reserved_tls_last INTERFACE)
+target_link_libraries(reserved_tls_last INTERFACE reserved_tls)
+
 add_executable(ego-enclave src/empty.c)
 target_link_libraries(ego-enclave
   openenclave::oeenclave
@@ -26,7 +35,8 @@ target_link_libraries(ego-enclave
   openenclave::ertlibc
   -Wl,--whole-archive
   openenclave::oelibc
-  -Wl,--no-whole-archive)
+  -Wl,--no-whole-archive
+  reserved_tls_last)
 
 add_custom_command(
   OUTPUT ego
