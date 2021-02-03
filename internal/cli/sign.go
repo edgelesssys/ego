@@ -24,15 +24,15 @@ type config struct {
 	Exe             string `json:"exe"`
 	Key             string `json:"key"`
 	Debug           bool   `json:"debug"`
-	Heapsize        int    `json:"heapsize"`
+	HeapSize        int    `json:"heapSize"`
 	ProductID       int    `json:"productID"`
 	SecurityVersion int    `json:"securityVersion"`
 }
 
-// Validate Exe, Key, Heapsize
+// Validate Exe, Key, HeapSize
 func (c *config) validate() error {
-	if c.Heapsize == 0 {
-		return fmt.Errorf("heapsize not set in config file")
+	if c.HeapSize == 0 {
+		return fmt.Errorf("heapSize not set in config file")
 	}
 	if c.Exe == "" {
 		return fmt.Errorf("exe not set in config file")
@@ -55,8 +55,8 @@ func (c *Cli) signWithJSON(conf *config) error {
 		cDebug = "Debug=0\n"
 	}
 
-	// calculate number of pages: Heapsize[MiB], pageSize is 4096B
-	heapPages := conf.Heapsize * 1024 * 1024 / 4096
+	// calculate number of pages: HeapSize[MiB], pageSize is 4096B
+	heapPages := conf.HeapSize * 1024 * 1024 / 4096
 	cNumHeapPages := "NumHeapPages=" + strconv.Itoa(heapPages) + "\n"
 
 	cStackPages := "NumStackPages=1024\n"
@@ -107,7 +107,7 @@ func (c *Cli) signExecutable(path string) error {
 		Exe:             path,
 		Key:             defaultPrivKeyFilename,
 		Debug:           true,
-		Heapsize:        512, //[MB]
+		HeapSize:        512, //[MB]
 		ProductID:       1,
 		SecurityVersion: 1,
 	}
