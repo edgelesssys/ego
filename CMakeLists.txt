@@ -27,7 +27,7 @@ add_library(reserved_tls src/reserved_tls.c)
 add_library(reserved_tls_last INTERFACE)
 target_link_libraries(reserved_tls_last INTERFACE reserved_tls)
 
-add_executable(ego-enclave src/empty.c)
+add_executable(ego-enclave src/empty.c src/gcc_libinit.c src/gcc_mmap.c)
 target_link_libraries(ego-enclave
   openenclave::oeenclave
   openenclave::ertcalls
