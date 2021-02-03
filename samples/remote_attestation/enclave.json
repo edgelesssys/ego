@@ -2,7 +2,7 @@
     "exe": "server",
     "key": "private.pem",
     "debug": true,
-    "heapsize": 512,
+    "heapSize": 512,
     "productID": 1234,
     "securityVersion": 2
 }

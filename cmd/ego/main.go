@@ -43,6 +43,14 @@ func main() {
 		}
 		// also print usage
 		fmt.Println()
+	case "run":
+		if len(args) > 0 {
+			os.Exit(cli.Run(args[0], args[1:]))
+		}
+	case "marblerun":
+		if len(args) == 1 {
+			os.Exit(cli.Marblerun(args[0]))
+		}
 	case "signerid":
 		if len(args) == 1 {
 			id, err := cli.Signerid(args[0])
@@ -60,14 +68,6 @@ func main() {
 			}
 			fmt.Println(id)
 			return
-		}
-	case "run":
-		if len(args) > 0 {
-			os.Exit(cli.Run(args[0], args[1:]))
-		}
-	case "marblerun":
-		if len(args) == 1 {
-			os.Exit(cli.Marblerun(args[0]))
 		}
 	case "env":
 		if len(args) > 0 {
@@ -89,21 +89,20 @@ func help(cmd string) {
 
 	switch cmd {
 	case "sign":
-		s = `sign [executable|json]
+		s = `sign [executable | config.json]
 
 Sign an executable built with ego-go. Executables must be signed before they can be run in an enclave.
-There are 3 different ways of signing an executable:
 
-1. ego sign
-Searches in the current directory for enclave.json and signs the therein provided executable.
+This command can be used in different modes:
 
-2. ego sign <executable>
-Searches in the current directory for enclave.json.
-If no such file is found, create one with default parameters for the executable.
-Use enclave.json to sign the executable.
+ego sign <executable>
+  Generates a new key "private.pem" and a default configuration "enclave.json" in the current directory and signs the executable.
 
-3. ego sign <json>
-Reads json and signs the therein provided executable.`
+ego sign
+  Searches in the current directory for "enclave.json" and signs the therein provided executable.
+
+ego sign <config.json>
+  Signs an executable according to a given configuration.`
 
 	case "run":
 		s = `run <executable> [args...]
@@ -117,46 +116,46 @@ Set OE_SIMULATION=1 to run in simulation mode.`
 	case "marblerun":
 		s = `marblerun <executable>
 
-Run a signed executable as a Marblerun marble.
+Run a signed executable as a Marblerun Marble.
 Requires a running Marblerun Coordinator instance.
-Environment variables are only readable from within the enclave if they start with "EDG_".
-Environment variables will be extended/overwritten with the ones specified in the manifest.
+Environment variables are only readable from within the enclave if they start with "EDG_" and
+will be extended/overwritten with the ones specified in the manifest.
+
 Requires the following configuration environment variables:
-		- EDG_MARBLE_COORDINATOR_ADDR: The Coordinator address
-		- EDG_MARBLE_TYPE: The type of this marble (as specified in the manifest)
-		- EDG_MARBLE_DNS_NAMES: The alternative DNS names for this marble's TLS certificate
-		- EDG_MARBLE_UUID_FILE: The location where this marble will store its UUID
+  EDG_MARBLE_COORDINATOR_ADDR   The Coordinator address
+  EDG_MARBLE_TYPE               The type of this Marble (as specified in the manifest)
+  EDG_MARBLE_DNS_NAMES          The alternative DNS names for this Marble's TLS certificate
+  EDG_MARBLE_UUID_FILE          The location where this Marble will store its UUID
 
 Set OE_SIMULATION=1 to run in simulation mode.`
 
 	case "env":
 		s = `env ...
 
-Run a command within the ego environment. For example, run
+Run a command within the EGo environment. For example, run
 ` + me + ` env make
 to build a Go project that uses a Makefile.`
+
 	case "signerid":
-		s = `signerid <executable|keyfile>
+		s = `signerid <executable | key.pem>
 
-Print the signerID either from the executable or by reading the keyfile.
-
-The keyfile needs to have the extension ".pem"`
+Print the SignerID either from a signed executable or by reading a keyfile.`
 
 	case "uniqueid":
-		s = `signerid <executable>
+		s = `uniqueid <executable>
 
-Print the uniqueID from the executable.`
+Print the UniqueID of a signed executable.`
 
 	default:
 		s = `<command> [arguments]
 
 Commands:
-  sign       Sign an executable built with ego-go.
-  run        Run a signed executable.
-  env        Run a command in the ego environment.
-  marblerun    Run a signed Marblerun marble.
-  signerid   Print the signerID of an executable.
-  uniqueid   Print the uniqueID of an executable.
+  sign        Sign an executable built with ego-go.
+  run         Run a signed executable in standalone mode.
+  marblerun   Run a signed executable as a Marblerun Marble.
+  signerid    Print the SignerID of a signed executable.
+  uniqueid    Print the UniqueID of a signed executable.
+  env         Run a command in the EGo environment.
 
 Use "` + me + ` help <command>" for more information about a command.`
 	}
