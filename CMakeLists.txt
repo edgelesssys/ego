@@ -15,8 +15,11 @@ execute_process(
   COMMAND git submodule update --init ertgo
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
-add_library(ego-enclave-lib src/enc.cpp)
+add_library(ego-enclave-lib
+  src/enc.cpp
+  src/go_runtime_cleanup.cpp)
 target_link_libraries(ego-enclave-lib PRIVATE openenclave::oe_includes)
+
 
 # Both ego-enclave and the payload use the local-exec TLS model. This means that TLS memory
 # will overlap. Quick fix is to reserve space in ego-enclave that we won't touch.
@@ -27,7 +30,7 @@ add_library(reserved_tls src/reserved_tls.c)
 add_library(reserved_tls_last INTERFACE)
 target_link_libraries(reserved_tls_last INTERFACE reserved_tls)
 
-add_executable(ego-enclave src/empty.c src/gcc_libinit.c src/gcc_mmap.c)
+add_executable(ego-enclave src/gcc_libinit.c src/gcc_mmap.c)
 target_link_libraries(ego-enclave
   openenclave::oeenclave
   openenclave::ertcalls

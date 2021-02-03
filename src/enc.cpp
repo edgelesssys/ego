@@ -8,6 +8,7 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
+#include "go_runtime_cleanup.h"
 
 static const auto _memfs_name = "edg_memfs";
 static const auto _premain_env_key = "EDG_EGO_PREMAIN";
@@ -81,6 +82,10 @@ int emain()
         }
     }
 
+    // cleanup go runtime
+    cout << "cleaning up the old goruntime\n";
+    go_rc_kill_threads();
+    go_rc_unmap_memory();
     // relocate
     try
     {
@@ -99,6 +104,7 @@ int emain()
     assert(ehdr.e_entry);
     const auto entry = (void (*)())(base + ehdr.e_entry);
 
+    cout << "calling payload\n";
     entry();
 }
 
