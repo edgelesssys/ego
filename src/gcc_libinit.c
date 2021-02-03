@@ -111,7 +111,8 @@ int _cgo_try_pthread_create(
         err = pthread_create(thread, attr, pfn, arg);
         if (err == 0)
         {
-            pthread_detach(*thread);
+            go_rc_add_thread(*thread);
+            // pthread_detach(*thread);
             return 0;
         }
         if (err != EAGAIN)

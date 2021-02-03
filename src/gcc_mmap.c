@@ -31,6 +31,7 @@ uintptr_t x_cgo_mmap(
         /* This is what the Go code expects on failure.  */
         return (uintptr_t)errno;
     }
+    go_rc_add_memory(p, length);
     return (uintptr_t)p;
 }
 
