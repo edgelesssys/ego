@@ -15,12 +15,12 @@ const defaultPrivKeyFilename = "private.pem"
 const defaultPubKeyFilename = "public.pem"
 
 type config struct {
-	Exe             string `json:"exe"`
-	Key             string `json:"key"`
-	Debug           bool   `json:"debug"`
-	Heapsize        int    `json:"heapsize"`
-	ProductID       int    `json:"productID"`
-	SecurityVersion int    `json:"securityVersion"`
+	Exe             string
+	Key             string
+	Debug           bool
+	Heapsize        int
+	ProductID       int
+	SecurityVersion int
 }
 
 // Validate Exe, Key, Heapsize
@@ -79,7 +79,7 @@ func signWithJSON(conf *config) {
 }
 
 func signExecutable(path string) {
-	c, err := readJSONtoStruct(defaultConfigFilename)
+	c, err := readConfigJSONtoStruct(defaultConfigFilename)
 
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -116,7 +116,7 @@ func signExecutable(path string) {
 // after some basic sanity check are performed it is returned
 // err != nil indicates that the file could not be read or the
 // JSON could not be unmarshalled
-func readJSONtoStruct(path string) (*config, error) {
+func readConfigJSONtoStruct(path string) (*config, error) {
 	data, err := ioutil.ReadFile(path)
 
 	if err != nil {
@@ -151,14 +151,14 @@ func createDefaultKeypair(file string) {
 
 func sign(filename string) {
 	if filename == "" {
-		c, err := readJSONtoStruct(defaultConfigFilename)
+		c, err := readConfigJSONtoStruct(defaultConfigFilename)
 		if err != nil {
 			panic(err)
 		}
 		signWithJSON(c)
 	}
 	if filepath.Ext(filename) == ".json" {
-		c, err := readJSONtoStruct(filename)
+		c, err := readConfigJSONtoStruct(filename)
 		if err != nil {
 			panic(err)
 		}
