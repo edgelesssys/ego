@@ -11,7 +11,8 @@ import (
 )
 
 const defaultConfigFilename = "enclave.json"
-const defaultKeyFilename = "private.pem"
+const defaultPrivKeyFilename = "private.pem"
+const defaultPubKeyFilename = "public.pem"
 
 type config struct {
 	Exe             string `json:"exe"`
@@ -69,6 +70,9 @@ func signWithJSON(conf *config) {
 		panic(err)
 	}
 
+	//create public and private key if private key does not exits
+	createDefaultKeypair(conf.Key)
+
 	enclavePath := filepath.Join(egoPath, "share", "ego-enclave")
 	cmd := exec.Command("ego-oesign", "sign", "-e", enclavePath, "-c", file.Name(), "-k", conf.Key, "--payload", conf.Exe)
 	runAndExit(cmd)
@@ -90,7 +94,7 @@ func signExecutable(path string) {
 	//sane default values
 	conf := config{
 		Exe:             path,
-		Key:             defaultKeyFilename,
+		Key:             defaultPrivKeyFilename,
 		Debug:           true,
 		Heapsize:        512, //[MB]
 		ProductID:       1,
@@ -103,16 +107,6 @@ func signExecutable(path string) {
 	}
 	if err := ioutil.WriteFile(defaultConfigFilename, jsonData, 0644); err != nil {
 		panic(err)
-	}
-
-	if _, err := os.Stat(defaultKeyFilename); err != nil {
-		if !os.IsNotExist(err) {
-			panic(err)
-		}
-		// SGX requires the RSA exponent to be 3. Go's API does not support this.
-		if err := exec.Command("openssl", "genrsa", "-out", defaultKeyFilename, "-3", "3072").Run(); err != nil {
-			panic(err)
-		}
 	}
 
 	signWithJSON(&conf)
@@ -135,6 +129,24 @@ func readJSONtoStruct(path string) (*config, error) {
 	}
 	conf.validate()
 	return &conf, nil
+}
+
+// Creates a public/secret keypair if the provided secret key does not exists
+func createDefaultKeypair(file string) {
+	if _, err := os.Stat(file); err != nil {
+		if !os.IsNotExist(err) {
+			panic(err)
+		}
+		fmt.Println("Generating new " + file)
+		// SGX requires the RSA exponent to be 3. Go's API does not support this.
+		if err := exec.Command("openssl", "genrsa", "-out", file, "-3", "3072").Run(); err != nil {
+			panic(err)
+		}
+		pubPath := filepath.Join(filepath.Dir(file), defaultPubKeyFilename)
+		if err := exec.Command("openssl", "rsa", "-in", file, "-pubout", "-out", pubPath).Run(); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func sign(filename string) {
