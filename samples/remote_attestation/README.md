@@ -21,7 +21,12 @@ ego sign server
 ego run server
 ```
 
-The client can be run either using `ego-go` or a recent Go compiler. It expects the `signer ID` (`MRSIGNER`) as an argument. The `signer ID` can be derived from the signer's public key using `ego signerid`:
+The client can be built either using `ego-go` or a recent Go compiler:
 ```sh
-go run client/client.go -s `ego signerid public.pem`
+CGO_CFLAGS=-I/opt/ego/include CGO_LDFLAGS=-L/opt/ego/lib go build ra_client/client.go
+```
+
+The client expects the `signer ID` (`MRSIGNER`) as an argument. The `signer ID` can be derived from the signer's public key using `ego signerid`:
+```sh
+./client -s `ego signerid public.pem`
 ```
