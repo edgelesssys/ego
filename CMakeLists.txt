@@ -60,5 +60,15 @@ install(
   PROGRAMS ${OpenEnclave_DIR}/../../../bin/oesign
   RENAME ego-oesign
   DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ${OpenEnclave_DIR}/../host/liboehostverify.a DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${OpenEnclave_DIR}/../../../include/openenclave/host_verify.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/openenclave)
+install(
+  FILES
+  ${OpenEnclave_DIR}/../../../include/openenclave/bits/defs.h
+  ${OpenEnclave_DIR}/../../../include/openenclave/bits/evidence.h
+  ${OpenEnclave_DIR}/../../../include/openenclave/bits/report.h
+  ${OpenEnclave_DIR}/../../../include/openenclave/bits/result.h
+  ${OpenEnclave_DIR}/../../../include/openenclave/bits/types.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/openenclave/bits)
 install(DIRECTORY ${OpenEnclave_DIR}/../debugger DESTINATION ${CMAKE_INSTALL_LIBDIR}/openenclave)
 install(DIRECTORY ertgo/ DESTINATION go USE_SOURCE_PERMISSIONS)
