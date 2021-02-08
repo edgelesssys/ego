@@ -32,6 +32,16 @@ func main() {
 		}
 		sign(filename)
 		return
+	case "signerid":
+		if len(args) == 1 {
+			signerid(args[0])
+			return
+		}
+	case "uniqueid":
+		if len(args) == 1 {
+			uniqueid(args[0])
+			return
+		}
 	case "run":
 		if len(args) > 0 {
 			run(args[0], args[1:])
@@ -63,7 +73,7 @@ func help(cmd string) {
 Sign an executable built with ego-go. Executables must be signed before they can be run in an enclave.
 There are 3 different ways of signing an executable:
 
-1. ego sign 
+1. ego sign
 Searches in the current directory for enclave.json and signs the therein provided executable.
 
 2. ego sign <executable>
@@ -88,13 +98,27 @@ Set OE_SIMULATION=1 to run in simulation mode.`
 Run a command within the ego environment. For example, run
 ` + me + ` env make
 to build a Go project that uses a Makefile.`
+	case "signerid":
+		s = `signerid <executable|keyfile>
+
+Print the signerID either from the executable or by reading the keyfile.
+
+The keyfile needs to have the extension ".pem"`
+
+	case "uniqueid":
+		s = `signerid <executable>
+
+Print the uniqueID from the executable.`
+
 	default:
 		s = `<command> [arguments]
 
 Commands:
-  sign   Sign an executable built with ego-go.
-  run    Run a signed executable.
-  env    Run a command in the ego environment.
+  sign       Sign an executable built with ego-go.
+  run        Run a signed executable.
+  env        Run a command in the ego environment.
+  signerid   Print the signerID of an executable.
+  uniqueid   Print the uniqueID of an executable.
 
 Use "` + me + ` help <command>" for more information about a command.`
 	}
