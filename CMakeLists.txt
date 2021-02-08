@@ -18,6 +18,9 @@ execute_process(
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options(-Wall -Wextra -pedantic -Werror)
+if(TIDY)
+  set(CMAKE_CXX_CLANG_TIDY clang-tidy-10)
+endif()
 
 add_library(ego-enclave-lib
   src/enc.cpp
