@@ -8,10 +8,10 @@ import (
 )
 
 type eradump struct {
-	SecurityVersion int    `json:"SecurityVersion"`
-	ProductID       int    `json:"ProductID"`
-	UniqueID        string `json:"UniqueID"`
-	SignerID        string `json:"SignerID"`
+	SecurityVersion int
+	ProductID       int
+	UniqueID        string
+	SignerID        string
 }
 
 func signeridByKey(path string) {

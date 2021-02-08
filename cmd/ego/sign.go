@@ -15,12 +15,12 @@ const defaultPrivKeyFilename = "private.pem"
 const defaultPubKeyFilename = "public.pem"
 
 type config struct {
-	Exe             string
-	Key             string
-	Debug           bool
-	Heapsize        int
-	ProductID       int
-	SecurityVersion int
+	Exe             string `json:"exe"`
+	Key             string `json:"key"`
+	Debug           bool   `json:"debug"`
+	Heapsize        int    `json:"heapsize"`
+	ProductID       int    `json:"productID"`
+	SecurityVersion int    `json:"securityVersion"`
 }
 
 // Validate Exe, Key, Heapsize
