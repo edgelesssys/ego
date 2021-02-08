@@ -1,7 +1,7 @@
 # EGo
 ![EGo logo](doc/logo.svg)
 
-[EGo](https://ego.dev) is an SDK for building confidential SGX enclaves in Go. It makes enclave development simple by providing two user-friendly tools:
+[EGo](https://ego.dev) is an SDK for building confidential SGX enclaves in Go. It simplifies enclave development by providing two user-friendly tools:
 * `ego-go`, a modified Go compiler that automatically compiles a Go project to an enclave - while providing the same CLI as the original Go compiler.
 * `ego`, a CLI tool that handles all enclave-related tasks such as signing and running.
 
