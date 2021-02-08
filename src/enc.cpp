@@ -106,6 +106,7 @@ int emain()
 
     cout << "calling payload\n";
     entry();
+    abort(); // unreachable
 }
 
 ert_args_t ert_get_args()

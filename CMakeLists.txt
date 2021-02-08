@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11)
-project(ego)
+project(ego VERSION 0.1.0)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
@@ -14,6 +14,10 @@ find_package(OpenEnclave CONFIG REQUIRED)
 execute_process(
   COMMAND git submodule update --init ertgo
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS OFF)
+add_compile_options(-Wall -Wextra -pedantic -Werror)
 
 add_library(ego-enclave-lib
   src/enc.cpp
@@ -80,3 +84,11 @@ install(
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/openenclave/bits)
 install(DIRECTORY ${OpenEnclave_DIR}/../debugger DESTINATION ${CMAKE_INSTALL_LIBDIR}/openenclave)
 install(DIRECTORY ertgo/ DESTINATION go USE_SOURCE_PERMISSIONS)
+
+set(CPACK_PACKAGE_CONTACT "contact@edgeless.systems​")
+set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+set(CPACK_DEBIAN_PACKAGE_DEPENDS
+  "libsgx-enclave-common (>=2.3.100.46354-1), libsgx-dcap-ql (>=1.0.100.46460-1.0), libsgx-dcap-ql-dev (>=1.0.100.46460-1.0)")
+set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+set(CPACK_DEBIAN_ARCHIVE_TYPE gnutar)
+include(CPack)
