@@ -1,11 +1,10 @@
 #include "go_runtime_cleanup.h"
 #include <openenclave/advanced/allocator.h>
 #include <openenclave/ert.h>
-#include <signal.h>
-#include <stdio.h>
 #include <sys/mman.h>
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -13,8 +12,6 @@
 #include <stdexcept>
 #include <vector>
 #include "bitset.h"
-
-#define CHAR_BIT 8
 
 using namespace std;
 
@@ -80,10 +77,9 @@ void go_rc_remove_memory(void* addr, uintptr_t length)
 
 void go_rc_kill_threads()
 {
-    int ret;
     for (const auto thread : threads)
     {
-        ret = pthread_cancel(thread);
+        const int ret = pthread_cancel(thread);
         if (ret != 0)
         {
             errno = ret;
@@ -91,7 +87,7 @@ void go_rc_kill_threads()
             return;
         }
     }
-    ret = oe_epoll_wake();
+    const int ret = oe_epoll_wake();
     if (ret != 0)
     {
         errno = ret;
@@ -108,9 +104,9 @@ void go_rc_kill_threads()
 
 void go_rc_unmap_memory()
 {
-    size_t pages;
     for (size_t pos = 0;;)
     {
+        size_t pages = 0;
         pos = ert_bitset_find_set_range(_bitset, _bitmap_size, pos, &pages);
         if (pos == SIZE_MAX)
         {

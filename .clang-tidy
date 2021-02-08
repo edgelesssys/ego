@@ -1,0 +1,28 @@
+WarningsAsErrors: '*'
+Checks: "*,\
+-cert-err58-cpp,\
+-cppcoreguidelines-avoid-goto,\
+-cppcoreguidelines-avoid-magic-numbers,\
+-cppcoreguidelines-owning-memory,\
+-cppcoreguidelines-pro-bounds-array-to-pointer-decay,\
+-cppcoreguidelines-pro-bounds-pointer-arithmetic,\
+-cppcoreguidelines-pro-type-cstyle-cast,\
+-cppcoreguidelines-pro-type-reinterpret-cast,\
+-cppcoreguidelines-special-member-functions,\
+-fuchsia-default-arguments-calls,\
+-fuchsia-statically-constructed-objects,\
+-google-build-using-namespace,\
+-google-readability-braces-around-statements,\
+-google-readability-casting,\
+-google-readability-todo,\
+-hicpp-avoid-goto,\
+-hicpp-braces-around-statements,\
+-hicpp-no-array-decay,\
+-hicpp-special-member-functions,\
+-llvm-include-order,\
+-llvm-qualified-auto,\
+-modernize-use-trailing-return-type,\
+-readability-braces-around-statements,\
+-readability-implicit-bool-conversion,\
+-readability-magic-numbers,\
+-readability-qualified-auto"

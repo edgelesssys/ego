@@ -171,8 +171,7 @@ static char** _merge_argv_env(int argc, char** argv, char** envp)
     }
 
     // [argv][null][env][null][auxv][null]
-    char** p = (char**)oe_allocator_calloc(
-        (size_t)(argc + 1 + envc + 1 + 2), sizeof *p);
+    char** p = (char**)oe_allocator_calloc(argc + 1 + envc + 1 + 2, sizeof *p);
 
     if (!p)
         abort();
