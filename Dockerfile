@@ -6,7 +6,7 @@ RUN --mount=type=secret,id=repoaccess,dst=/root/.netrc,required=true git clone -
 FROM ghcr.io/edgelesssys/edgelessrt-dev:nightly AS build
 COPY --from=pull /ego /ego
 WORKDIR /ego/build
-RUN cmake ..
+RUN cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 RUN make && make install
 
 FROM ghcr.io/edgelesssys/edgelessrt-dev:nightly as ego-dev
