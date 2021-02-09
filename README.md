@@ -1,9 +1,10 @@
 # EGo
-![EGo logo](doc/logo.svg)
+<img src="doc/logo.svg" alt="EGo logo" width="25%"/>
 
-[EGo](https://ego.dev) is an SDK for building confidential SGX enclaves in Go. It simplifies enclave development by providing two user-friendly tools:
-* `ego-go`, a modified Go compiler that automatically compiles a Go project to an enclave - while providing the same CLI as the original Go compiler.
-* `ego`, a CLI tool that handles all enclave-related tasks such as signing and running.
+[EGo](https://ego.dev) is a framework for building *confidential apps* in Go. Confidential apps run in always-encrypted and verifiable enclaves on Intel SGX-enabled hardware. EGo simplifies enclave development by providing two user-friendly tools:
+
+* `ego-go`, an adapted Go compiler that builds enclave-compatible executables from a given Go project - while providing the same CLI as the original Go compiler.
+* `ego`, a CLI tool that handles all enclave-related tasks such as signing and enclave creation.
 
 Building and running a confidential Go app is as easy as:
 ```sh
@@ -13,7 +14,7 @@ ego run hello
 ```
 
 ## Quick Start
-If you are on Ubuntu 18.04 and do not want to build the SDK from source, you can install the binary release:
+If you are on Ubuntu 18.04 and do not want to build EGo from source, you can install the binary release:
 ```bash
 wget -qO- https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add
 sudo add-apt-repository 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main'
@@ -34,7 +35,7 @@ make install
 ```
 
 ## Use
-To use the SDK, the EGo `bin` directory must be in the PATH:
+To use the EGo, its `bin` directory must be in the PATH:
 ```sh
 export PATH="$PATH:/opt/ego/bin"
 ```
@@ -46,6 +47,6 @@ Now you are ready to build applications with EGo!
 * [vault](samples/vault) demonstrates how to port a Go application exemplified by Hashicorp Vault.
 
 ## Documentation
+* The [EGo API](https://pkg.go.dev/github.com/edgelesssys/ertgolib) provides access to *remote attestation* and *sealing* to your confidential app at runtime.
 * [`ego` command reference](doc/ego_cli.md)
-* The [EGo API](https://pkg.go.dev/github.com/edgelesssys/ertgolib) provides remote attestation and sealing
 * [Debugging](doc/debugging.md)
