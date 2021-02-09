@@ -35,7 +35,7 @@ make install
 ```
 
 ## Use
-To use the EGo, its `bin` directory must be in the PATH:
+To use EGo, its `bin` directory must be in the PATH:
 ```sh
 export PATH="$PATH:/opt/ego/bin"
 ```
