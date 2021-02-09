@@ -1,10 +1,10 @@
 # Debugging
-EGo executables can be debugged inside as well as outside the enclave. Depending on the task, one or the other may be preferable.
+EGo executables can be debugged inside as well as outside of enclaves. Depending on the task, one or the other may be preferable.
 
-## Debugging outside the enclave
-As an EGo executable can be run as a normal host process without an enclave, it can also be debugged like any other Go program. This should be your first attempt if the problem is not related to specific enclave functionality. Use your favorite tools (e.g., the Delve debugger) as usual.
+## Debugging outside an enclave
+An EGo executable can be run as a normal host process without an enclave. Thus, it can also be debugged like any other Go program. This should be your first attempt if the problem is not related to specific enclave functionality. Use your favorite tools (e.g., the Delve debugger) as usual.
 
-## Debugging inside the enclave
+## Debugging inside an enclave
 EGo comes with `ego-gdb` that augments `gdb` with enclave support. The `console` interface is the same as `gdb`:
 ```sh
 ego-gdb --args ./helloworld
