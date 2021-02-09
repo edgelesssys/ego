@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/edgelesssys/edgelessrt-dev:nightly
+      image: ghcr.io/edgelesssys/edgelessrt-dev:ci
     steps:
 
     - name: Check out code
@@ -35,9 +35,36 @@ jobs:
       run: cpack -G DEB
       working-directory: build
 
-# disabled until public
-#   - name: Build artifact
-#     uses: actions/upload-artifact@v2
-#     with:
-#       name: ego
-#       path: build/*.deb
+    - name: Build artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ego
+        path: build/*.deb
+
+    - name: Deploy ego-dev:nightly
+      if: github.ref == 'refs/heads/master' &&
+          github.event_name == 'push'
+      run: |
+        curl -X POST -H "Accept: application/vnd.github.v3+json" \
+        -H "Authorization: token ${{ secrets.CI_GITHUB_REPOSITORY }}" \
+        -d '{"event_type": "docker-build",
+            "client_payload":{"repository":"ego",
+                              "sign":"nightly",
+                              "imagename":"ego-dev",
+                              "tag":"nightly",
+                              "target":"ego-dev"}}' \
+        https://api.github.com/repos/edgelesssys/deployment/dispatches
+
+    - name: Deploy ego-deploy:nightly
+      if: github.ref == 'refs/heads/master' &&
+          github.event_name == 'push'
+      run: |
+        curl -X POST -H "Accept: application/vnd.github.v3+json" \
+        -H "Authorization: token ${{ secrets.CI_GITHUB_REPOSITORY }}" \
+        -d '{"event_type": "docker-build",
+            "client_payload":{"repository":"ego",
+                              "sign":"nightly",
+                              "imagename":"ego-deploy",
+                              "tag":"nightly",
+                              "target":"ego-deploy"}}' \
+        https://api.github.com/repos/edgelesssys/deployment/dispatches
