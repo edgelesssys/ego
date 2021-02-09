@@ -17,7 +17,7 @@ ENTRYPOINT ["bash"]
 
 FROM ghcr.io/edgelesssys/edgelessrt-deploy:nightly as ego-deploy
 LABEL description="A runtime version of EGo to handle enclave-related tasks such as signing and running Go SGX enclaves."
-COPY --from=build /opt/ego/bin/ego /opt/ego/bin/ego
+COPY --from=build /opt/ego/bin/ /opt/ego/bin
 COPY --from=build /opt/ego/share /opt/ego/share
 ENV PATH=${PATH}:/opt/ego/bin
 ENTRYPOINT ["bash"]
