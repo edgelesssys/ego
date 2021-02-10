@@ -47,6 +47,6 @@ Now you are ready to build applications with EGo!
 * [vault](samples/vault) demonstrates how to port a Go application exemplified by Hashicorp Vault.
 
 ## Documentation
-* The [EGo API](https://pkg.go.dev/github.com/edgelesssys/ertgolib) provides access to *remote attestation* and *sealing* to your confidential app at runtime.
+* The [EGo API](https://pkg.go.dev/github.com/edgelesssys/ego) provides access to *remote attestation* and *sealing* to your confidential app at runtime.
 * [`ego` command reference](doc/ego_cli.md)
 * [Debugging](doc/debugging.md)

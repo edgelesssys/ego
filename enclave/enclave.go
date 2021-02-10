@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Package ertenclave provides functionality for Go enclaves like remote attestation and sealing.
-package ertenclave
+// Package enclave provides functionality for Go enclaves like remote attestation and sealing.
+package enclave
 
 // #include "structs.h"
 import "C"
@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/edgelesssys/ertgolib/ert"
+	"github.com/edgelesssys/ego/attestation"
 )
 
 const SYS_get_remote_report = 1000
@@ -59,7 +59,7 @@ func GetRemoteReport(reportData []byte) ([]byte, error) {
 //
 // Returns the parsed report if the signature is valid.
 // Returns an error if the signature is invalid.
-func VerifyRemoteReport(reportBytes []byte) (ert.Report, error) {
+func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 	var report C.oe_report_t
 
 	res, _, errno := syscall.Syscall(
@@ -69,14 +69,14 @@ func VerifyRemoteReport(reportBytes []byte) (ert.Report, error) {
 		uintptr(unsafe.Pointer(&report)),
 	)
 	if err := oeError(errno, res); err != nil {
-		return ert.Report{}, err
+		return attestation.Report{}, err
 	}
 
 	if (report.identity.attributes & C.OE_REPORT_ATTRIBUTES_REMOTE) == 0 {
-		return ert.Report{}, errors.New("OE_UNSUPPORTED")
+		return attestation.Report{}, errors.New("OE_UNSUPPORTED")
 	}
 
-	return ert.Report{
+	return attestation.Report{
 		Data:            C.GoBytes(unsafe.Pointer(report.report_data), C.int(report.report_data_size)),
 		SecurityVersion: uint(report.identity.security_version),
 		Debug:           (report.identity.attributes & C.OE_REPORT_ATTRIBUTES_DEBUG) != 0,

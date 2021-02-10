@@ -4,8 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Package ertcrypto provides cryptographic functionalities for Go enclaves
-package ertcrypto
+// Package ecrypto provides cryptographic functionalities for Go enclaves
+package ecrypto
 
 import (
 	"crypto/aes"
@@ -14,28 +14,28 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/edgelesssys/ertgolib/ertenclave"
+	"github.com/edgelesssys/ego/enclave"
 )
 
 var sealer interface {
 	GetUniqueSealKey() (key, keyInfo []byte, err error)
 	GetProductSealKey() (key, keyInfo []byte, err error)
 	GetSealKey(keyInfo []byte) ([]byte, error)
-} = enclave{}
+} = enclaveSealer{}
 
-type enclave struct{}
+type enclaveSealer struct{}
 
-func (enclave) GetUniqueSealKey() (key, keyInfo []byte, err error) {
-	return ertenclave.GetUniqueSealKey()
+func (enclaveSealer) GetUniqueSealKey() (key, keyInfo []byte, err error) {
+	return enclave.GetUniqueSealKey()
 }
-func (enclave) GetProductSealKey() (key, keyInfo []byte, err error) {
-	return ertenclave.GetProductSealKey()
+func (enclaveSealer) GetProductSealKey() (key, keyInfo []byte, err error) {
+	return enclave.GetProductSealKey()
 }
-func (enclave) GetSealKey(keyInfo []byte) ([]byte, error) {
-	return ertenclave.GetSealKey(keyInfo)
+func (enclaveSealer) GetSealKey(keyInfo []byte) ([]byte, error) {
+	return enclave.GetSealKey(keyInfo)
 }
 
-// Encrypt encrypts a given plaintext with a supplied key using AES-GCM
+// Encrypt encrypts a given plaintext with a supplied key using AES-GCM.
 func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
 	// Get cipher object with key
 	aesgcm, err := getCipher(key)
@@ -55,7 +55,7 @@ func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
 	return append(nonce, ciphertext...), nil
 }
 
-// Decrypt decrypts a given ciphertext (with prepended nonce) with a supplied key using AES-GCM
+// Decrypt decrypts a ciphertext produced by Encrypt.
 func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
 	// Get cipher object with key
 	aesgcm, err := getCipher(key)
@@ -88,7 +88,7 @@ func SealWithUniqueKey(plaintext []byte) ([]byte, error) {
 	return seal(plaintext, sealKey, keyInfo)
 }
 
-// SealWithProductKey encrypts a given plaintext with the a key from the signer and product id of the enclave.
+// SealWithProductKey encrypts a given plaintext with a key derived from the signer and product id of the enclave.
 func SealWithProductKey(plaintext []byte) ([]byte, error) {
 	sealKey, keyInfo, err := sealer.GetProductSealKey()
 	if err != nil {
@@ -98,7 +98,7 @@ func SealWithProductKey(plaintext []byte) ([]byte, error) {
 	return seal(plaintext, sealKey, keyInfo)
 }
 
-// Unseal decrypts data encrypted with the unique or product CPU key with the help of the embedded key info
+// Unseal decrypts a ciphertext produced by SealWithUniqueKey or SealWithProductKey.
 func Unseal(ciphertext []byte) ([]byte, error) {
 	if len(ciphertext) < 4 {
 		return nil, fmt.Errorf("ciphertext is too short")

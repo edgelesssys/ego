@@ -17,6 +17,9 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
 
+    - name: Go test
+      run: go test ./...
+
     - name: Setup
       run: mkdir build
 
@@ -26,7 +29,7 @@ jobs:
         make
       working-directory: build
 
-    - name: Test
+    - name: Test commands
       run: |
         src/tests/helloworld/testSign.sh
         src/tests/helloworld/testIDs.sh
