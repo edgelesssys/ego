@@ -4,9 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Package erthost provides functionality for Go programs that interact with
-// enclave programs. Currently, this is limited to remote attestation.
-package erthost
+// Package ehost provides functionality for Go programs that interact with enclave programs.
+package ehost
 
 // #cgo LDFLAGS: -loehostverify -lcrypto -ldl
 // #include <openenclave/host_verify.h>
@@ -16,7 +15,7 @@ import (
 	"errors"
 	"unsafe"
 
-	"github.com/edgelesssys/ertgolib/ert"
+	"github.com/edgelesssys/ego/attestation"
 )
 
 // VerifyRemoteReport verifies the integrity of the remote report and its signature.
@@ -27,7 +26,7 @@ import (
 //
 // Returns the parsed report if the signature is valid.
 // Returns an error if the signature is invalid.
-func VerifyRemoteReport(reportBytes []byte) (ert.Report, error) {
+func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 	var report C.oe_report_t
 
 	res := C.oe_verify_remote_report(
@@ -36,10 +35,10 @@ func VerifyRemoteReport(reportBytes []byte) (ert.Report, error) {
 		&report)
 
 	if res != C.OE_OK {
-		return ert.Report{}, oeError(res)
+		return attestation.Report{}, oeError(res)
 	}
 
-	return ert.Report{
+	return attestation.Report{
 		Data:            C.GoBytes(unsafe.Pointer(report.report_data), C.int(report.report_data_size)),
 		SecurityVersion: uint(report.identity.security_version),
 		Debug:           (report.identity.attributes & C.OE_REPORT_ATTRIBUTES_DEBUG) != 0,
