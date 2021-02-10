@@ -16,7 +16,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/edgelesssys/ertgolib/erthost"
+	"github.com/edgelesssys/ego/ehost"
 )
 
 func main() {
@@ -57,7 +57,7 @@ func main() {
 }
 
 func verifyReport(reportBytes, certBytes, signer []byte) error {
-	report, err := erthost.VerifyRemoteReport(reportBytes)
+	report, err := ehost.VerifyRemoteReport(reportBytes)
 	if err != nil {
 		return err
 	}

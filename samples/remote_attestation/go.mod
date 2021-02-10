@@ -2,4 +2,4 @@ module server
 
 go 1.14
 
-require github.com/edgelesssys/ertgolib v0.1.5-0.20210202111806-4e637e2f28b6
+require github.com/edgelesssys/ego v0.0.0-20210210152526-3cd524c87980

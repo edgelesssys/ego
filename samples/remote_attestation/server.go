@@ -16,14 +16,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/edgelesssys/ertgolib/ertenclave"
+	"github.com/edgelesssys/ego/enclave"
 )
 
 func main() {
 	// Create certificate and a report that includes the certificate's hash.
 	cert, priv := createCertificate()
 	hash := sha256.Sum256(cert)
-	report, err := ertenclave.GetRemoteReport(hash[:])
+	report, err := enclave.GetRemoteReport(hash[:])
 	if err != nil {
 		fmt.Println(err)
 	}
