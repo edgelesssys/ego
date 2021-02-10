@@ -12,7 +12,7 @@ include(GNUInstallDirs)
 find_package(OpenEnclave CONFIG REQUIRED)
 
 execute_process(
-  COMMAND git submodule update --init ertgo
+  COMMAND git submodule update --init _ertgo
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 set(CMAKE_CXX_STANDARD 17)
@@ -86,7 +86,7 @@ install(
   ${OpenEnclave_DIR}/../../../include/openenclave/bits/types.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/openenclave/bits)
 install(DIRECTORY ${OpenEnclave_DIR}/../debugger DESTINATION ${CMAKE_INSTALL_LIBDIR}/openenclave)
-install(DIRECTORY ertgo/ DESTINATION go USE_SOURCE_PERMISSIONS)
+install(DIRECTORY _ertgo/ DESTINATION go USE_SOURCE_PERMISSIONS)
 
 set(CPACK_PACKAGE_CONTACT "contact@edgeless.systems​")
 set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
