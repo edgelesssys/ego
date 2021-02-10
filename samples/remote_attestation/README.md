@@ -3,14 +3,14 @@ This sample shows how to do remote attestation of a EGo enclave. It consists of 
 
 **Note: This sample only works on SGX-FLC systems.**
 
-The server generates a self-signed certificate and a report for remote attestation using [GetRemoteReport()](https://pkg.go.dev/github.com/edgelesssys/ertgolib/ertenclave#GetRemoteReport) that includes the certificate's hash. It thereby binds the certificate to the enclave's identity.
+The server generates a self-signed certificate and a report for remote attestation using [GetRemoteReport()](https://pkg.go.dev/github.com/edgelesssys/ego/enclave#GetRemoteReport) that includes the certificate's hash. It thereby binds the certificate to the enclave's identity.
 
 The server runs HTTPS and serves the following:
 * `/cert` makes the TLS certificate explicitly available on the HTTP layer (for simplicity for this sample).
 * `/report` returns the remote report.
 * `/secret` receives the secret via a query parameter named `s`.
 
-The client first gets the certificate and the report skipping TLS certificate verification. Then it verifies the certificate using the report via [VerifyRemoteReport()](https://pkg.go.dev/github.com/edgelesssys/ertgolib/erthost#VerifyRemoteReport). From there on it can establish a secure connection to the enclave server and send its secret.
+The client first gets the certificate and the report skipping TLS certificate verification. Then it verifies the certificate using the report via [VerifyRemoteReport()](https://pkg.go.dev/github.com/edgelesssys/ego/ehost#VerifyRemoteReport). From there on it can establish a secure connection to the enclave server and send its secret.
 
 Some error handling in this sample is omitted for brevity.
 
