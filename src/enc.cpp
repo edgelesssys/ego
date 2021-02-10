@@ -14,10 +14,12 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
+#include <string_view>
 #include "go_runtime_cleanup.h"
 
 static const auto _memfs_name = "edg_memfs";
 static const auto _premain_env_key = "EDG_EGO_PREMAIN";
+static const auto _verbose_env_key = "EDG_EGO_VERBOSE";
 
 using namespace std;
 using namespace ert;
@@ -35,8 +37,26 @@ static void _start_main(int payload_main(...))
     exit(payload_main(_argc, _argv));
 }
 
+static void _log(string_view s)
+{
+    cout << "[ego] " << s << '\n';
+}
+
+static void _log_verbose(string_view s)
+{
+    static const bool verbose_enabled = [] {
+        const char* const env_verbose = getenv(_verbose_env_key);
+        return env_verbose && *env_verbose == '1';
+    }();
+
+    if (verbose_enabled)
+        _log(s);
+}
+
 int emain()
 {
+    _log_verbose("entered emain");
+
     // Accessing this variable makes sure that the reserved_tls lib will be
     // linked. See comment about the lib in CMakeLists for more info.
     *ert_ego_reserved_tls = 0;
@@ -50,7 +70,7 @@ int emain()
         oe_load_module_host_resolver() != OE_OK ||
         oe_load_module_host_socket_interface() != OE_OK)
     {
-        cout << "oe_load_module_host failed\n";
+        _log("oe_load_module_host failed");
         return EXIT_FAILURE;
     }
 
@@ -62,7 +82,7 @@ int emain()
     const auto mount_path = is_marblerun ? "/edg/hostfs" : "/";
     if (mount("/", mount_path, OE_HOST_FILE_SYSTEM, 0, nullptr) != 0)
     {
-        cout << "mount hostfs failed\n";
+        _log("mount hostfs failed");
         return EXIT_FAILURE;
     }
 
@@ -70,9 +90,9 @@ int emain()
     // get args and env
     if (is_marblerun)
     {
-        cout << "invoking premain\n";
+        _log_verbose("invoking premain");
         ert_meshentry_premain(&_argc, &_argv);
-        cout << "premain done\n";
+        _log_verbose("premain done");
         _argv = _merge_argv_env(_argc, _argv, environ);
     }
     else
@@ -83,15 +103,17 @@ int emain()
         const char* const cwd = getenv("EDG_CWD");
         if (!cwd || !*cwd || chdir(cwd) != 0)
         {
-            cout << "cannot set cwd\n";
+            _log("cannot set cwd");
             return EXIT_FAILURE;
         }
     }
 
     // cleanup go runtime
-    cout << "cleaning up the old goruntime\n";
+    _log_verbose("cleaning up the old goruntime: go_rc_kill_threads");
     go_rc_kill_threads();
+    _log_verbose("cleaning up the old goruntime: go_rc_unmap_memory");
     go_rc_unmap_memory();
+    _log_verbose("cleaning up the old goruntime: done");
     // relocate
     try
     {
@@ -99,7 +121,7 @@ int emain()
     }
     catch (const exception& e)
     {
-        cout << "apply_relocations failed: " << e.what() << '\n';
+        _log("apply_relocations failed: "s + e.what());
         return EXIT_FAILURE;
     }
 
@@ -110,7 +132,7 @@ int emain()
     assert(ehdr.e_entry);
     const auto entry = (void (*)())(base + ehdr.e_entry);
 
-    cout << "calling payload\n";
+    _log("starting application ...");
     entry();
     abort(); // unreachable
 }
