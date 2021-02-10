@@ -17,7 +17,7 @@ func (c *Cli) Run(filename string, args []string) int {
 	enclaves := filepath.Join(c.egoPath, "share", "ego-enclave") + ":" + filename
 	args = append([]string{enclaves}, args...)
 	os.Setenv("EDG_EGO_PREMAIN", "0")
-	cmd := exec.Command("ego-host", args...)
+	cmd := exec.Command(c.getEgoHostPath(), args...)
 	return c.run(cmd)
 }
 
@@ -25,6 +25,10 @@ func (c *Cli) Run(filename string, args []string) int {
 func (c *Cli) Marblerun(filename string) int {
 	enclaves := filepath.Join(c.egoPath, "share", "ego-enclave") + ":" + filename
 	os.Setenv("EDG_EGO_PREMAIN", "1")
-	cmd := exec.Command("ego-host", enclaves)
+	cmd := exec.Command(c.getEgoHostPath(), enclaves)
 	return c.run(cmd)
+}
+
+func (c *Cli) getEgoHostPath() string {
+	return filepath.Join(c.egoPath, "bin", "ego-host")
 }

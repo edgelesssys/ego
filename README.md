@@ -14,14 +14,14 @@ ego run hello
 ```
 
 ## Quick Start
-If you are on Ubuntu 18.04 and do not want to build EGo from source, you can install the binary release:
+If you are on Ubuntu 18.04 or above and do not want to build EGo from source, you can install the binary release:
 ```bash
 wget -qO- https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add
 sudo add-apt-repository 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main'
 wget https://github.com/edgelesssys/ego/releases/download/v0.1.0/ego_0.1.0_amd64.deb
 sudo apt install ./ego_0.1.0_amd64.deb
 ```
-Then proceed with [Use](#use).
+Now you are ready to build applications with EGo! To start, check out the [samples](#samples).
 
 ## Build and Install
 *Prerequisite*: [Edgeless RT](https://github.com/edgelesssys/edgelessrt) is installed and sourced.
@@ -34,14 +34,7 @@ make
 make install
 ```
 
-## Use
-To use EGo, its `bin` directory must be in the PATH:
-```sh
-export PATH="$PATH:/opt/ego/bin"
-```
-Now you are ready to build applications with EGo!
-
-### Samples
+## Samples
 * [helloworld](samples/helloworld) is a minimal example of an enclave application.
 * [remote_attestation](samples/remote_attestation) shows how to do remote attestation in EGo.
 * [vault](samples/vault) demonstrates how to port a Go application exemplified by Hashicorp Vault.

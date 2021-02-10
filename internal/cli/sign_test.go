@@ -9,6 +9,7 @@ package cli
 import (
 	"errors"
 	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -120,8 +121,9 @@ func (signRunner) Output(cmd *exec.Cmd) ([]byte, error) {
 }
 
 func (s signRunner) CombinedOutput(cmd *exec.Cmd) ([]byte, error) {
-	if !cmp.Equal(cmd.Args[:3], []string{"ego-oesign", "sign", "-e"}) ||
-		!cmp.Equal(cmd.Args[6:], []string{"-k", "keyfile", "--payload", "exefile"}) {
+	if !(filepath.Base(cmd.Path) == "ego-oesign" &&
+		cmp.Equal(cmd.Args[1:3], []string{"sign", "-e"}) &&
+		cmp.Equal(cmd.Args[6:], []string{"-k", "keyfile", "--payload", "exefile"})) {
 		return nil, errors.New("unexpected cmd: " + cmd.Path)
 	}
 	data, err := s.fs.ReadFile(cmd.Args[5])

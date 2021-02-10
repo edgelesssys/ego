@@ -53,3 +53,7 @@ func (c *Cli) run(cmd *exec.Cmd) int {
 	}
 	return c.runner.ExitCode(cmd)
 }
+
+func (c *Cli) getOesignPath() string {
+	return filepath.Join(c.egoPath, "bin", "ego-oesign")
+}

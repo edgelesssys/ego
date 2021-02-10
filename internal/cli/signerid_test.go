@@ -9,6 +9,7 @@ package cli
 import (
 	"errors"
 	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -46,7 +47,7 @@ func (signeridRunner) Run(cmd *exec.Cmd) error {
 }
 
 func (signeridRunner) Output(cmd *exec.Cmd) ([]byte, error) {
-	if cmd.Path != "ego-oesign" || len(cmd.Args) != 4 {
+	if filepath.Base(cmd.Path) != "ego-oesign" || len(cmd.Args) != 4 {
 		return nil, errors.New("unexpected cmd")
 	}
 	if cmd.Args[1] == "signerid" && cmd.Args[2] == "-k" {

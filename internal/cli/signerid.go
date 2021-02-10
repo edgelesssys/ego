@@ -21,7 +21,7 @@ type eradump struct {
 }
 
 func (c *Cli) signeridByKey(path string) (string, error) {
-	out, err := c.runner.Output(exec.Command("ego-oesign", "signerid", "-k", path))
+	out, err := c.runner.Output(exec.Command(c.getOesignPath(), "signerid", "-k", path))
 	if err != nil {
 		if err, ok := err.(*exec.ExitError); ok {
 			return "", errors.New(string(err.Stderr))
@@ -32,7 +32,7 @@ func (c *Cli) signeridByKey(path string) (string, error) {
 }
 
 func (c *Cli) readEradumpJSONtoStruct(path string) (*eradump, error) {
-	data, err := c.runner.Output(exec.Command("ego-oesign", "eradump", "-e", path))
+	data, err := c.runner.Output(exec.Command(c.getOesignPath(), "eradump", "-e", path))
 
 	if err != nil {
 		if err, ok := err.(*exec.ExitError); ok {

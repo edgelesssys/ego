@@ -88,6 +88,15 @@ install(
 install(DIRECTORY ${OpenEnclave_DIR}/../debugger DESTINATION ${CMAKE_INSTALL_LIBDIR}/openenclave)
 install(DIRECTORY _ertgo/ DESTINATION go USE_SOURCE_PERMISSIONS)
 
+if(CMAKE_INSTALL_PREFIX STREQUAL /opt/ego)
+  install(
+    FILES
+    src/symlinks/ego
+    src/symlinks/ego-gdb
+    src/symlinks/ego-go
+    DESTINATION /usr/local/bin)
+endif()
+
 set(CPACK_PACKAGE_CONTACT "contact@edgeless.systems​")
 set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 set(CPACK_DEBIAN_PACKAGE_DEPENDS

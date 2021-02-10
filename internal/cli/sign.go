@@ -81,7 +81,7 @@ func (c *Cli) signWithJSON(conf *config) error {
 	c.createDefaultKeypair(conf.Key)
 
 	enclavePath := filepath.Join(c.egoPath, "share", "ego-enclave")
-	cmd := exec.Command("ego-oesign", "sign", "-e", enclavePath, "-c", file.Name(), "-k", conf.Key, "--payload", conf.Exe)
+	cmd := exec.Command(c.getOesignPath(), "sign", "-e", enclavePath, "-c", file.Name(), "-k", conf.Key, "--payload", conf.Exe)
 	out, err := c.runner.CombinedOutput(cmd)
 	if _, ok := err.(*exec.ExitError); ok {
 		return errors.New(string(out))
