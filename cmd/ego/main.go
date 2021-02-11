@@ -9,17 +9,9 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
-	"path/filepath"
-)
 
-var egoPath = func() string {
-	exe, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	return filepath.Dir(filepath.Dir(exe)) // parent dir of dir of exe
-}()
+	"github.com/edgelesssys/ego/internal/cli"
+)
 
 func main() {
 	if len(os.Args) < 2 {
@@ -36,31 +28,31 @@ func main() {
 		if len(args) > 0 {
 			filename = args[0]
 		}
-		sign(filename)
+		cli.Sign(filename)
 		return
 	case "signerid":
 		if len(args) == 1 {
-			signerid(args[0])
+			cli.Signerid(args[0])
 			return
 		}
 	case "uniqueid":
 		if len(args) == 1 {
-			uniqueid(args[0])
+			cli.Uniqueid(args[0])
 			return
 		}
 	case "run":
 		if len(args) > 0 {
-			run(args[0], args[1:])
+			cli.Run(args[0], args[1:])
 			return
 		}
 	case "marblerun":
 		if len(args) == 1 {
-			marblerun(args[0])
+			cli.Marblerun(args[0])
 			return
 		}
 	case "env":
 		if len(args) > 0 {
-			env(args[0], args[1:])
+			cli.Env(args[0], args[1:])
 			return
 		}
 	case "help":
@@ -152,44 +144,4 @@ Use "` + me + ` help <command>" for more information about a command.`
 	}
 
 	fmt.Println("Usage: " + me + " " + s)
-}
-
-func run(filename string, args []string) {
-	enclaves := filepath.Join(egoPath, "share", "ego-enclave") + ":" + filename
-	args = append([]string{enclaves}, args...)
-	os.Setenv("EDG_EGO_PREMAIN", "0")
-	cmd := exec.Command("ego-host", args...)
-	runAndExit(cmd)
-}
-
-func marblerun(filename string) {
-	enclaves := filepath.Join(egoPath, "share", "ego-enclave") + ":" + filename
-	os.Setenv("EDG_EGO_PREMAIN", "1")
-	cmd := exec.Command("ego-host", enclaves)
-	runAndExit(cmd)
-}
-
-func env(filename string, args []string) {
-	if filename == "go" {
-		// "ego env go" should resolve to our Go compiler
-		filename = filepath.Join(egoPath, "go", "bin", "go")
-	}
-	cmd := exec.Command(filename, args...)
-	cmd.Env = append(os.Environ(),
-		"CGO_ENABLED=1",
-		"PATH="+filepath.Join(egoPath, "go", "bin")+":"+os.Getenv("PATH"),
-		"GOROOT="+filepath.Join(egoPath, "go"))
-	runAndExit(cmd)
-}
-
-func runAndExit(cmd *exec.Cmd) {
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		if _, ok := err.(*exec.ExitError); !ok {
-			panic(err)
-		}
-	}
-	os.Exit(cmd.ProcessState.ExitCode())
 }

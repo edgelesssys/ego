@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-package main
+package cli
 
 import (
 	"encoding/json"
@@ -155,7 +155,8 @@ func createDefaultKeypair(file string) {
 	}
 }
 
-func sign(filename string) {
+// Sign signs an executable built with ego-go.
+func Sign(filename string) {
 	if filename == "" {
 		c, err := readConfigJSONtoStruct(defaultConfigFilename)
 		if err != nil {
