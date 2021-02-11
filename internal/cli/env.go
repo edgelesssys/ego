@@ -13,7 +13,7 @@ import (
 )
 
 // Env runs a command in the EGo environment.
-func (c *Cli) Env(filename string, args []string) {
+func (c *Cli) Env(filename string, args []string) int {
 	if filename == "go" {
 		// "ego env go" should resolve to our Go compiler
 		filename = filepath.Join(c.egoPath, "go", "bin", "go")
@@ -23,5 +23,5 @@ func (c *Cli) Env(filename string, args []string) {
 		"CGO_ENABLED=1",
 		"PATH="+filepath.Join(c.egoPath, "go", "bin")+":"+os.Getenv("PATH"),
 		"GOROOT="+filepath.Join(c.egoPath, "go"))
-	c.runAndExit(cmd)
+	return c.run(cmd)
 }

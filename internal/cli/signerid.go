@@ -8,7 +8,7 @@ package cli
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"os/exec"
 	"path/filepath"
 )
@@ -20,44 +20,55 @@ type eradump struct {
 	SignerID        string
 }
 
-func (c *Cli) signeridByKey(path string) {
+func (c *Cli) signeridByKey(path string) (string, error) {
 	out, err := c.runner.Output(exec.Command("ego-oesign", "signerid", "-k", path))
 	if err != nil {
-		panic(err)
+		if err, ok := err.(*exec.ExitError); ok {
+			return "", errors.New(string(err.Stderr))
+		}
+		return "", err
 	}
-	fmt.Println(string(out))
+	return string(out), nil
 }
 
-func (c *Cli) readEradumpJSONtoStruct(path string) *eradump {
+func (c *Cli) readEradumpJSONtoStruct(path string) (*eradump, error) {
 	data, err := c.runner.Output(exec.Command("ego-oesign", "eradump", "-e", path))
 
 	if err != nil {
-		panic(err)
+		if err, ok := err.(*exec.ExitError); ok {
+			return nil, errors.New(string(err.Stderr))
+		}
+		return nil, err
 	}
 
 	var dump eradump
 	if err := json.Unmarshal(data, &dump); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return &dump
+	return &dump, nil
 }
 
-func (c *Cli) signeridByExecutable(path string) {
-	dump := c.readEradumpJSONtoStruct(path)
-	fmt.Println(dump.SignerID)
+func (c *Cli) signeridByExecutable(path string) (string, error) {
+	dump, err := c.readEradumpJSONtoStruct(path)
+	if err != nil {
+		return "", err
+	}
+	return dump.SignerID, nil
 }
 
-// Uniqueid prints the UniqueID of a signed executable.
-func (c *Cli) Uniqueid(path string) {
-	dump := c.readEradumpJSONtoStruct(path)
-	fmt.Println(dump.UniqueID)
+// Uniqueid returns the UniqueID of a signed executable.
+func (c *Cli) Uniqueid(path string) (string, error) {
+	dump, err := c.readEradumpJSONtoStruct(path)
+	if err != nil {
+		return "", err
+	}
+	return dump.UniqueID, nil
 }
 
-// Signerid prints the SignerID of a signed executable.
-func (c *Cli) Signerid(path string) {
+// Signerid returns the SignerID of a signed executable.
+func (c *Cli) Signerid(path string) (string, error) {
 	if filepath.Ext(path) == ".pem" {
-		c.signeridByKey(path)
-	} else {
-		c.signeridByExecutable(path)
+		return c.signeridByKey(path)
 	}
+	return c.signeridByExecutable(path)
 }

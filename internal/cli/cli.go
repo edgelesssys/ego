@@ -18,6 +18,8 @@ import (
 type Runner interface {
 	Run(cmd *exec.Cmd) error
 	Output(cmd *exec.Cmd) ([]byte, error)
+	CombinedOutput(cmd *exec.Cmd) ([]byte, error)
+	ExitCode(cmd *exec.Cmd) int
 }
 
 // Cli implements the ego commands.
@@ -40,7 +42,7 @@ func NewCli(runner Runner, fs afero.Fs) *Cli {
 	}
 }
 
-func (c *Cli) runAndExit(cmd *exec.Cmd) {
+func (c *Cli) run(cmd *exec.Cmd) int {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -49,5 +51,5 @@ func (c *Cli) runAndExit(cmd *exec.Cmd) {
 			panic(err)
 		}
 	}
-	os.Exit(cmd.ProcessState.ExitCode())
+	return c.runner.ExitCode(cmd)
 }
