@@ -18,13 +18,13 @@ import (
 	"github.com/edgelesssys/ego/attestation"
 )
 
-const SYS_get_remote_report = 1000
-const SYS_free_report = 1001
-const SYS_verify_report = 1002
-const SYS_get_seal_key = 1003
-const SYS_free_seal_key = 1004
-const SYS_get_seal_key_by_policy = 1005
-const SYS_result_str = 1006
+const sysGetRemoteReport = 1000
+const sysFreeReport = 1001
+const sysVerifyReport = 1002
+const sysGetSealKey = 1003
+const sysFreeSealKey = 1004
+const sysGetSealKeyByPolicy = 1005
+const sysResultStr = 1006
 
 // GetRemoteReport gets a report signed by the enclave platform for use in remote attestation.
 //
@@ -34,7 +34,7 @@ func GetRemoteReport(reportData []byte) ([]byte, error) {
 	var reportSize C.size_t
 
 	res, _, errno := syscall.Syscall6(
-		SYS_get_remote_report,
+		sysGetRemoteReport,
 		uintptr(unsafe.Pointer(&reportData[0])),
 		uintptr(len(reportData)),
 		0,
@@ -47,7 +47,7 @@ func GetRemoteReport(reportData []byte) ([]byte, error) {
 	}
 
 	result := C.GoBytes(unsafe.Pointer(report), C.int(reportSize))
-	syscall.Syscall(SYS_free_report, uintptr(unsafe.Pointer(report)), 0, 0)
+	syscall.Syscall(sysFreeReport, uintptr(unsafe.Pointer(report)), 0, 0)
 	return result, nil
 }
 
@@ -63,7 +63,7 @@ func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 	var report C.oe_report_t
 
 	res, _, errno := syscall.Syscall(
-		SYS_verify_report,
+		sysVerifyReport,
 		uintptr(unsafe.Pointer(&reportBytes[0])),
 		uintptr(len(reportBytes)),
 		uintptr(unsafe.Pointer(&report)),
@@ -106,7 +106,7 @@ func GetSealKey(keyInfo []byte) ([]byte, error) {
 	var keySize C.size_t
 
 	res, _, errno := syscall.Syscall6(
-		SYS_get_seal_key,
+		sysGetSealKey,
 		uintptr(unsafe.Pointer(&keyInfo[0])),
 		uintptr(len(keyInfo)),
 		uintptr(unsafe.Pointer(&keyBuffer)),
@@ -122,7 +122,7 @@ func GetSealKey(keyInfo []byte) ([]byte, error) {
 	}
 
 	key := C.GoBytes(unsafe.Pointer(keyBuffer), C.int(keySize))
-	syscall.Syscall(SYS_free_seal_key, uintptr(unsafe.Pointer(keyBuffer)), 0, 0)
+	syscall.Syscall(sysFreeSealKey, uintptr(unsafe.Pointer(keyBuffer)), 0, 0)
 	return key, nil
 }
 
@@ -131,7 +131,7 @@ func getSealKeyByPolicy(sealPolicy uintptr) (key, keyInfo []byte, err error) {
 	var keySize, keyInfoSize C.size_t
 
 	res, _, errno := syscall.Syscall6(
-		SYS_get_seal_key_by_policy,
+		sysGetSealKeyByPolicy,
 		sealPolicy,
 		uintptr(unsafe.Pointer(&keyBuffer)),
 		uintptr(unsafe.Pointer(&keySize)),
@@ -149,7 +149,7 @@ func getSealKeyByPolicy(sealPolicy uintptr) (key, keyInfo []byte, err error) {
 	key = C.GoBytes(unsafe.Pointer(keyBuffer), C.int(keySize))
 	keyInfo = C.GoBytes(unsafe.Pointer(keyInfoBuffer), C.int(keyInfoSize))
 	syscall.Syscall(
-		SYS_free_seal_key,
+		sysFreeSealKey,
 		uintptr(unsafe.Pointer(keyBuffer)),
 		uintptr(unsafe.Pointer(keyInfoBuffer)),
 		0,
@@ -168,7 +168,7 @@ func oeError(errno syscall.Errno, res uintptr) error {
 		return nil
 	}
 
-	resStr, _, errno := syscall.Syscall(SYS_result_str, res, 0, 0)
+	resStr, _, errno := syscall.Syscall(sysResultStr, res, 0, 0)
 	if errno != 0 {
 		return errno
 	}
