@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-package main
+package cli
 
 import (
 	"encoding/json"
@@ -47,12 +47,14 @@ func signeridByExecutable(path string) {
 	fmt.Println(dump.SignerID)
 }
 
-func uniqueid(path string) {
+// Uniqueid prints the UniqueID of a signed executable.
+func Uniqueid(path string) {
 	dump := readEradumpJSONtoStruct(path)
 	fmt.Println(dump.UniqueID)
 }
 
-func signerid(path string) {
+// Signerid prints the SignerID of a signed executable.
+func Signerid(path string) {
 	if filepath.Ext(path) == ".pem" {
 		signeridByKey(path)
 	} else {
