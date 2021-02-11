@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 
@@ -31,32 +32,46 @@ func main() {
 		if len(args) > 0 {
 			filename = args[0]
 		}
-		cli.Sign(filename)
-		return
+		err := cli.Sign(filename)
+		if err == nil {
+			return
+		}
+		fmt.Println(err)
+		if !os.IsNotExist(err) {
+			// print error only
+			return
+		}
+		// also print usage
+		fmt.Println()
 	case "signerid":
 		if len(args) == 1 {
-			cli.Signerid(args[0])
+			id, err := cli.Signerid(args[0])
+			if err != nil {
+				log.Fatalln(err)
+			}
+			fmt.Println(id)
 			return
 		}
 	case "uniqueid":
 		if len(args) == 1 {
-			cli.Uniqueid(args[0])
+			id, err := cli.Uniqueid(args[0])
+			if err != nil {
+				log.Fatalln(err)
+			}
+			fmt.Println(id)
 			return
 		}
 	case "run":
 		if len(args) > 0 {
-			cli.Run(args[0], args[1:])
-			return
+			os.Exit(cli.Run(args[0], args[1:]))
 		}
 	case "marblerun":
 		if len(args) == 1 {
-			cli.Marblerun(args[0])
-			return
+			os.Exit(cli.Marblerun(args[0]))
 		}
 	case "env":
 		if len(args) > 0 {
-			cli.Env(args[0], args[1:])
-			return
+			os.Exit(cli.Env(args[0], args[1:]))
 		}
 	case "help":
 		if len(args) == 1 {
@@ -157,4 +172,12 @@ func (runner) Run(cmd *exec.Cmd) error {
 
 func (runner) Output(cmd *exec.Cmd) ([]byte, error) {
 	return cmd.Output()
+}
+
+func (runner) CombinedOutput(cmd *exec.Cmd) ([]byte, error) {
+	return cmd.CombinedOutput()
+}
+
+func (runner) ExitCode(cmd *exec.Cmd) int {
+	return cmd.ProcessState.ExitCode()
 }

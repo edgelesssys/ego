@@ -13,18 +13,18 @@ import (
 )
 
 // Run runs a signed executable in standalone mode.
-func (c *Cli) Run(filename string, args []string) {
+func (c *Cli) Run(filename string, args []string) int {
 	enclaves := filepath.Join(c.egoPath, "share", "ego-enclave") + ":" + filename
 	args = append([]string{enclaves}, args...)
 	os.Setenv("EDG_EGO_PREMAIN", "0")
 	cmd := exec.Command("ego-host", args...)
-	c.runAndExit(cmd)
+	return c.run(cmd)
 }
 
 // Marblerun runs a signed executable as a Marblerun Marble.
-func (c *Cli) Marblerun(filename string) {
+func (c *Cli) Marblerun(filename string) int {
 	enclaves := filepath.Join(c.egoPath, "share", "ego-enclave") + ":" + filename
 	os.Setenv("EDG_EGO_PREMAIN", "1")
 	cmd := exec.Command("ego-host", enclaves)
-	c.runAndExit(cmd)
+	return c.run(cmd)
 }

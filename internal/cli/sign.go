@@ -8,6 +8,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -29,19 +30,20 @@ type config struct {
 }
 
 // Validate Exe, Key, Heapsize
-func (c *config) validate() {
+func (c *config) validate() error {
 	if c.Heapsize == 0 {
-		panic(fmt.Errorf("heapsize not set in config file"))
+		return fmt.Errorf("heapsize not set in config file")
 	}
 	if c.Exe == "" {
-		panic(fmt.Errorf("exe not set in config file"))
+		return fmt.Errorf("exe not set in config file")
 	}
 	if c.Key == "" {
-		panic(fmt.Errorf("key not set in config file"))
+		return fmt.Errorf("key not set in config file")
 	}
+	return nil
 }
 
-func (c *Cli) signWithJSON(conf *config) {
+func (c *Cli) signWithJSON(conf *config) error {
 	//write temp .conf file
 	cProduct := "ProductID=" + strconv.Itoa(conf.ProductID) + "\n"
 	cSecurityVersion := "SecurityVersion=" + strconv.Itoa(conf.SecurityVersion) + "\n"
@@ -62,17 +64,17 @@ func (c *Cli) signWithJSON(conf *config) {
 
 	file, err := c.fs.TempFile("", "")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer c.fs.Remove(file.Name())
 
 	_, err = file.Write([]byte(cProduct + cSecurityVersion + cDebug + cNumHeapPages + cStackPages + cNumTCS))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if err := file.Close(); err != nil {
-		panic(err)
+		return err
 	}
 
 	//create public and private key if private key does not exits
@@ -80,20 +82,24 @@ func (c *Cli) signWithJSON(conf *config) {
 
 	enclavePath := filepath.Join(c.egoPath, "share", "ego-enclave")
 	cmd := exec.Command("ego-oesign", "sign", "-e", enclavePath, "-c", file.Name(), "-k", conf.Key, "--payload", conf.Exe)
-	c.runAndExit(cmd)
+	out, err := c.runner.CombinedOutput(cmd)
+	if _, ok := err.(*exec.ExitError); ok {
+		return errors.New(string(out))
+	}
+	return err
 }
 
-func (c *Cli) signExecutable(path string) {
+func (c *Cli) signExecutable(path string) error {
 	conf, err := c.readConfigJSONtoStruct(defaultConfigFilename)
 
 	if err != nil {
 		if !os.IsNotExist(err) {
-			panic(err)
+			return err
 		}
 	} else if conf.Exe == path {
-		c.signWithJSON(conf)
+		return c.signWithJSON(conf)
 	} else {
-		panic(fmt.Errorf("Provided path to executable does not match the one in enclave.json"))
+		return fmt.Errorf("Provided path to executable does not match the one in enclave.json")
 	}
 
 	//sane default values
@@ -108,13 +114,13 @@ func (c *Cli) signExecutable(path string) {
 
 	jsonData, err := json.MarshalIndent(conf, "", " ")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	if err := c.fs.WriteFile(defaultConfigFilename, jsonData, 0644); err != nil {
-		panic(err)
+		return err
 	}
 
-	c.signWithJSON(conf)
+	return c.signWithJSON(conf)
 }
 
 // Reads the provided File and turns it into a struct
@@ -132,7 +138,9 @@ func (c *Cli) readConfigJSONtoStruct(path string) (*config, error) {
 	if err := json.Unmarshal(data, &conf); err != nil {
 		return nil, err
 	}
-	conf.validate()
+	if err := conf.validate(); err != nil {
+		return nil, err
+	}
 	return &conf, nil
 }
 
@@ -155,20 +163,20 @@ func (c *Cli) createDefaultKeypair(file string) {
 }
 
 // Sign signs an executable built with ego-go.
-func (c *Cli) Sign(filename string) {
+func (c *Cli) Sign(filename string) error {
 	if filename == "" {
 		conf, err := c.readConfigJSONtoStruct(defaultConfigFilename)
 		if err != nil {
-			panic(err)
+			return err
 		}
-		c.signWithJSON(conf)
+		return c.signWithJSON(conf)
 	}
 	if filepath.Ext(filename) == ".json" {
 		conf, err := c.readConfigJSONtoStruct(filename)
 		if err != nil {
-			panic(err)
+			return err
 		}
-		c.signWithJSON(conf)
+		return c.signWithJSON(conf)
 	}
-	c.signExecutable(filename)
+	return c.signExecutable(filename)
 }
