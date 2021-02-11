@@ -9,8 +9,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/edgelesssys/ego/internal/cli"
+	"github.com/spf13/afero"
 )
 
 func main() {
@@ -21,6 +23,7 @@ func main() {
 
 	cmd := os.Args[1]
 	args := os.Args[2:]
+	cli := cli.NewCli(runner{}, afero.NewOsFs())
 
 	switch cmd {
 	case "sign":
@@ -144,4 +147,14 @@ Use "` + me + ` help <command>" for more information about a command.`
 	}
 
 	fmt.Println("Usage: " + me + " " + s)
+}
+
+type runner struct{}
+
+func (runner) Run(cmd *exec.Cmd) error {
+	return cmd.Run()
+}
+
+func (runner) Output(cmd *exec.Cmd) ([]byte, error) {
+	return cmd.Output()
 }

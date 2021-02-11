@@ -20,16 +20,16 @@ type eradump struct {
 	SignerID        string
 }
 
-func signeridByKey(path string) {
-	out, err := exec.Command("ego-oesign", "signerid", "-k", path).Output()
+func (c *Cli) signeridByKey(path string) {
+	out, err := c.runner.Output(exec.Command("ego-oesign", "signerid", "-k", path))
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(string(out))
 }
 
-func readEradumpJSONtoStruct(path string) *eradump {
-	data, err := exec.Command("ego-oesign", "eradump", "-e", path).Output()
+func (c *Cli) readEradumpJSONtoStruct(path string) *eradump {
+	data, err := c.runner.Output(exec.Command("ego-oesign", "eradump", "-e", path))
 
 	if err != nil {
 		panic(err)
@@ -42,22 +42,22 @@ func readEradumpJSONtoStruct(path string) *eradump {
 	return &dump
 }
 
-func signeridByExecutable(path string) {
-	dump := readEradumpJSONtoStruct(path)
+func (c *Cli) signeridByExecutable(path string) {
+	dump := c.readEradumpJSONtoStruct(path)
 	fmt.Println(dump.SignerID)
 }
 
 // Uniqueid prints the UniqueID of a signed executable.
-func Uniqueid(path string) {
-	dump := readEradumpJSONtoStruct(path)
+func (c *Cli) Uniqueid(path string) {
+	dump := c.readEradumpJSONtoStruct(path)
 	fmt.Println(dump.UniqueID)
 }
 
 // Signerid prints the SignerID of a signed executable.
-func Signerid(path string) {
+func (c *Cli) Signerid(path string) {
 	if filepath.Ext(path) == ".pem" {
-		signeridByKey(path)
+		c.signeridByKey(path)
 	} else {
-		signeridByExecutable(path)
+		c.signeridByExecutable(path)
 	}
 }

@@ -10,21 +10,41 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/spf13/afero"
 )
 
-var egoPath = func() string {
+// Runner runs Cmd objects.
+type Runner interface {
+	Run(cmd *exec.Cmd) error
+	Output(cmd *exec.Cmd) ([]byte, error)
+}
+
+// Cli implements the ego commands.
+type Cli struct {
+	runner  Runner
+	fs      afero.Afero
+	egoPath string
+}
+
+// NewCli creates a new Cli object.
+func NewCli(runner Runner, fs afero.Fs) *Cli {
 	exe, err := os.Executable()
 	if err != nil {
 		panic(err)
 	}
-	return filepath.Dir(filepath.Dir(exe)) // parent dir of dir of exe
-}()
+	return &Cli{
+		runner:  runner,
+		fs:      afero.Afero{Fs: fs},
+		egoPath: filepath.Dir(filepath.Dir(exe)),
+	}
+}
 
-func runAndExit(cmd *exec.Cmd) {
+func (c *Cli) runAndExit(cmd *exec.Cmd) {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+	if err := c.runner.Run(cmd); err != nil {
 		if _, ok := err.(*exec.ExitError); !ok {
 			panic(err)
 		}
