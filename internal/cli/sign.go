@@ -9,7 +9,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -42,7 +41,7 @@ func (c *config) validate() {
 	}
 }
 
-func signWithJSON(conf *config) {
+func (c *Cli) signWithJSON(conf *config) {
 	//write temp .conf file
 	cProduct := "ProductID=" + strconv.Itoa(conf.ProductID) + "\n"
 	cSecurityVersion := "SecurityVersion=" + strconv.Itoa(conf.SecurityVersion) + "\n"
@@ -61,11 +60,11 @@ func signWithJSON(conf *config) {
 	cStackPages := "NumStackPages=1024\n"
 	cNumTCS := "NumTCS=32\n"
 
-	file, err := ioutil.TempFile("", "")
+	file, err := c.fs.TempFile("", "")
 	if err != nil {
 		panic(err)
 	}
-	defer os.Remove(file.Name())
+	defer c.fs.Remove(file.Name())
 
 	_, err = file.Write([]byte(cProduct + cSecurityVersion + cDebug + cNumHeapPages + cStackPages + cNumTCS))
 	if err != nil {
@@ -77,28 +76,28 @@ func signWithJSON(conf *config) {
 	}
 
 	//create public and private key if private key does not exits
-	createDefaultKeypair(conf.Key)
+	c.createDefaultKeypair(conf.Key)
 
-	enclavePath := filepath.Join(egoPath, "share", "ego-enclave")
+	enclavePath := filepath.Join(c.egoPath, "share", "ego-enclave")
 	cmd := exec.Command("ego-oesign", "sign", "-e", enclavePath, "-c", file.Name(), "-k", conf.Key, "--payload", conf.Exe)
-	runAndExit(cmd)
+	c.runAndExit(cmd)
 }
 
-func signExecutable(path string) {
-	c, err := readConfigJSONtoStruct(defaultConfigFilename)
+func (c *Cli) signExecutable(path string) {
+	conf, err := c.readConfigJSONtoStruct(defaultConfigFilename)
 
 	if err != nil {
 		if !os.IsNotExist(err) {
 			panic(err)
 		}
-	} else if c.Exe == path {
-		signWithJSON(c)
+	} else if conf.Exe == path {
+		c.signWithJSON(conf)
 	} else {
 		panic(fmt.Errorf("Provided path to executable does not match the one in enclave.json"))
 	}
 
 	//sane default values
-	conf := config{
+	conf = &config{
 		Exe:             path,
 		Key:             defaultPrivKeyFilename,
 		Debug:           true,
@@ -111,19 +110,19 @@ func signExecutable(path string) {
 	if err != nil {
 		panic(err)
 	}
-	if err := ioutil.WriteFile(defaultConfigFilename, jsonData, 0644); err != nil {
+	if err := c.fs.WriteFile(defaultConfigFilename, jsonData, 0644); err != nil {
 		panic(err)
 	}
 
-	signWithJSON(&conf)
+	c.signWithJSON(conf)
 }
 
 // Reads the provided File and turns it into a struct
 // after some basic sanity check are performed it is returned
 // err != nil indicates that the file could not be read or the
 // JSON could not be unmarshalled
-func readConfigJSONtoStruct(path string) (*config, error) {
-	data, err := ioutil.ReadFile(path)
+func (c *Cli) readConfigJSONtoStruct(path string) (*config, error) {
+	data, err := c.fs.ReadFile(path)
 
 	if err != nil {
 		return nil, err
@@ -138,38 +137,38 @@ func readConfigJSONtoStruct(path string) (*config, error) {
 }
 
 // Creates a public/secret keypair if the provided secret key does not exists
-func createDefaultKeypair(file string) {
-	if _, err := os.Stat(file); err != nil {
+func (c *Cli) createDefaultKeypair(file string) {
+	if _, err := c.fs.Stat(file); err != nil {
 		if !os.IsNotExist(err) {
 			panic(err)
 		}
 		fmt.Println("Generating new " + file)
 		// SGX requires the RSA exponent to be 3. Go's API does not support this.
-		if err := exec.Command("openssl", "genrsa", "-out", file, "-3", "3072").Run(); err != nil {
+		if err := c.runner.Run(exec.Command("openssl", "genrsa", "-out", file, "-3", "3072")); err != nil {
 			panic(err)
 		}
 		pubPath := filepath.Join(filepath.Dir(file), defaultPubKeyFilename)
-		if err := exec.Command("openssl", "rsa", "-in", file, "-pubout", "-out", pubPath).Run(); err != nil {
+		if err := c.runner.Run(exec.Command("openssl", "rsa", "-in", file, "-pubout", "-out", pubPath)); err != nil {
 			panic(err)
 		}
 	}
 }
 
 // Sign signs an executable built with ego-go.
-func Sign(filename string) {
+func (c *Cli) Sign(filename string) {
 	if filename == "" {
-		c, err := readConfigJSONtoStruct(defaultConfigFilename)
+		conf, err := c.readConfigJSONtoStruct(defaultConfigFilename)
 		if err != nil {
 			panic(err)
 		}
-		signWithJSON(c)
+		c.signWithJSON(conf)
 	}
 	if filepath.Ext(filename) == ".json" {
-		c, err := readConfigJSONtoStruct(filename)
+		conf, err := c.readConfigJSONtoStruct(filename)
 		if err != nil {
 			panic(err)
 		}
-		signWithJSON(c)
+		c.signWithJSON(conf)
 	}
-	signExecutable(filename)
+	c.signExecutable(filename)
 }
