@@ -120,6 +120,31 @@ include(CPack)
 # tests
 #
 
+add_custom_command(
+  OUTPUT test_private.pem
+  COMMAND openssl genrsa -out test_private.pem -3 3072)
+
+# build the test marble with ertgo and sign it with oesign
+add_custom_command(
+  OUTPUT test-marble
+  DEPENDS ego-enclave test_private.pem cmd/test-marble/enclave.conf cmd/test-marble/main.go internal/test/t.go
+  COMMAND ${CMAKE_COMMAND} -E env GOROOT=${CMAKE_SOURCE_DIR}/_ertgo ${CMAKE_SOURCE_DIR}/_ertgo/bin/go build -o ${CMAKE_BINARY_DIR}
+  COMMAND oesign sign
+    -e ${CMAKE_BINARY_DIR}/ego-enclave
+    -c ${CMAKE_SOURCE_DIR}/cmd/test-marble/enclave.conf
+    -k ${CMAKE_BINARY_DIR}/test_private.pem
+    --payload ${CMAKE_BINARY_DIR}/test-marble
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/cmd/test-marble)
+
+add_custom_command(
+  OUTPUT marble-test
+  DEPENDS cmd/marble-test/main.go internal/test/t.go
+  COMMAND go build -o ${CMAKE_BINARY_DIR}
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/cmd/marble-test)
+
+add_custom_target(marbletest ALL DEPENDS test-marble marble-test)
+
 enable_testing()
 add_test(NAME go-unit-tests COMMAND go test ./... WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(integration ${CMAKE_SOURCE_DIR}/src/integration_test.sh)
+add_test(marble marble-test)
