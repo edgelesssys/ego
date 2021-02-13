@@ -22,11 +22,14 @@ if(TIDY)
   set(CMAKE_CXX_CLANG_TIDY clang-tidy-10)
 endif()
 
+#
+# ego-enclave
+#
+
 add_library(ego-enclave-lib
   src/enc.cpp
   src/go_runtime_cleanup.cpp)
 target_link_libraries(ego-enclave-lib PRIVATE openenclave::oe_includes)
-
 
 # Both ego-enclave and the payload use the local-exec TLS model. This means that TLS memory
 # will overlap. Quick fix is to reserve space in ego-enclave that we won't touch.
@@ -53,12 +56,20 @@ target_link_libraries(ego-enclave
   -Wl,--no-whole-archive
   reserved_tls_last)
 
+#
+# ego cli
+#
+
 add_custom_command(
   OUTPUT ego
   DEPENDS cmd/ego/main.go ${CMAKE_SOURCE_DIR}/internal/cli/*.go
   COMMAND go build -o ${CMAKE_CURRENT_BINARY_DIR}/ego
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/cmd/ego)
 add_custom_target(egobuild ALL DEPENDS ego)
+
+#
+# install
+#
 
 install(TARGETS ego-enclave DESTINATION ${CMAKE_INSTALL_DATADIR})
 install(
@@ -104,3 +115,11 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 set(CPACK_DEBIAN_ARCHIVE_TYPE gnutar)
 include(CPack)
+
+#
+# tests
+#
+
+enable_testing()
+add_test(NAME go-unit-tests COMMAND go test ./... WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(integration ${CMAKE_SOURCE_DIR}/src/integration_test.sh)
