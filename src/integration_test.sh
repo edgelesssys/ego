@@ -21,13 +21,17 @@ run()
 
 
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
-egoPath=$parent_path/../../..
+egoPath=$parent_path/..
 
 tPath=$(mktemp -d)
 cd $tPath
 
 cmake -DCMAKE_INSTALL_PREFIX=$tPath/install $egoPath
-make
+make -j`nproc`
 make install
 export PATH="$tPath/install/bin:$PATH"
 cp $egoPath/samples/helloworld/helloworld.go .
+
+run ego-go build helloworld.go
+run ego sign helloworld
+run ego run helloworld
