@@ -26,7 +26,7 @@ using namespace ert;
 static int _argc;
 static char** _argv;
 
-extern "C" void ert_meshentry_premain(int* argc, char*** argv);
+extern "C" void ert_ego_premain(int* argc, char*** argv);
 static char** _merge_argv_env(int argc, char** argv, char** envp);
 
 extern "C" __thread char ert_ego_reserved_tls[1024];
@@ -91,7 +91,7 @@ int emain()
     if (is_marblerun)
     {
         _log_verbose("invoking premain");
-        ert_meshentry_premain(&_argc, &_argv);
+        ert_ego_premain(&_argc, &_argv);
         _log_verbose("premain done");
         _argv = _merge_argv_env(_argc, _argv, environ);
     }

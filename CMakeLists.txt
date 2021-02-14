@@ -31,6 +31,13 @@ add_library(ego-enclave-lib
   src/go_runtime_cleanup.cpp)
 target_link_libraries(ego-enclave-lib PRIVATE openenclave::oe_includes)
 
+add_custom_command(
+  OUTPUT premain.a
+  DEPENDS internal/premain/main.go internal/premain/core/core.go
+  COMMAND ertgo build -buildmode=c-archive -o ${CMAKE_BINARY_DIR}
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/internal/premain)
+add_custom_target(premainbuild DEPENDS premain.a)
+
 # Both ego-enclave and the payload use the local-exec TLS model. This means that TLS memory
 # will overlap. Quick fix is to reserve space in ego-enclave that we won't touch.
 # The Go language does not have TLS and the implementation only stores one pointer in TLS.
@@ -41,6 +48,7 @@ add_library(reserved_tls_last INTERFACE)
 target_link_libraries(reserved_tls_last INTERFACE reserved_tls)
 
 add_executable(ego-enclave src/gcc_libinit.c src/gcc_mmap.c)
+add_dependencies(ego-enclave premainbuild)
 target_link_libraries(ego-enclave
   openenclave::oeenclave
   openenclave::ertcalls
@@ -49,7 +57,7 @@ target_link_libraries(ego-enclave
   openenclave::oehostfs
   openenclave::oehostresolver
   openenclave::oehostsock
-  openenclave::ertmeshpremain
+  ${CMAKE_BINARY_DIR}/premain.a
   openenclave::ertlibc
   -Wl,--whole-archive
   openenclave::oelibc
