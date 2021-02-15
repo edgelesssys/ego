@@ -24,14 +24,13 @@ uintptr_t x_cgo_mmap(
     void* p;
 
     _cgo_tsan_acquire();
-    p = mmap(addr, length, prot, flags, fd, offset);
+    p = go_rc_mmap(addr, length, prot, flags, fd, offset);
     _cgo_tsan_release();
     if (p == MAP_FAILED)
     {
         /* This is what the Go code expects on failure.  */
         return (uintptr_t)errno;
     }
-    go_rc_add_memory(p, length);
     return (uintptr_t)p;
 }
 
@@ -40,12 +39,11 @@ void x_cgo_munmap(void* addr, uintptr_t length)
     int r;
 
     _cgo_tsan_acquire();
-    r = munmap(addr, length);
+    r = go_rc_munmap(addr, length);
     _cgo_tsan_release();
     if (r < 0)
     {
         /* The Go runtime is not prepared for munmap to fail.  */
         abort();
     }
-    go_rc_remove_memory(addr, length);
 }
