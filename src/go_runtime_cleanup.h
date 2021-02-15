@@ -8,33 +8,37 @@
 
 #include <openenclave/bits/defs.h>
 #include <pthread.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <sys/mman.h>
 
 OE_EXTERNC_BEGIN
 
 /**
- * Adds a thread from the cleanup list.
- *
- * @param thread pthread.
+ * Creates a thread and adds it to the cleanup list.
  */
-void go_rc_add_thread(pthread_t thread);
+int go_rc_pthread_create(
+    pthread_t* thread,
+    const pthread_attr_t* attr,
+    void* (*start_routine)(void*),
+    void* arg);
 
 /**
- * Adds a mapped memory range to the cleanup list.
+ * Maps a memory range and adds it to the cleanup list.
+ */
+void* go_rc_mmap(
+    void* addr,
+    size_t length,
+    int prot,
+    int flags,
+    int fd,
+    off_t offset);
+
+/**
+ * Unmaps a mapped memory range and removes it from the cleanup list.
  *
  * @param addr Start address of the memory mapping.
  * @param length Length of the memory mapping in bytes.
  */
-void go_rc_add_memory(void* addr, uintptr_t length);
-
-/**
- * Removes a mapped memory range from the cleanup list.
- *
- * @param addr Start address of the memory mapping.
- * @param length Length of the memory mapping in bytes.
- */
-void go_rc_remove_memory(void* addr, uintptr_t length);
+int go_rc_munmap(void* addr, size_t length);
 
 /**
  * Cancels all threads in the cleanup list.

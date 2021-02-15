@@ -56,33 +56,46 @@ static const int _go_rc_init = [] {
     return 1;
 }();
 
-// Add a thread to the cleanup stack
-void go_rc_add_thread(pthread_t thread)
+int go_rc_pthread_create(
+    pthread_t* thread,
+    const pthread_attr_t* attr,
+    void* (*start_routine)(void*),
+    void* arg)
 {
     const lock_guard<mutex> lock(_mux);
-    if (count(threads.begin(), threads.end(), thread))
-    {
-        // already present -> ignore
-        return;
-    }
-    threads.push_back(thread);
+    const int res = pthread_create(thread, attr, start_routine, arg);
+    if (res == 0)
+        threads.push_back(*thread);
+    return res;
 }
 
-// Add a mapped location to the cleanup stack
-void go_rc_add_memory(void* addr, uintptr_t length)
+void* go_rc_mmap(
+    void* addr,
+    size_t length,
+    int prot,
+    int flags,
+    int fd,
+    off_t offset)
 {
     const lock_guard<mutex> lock(_mux);
-    ert_bitset_set_range(_bitset, _to_pos(addr), length / OE_PAGE_SIZE);
+    const auto res = mmap(addr, length, prot, flags, fd, offset);
+    if (res != MAP_FAILED)
+        ert_bitset_set_range(_bitset, _to_pos(res), length / OE_PAGE_SIZE);
+    return res;
 }
 
-void go_rc_remove_memory(void* addr, uintptr_t length)
+int go_rc_munmap(void* addr, size_t length)
 {
     const lock_guard<mutex> lock(_mux);
-    ert_bitset_reset_range(_bitset, _to_pos(addr), length / OE_PAGE_SIZE);
+    const int res = munmap(addr, length);
+    if (res == 0)
+        ert_bitset_reset_range(_bitset, _to_pos(addr), length / OE_PAGE_SIZE);
+    return res;
 }
 
 void go_rc_kill_threads()
 {
+    const lock_guard<mutex> lock(_mux);
     for (const auto thread : threads)
     {
         const int ret = pthread_cancel(thread);

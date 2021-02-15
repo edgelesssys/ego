@@ -108,10 +108,9 @@ int _cgo_try_pthread_create(
 
     for (tries = 0; tries < 20; tries++)
     {
-        err = pthread_create(thread, attr, pfn, arg);
+        err = go_rc_pthread_create(thread, attr, pfn, arg);
         if (err == 0)
         {
-            go_rc_add_thread(*thread);
             // pthread_detach(*thread);
             return 0;
         }
