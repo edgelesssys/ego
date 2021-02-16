@@ -10,6 +10,7 @@ import (
 	"errors"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -87,11 +88,56 @@ NumTCS=32
 }
 
 func TestSignConfig(t *testing.T) {
-	// TODO
+	assert := assert.New(t)
+	require := require.New(t)
+
+	fs := afero.Afero{Fs: afero.NewMemMapFs()}
+	runner := signRunner{fs: fs}
+	cli := NewCli(&runner, fs)
+
+	// key does not exist + custom config name
+	runner.expectedConfig = `ProductID=0
+SecurityVersion=0
+Debug=0
+NumHeapPages=512
+NumStackPages=1024
+NumTCS=32
+`
+	require.NoError(fs.WriteFile("customConfigName.json", []byte(`{"exe":"exefile", "key":"keyfile", "heapSize":2, "debug":false, "productID":0, "securityVersion":0}`), 0))
+	require.NoError(cli.Sign("customConfigName.json"))
+	key, err := fs.ReadFile("keyfile")
+	require.NoError(err)
+	assert.EqualValues("newkey", key)
+	exists, err := fs.Exists("public.pem")
+	require.NoError(err)
+	assert.True(exists)
+
 }
 
 func TestSignExecutable(t *testing.T) {
-	// TODO
+	require := require.New(t)
+
+	fs := afero.Afero{Fs: afero.NewMemMapFs()}
+	runner := signRunner{fs: fs}
+	cli := NewCli(&runner, fs)
+
+	// enclave.json does not exist
+	require.Error(cli.Sign("exefile"))
+
+	//exe in enclave.json does not match provided exefile
+	require.NoError(fs.WriteFile("enclave.json", []byte(`{"exe":"exefile", "key":"keyfile", "heapSize":3, "debug":true, "productID":4, "securityVersion":5}`), 0))
+	require.Error(cli.Sign("notExefile"))
+
+	//exe in enclave.json matches provided exefile
+	runner.expectedConfig = `ProductID=4
+SecurityVersion=5
+Debug=1
+NumHeapPages=768
+NumStackPages=1024
+NumTCS=32
+`
+	require.NoError(fs.WriteFile("enclave.json", []byte(`{"exe":"exefile", "key":"keyfile", "heapSize":3, "debug":true, "productID":4, "securityVersion":5}`), 0))
+	require.NoError(cli.Sign("exefile"))
 }
 
 type signRunner struct {
@@ -100,16 +146,18 @@ type signRunner struct {
 }
 
 func (s signRunner) Run(cmd *exec.Cmd) error {
-	if cmp.Equal(cmd.Args, []string{"openssl", "genrsa", "-out", "keyfile", "-3", "3072"}) {
-		return s.fs.WriteFile("keyfile", []byte("newkey"), 0)
+	if cmp.Equal(cmd.Args[:3], []string{"openssl", "genrsa", "-out"}) &&
+		cmp.Equal(cmd.Args[4:], []string{"-3", "3072"}) {
+		return s.fs.WriteFile(cmd.Args[3], []byte("newkey"), 0)
 	}
-	if cmp.Equal(cmd.Args, []string{"openssl", "rsa", "-in", "keyfile", "-pubout", "-out", "public.pem"}) {
-		exists, err := s.fs.Exists("keyfile")
+	if cmp.Equal(cmd.Args[:3], []string{"openssl", "rsa", "-in"}) &&
+		cmp.Equal(cmd.Args[4:], []string{"-pubout", "-out", "public.pem"}) {
+		exists, err := s.fs.Exists(cmd.Args[3])
 		if err != nil {
 			return err
 		}
 		if !exists {
-			return errors.New("openssl rsa: keyfile does not exist")
+			return errors.New("openssl rsa: " + cmd.Args[3] + " does not exist")
 		}
 		return s.fs.WriteFile("public.pem", nil, 0)
 	}
@@ -123,8 +171,9 @@ func (signRunner) Output(cmd *exec.Cmd) ([]byte, error) {
 func (s signRunner) CombinedOutput(cmd *exec.Cmd) ([]byte, error) {
 	if !(filepath.Base(cmd.Path) == "ego-oesign" &&
 		cmp.Equal(cmd.Args[1:3], []string{"sign", "-e"}) &&
-		cmp.Equal(cmd.Args[6:], []string{"-k", "keyfile", "--payload", "exefile"})) {
-		return nil, errors.New("unexpected cmd: " + cmd.Path)
+		cmp.Equal(cmd.Args[6], "-k") &&
+		cmp.Equal(cmd.Args[8:], []string{"--payload", "exefile"})) {
+		return nil, errors.New("unexpected cmd: " + cmd.Path + strings.Join(cmd.Args, " "))
 	}
 	data, err := s.fs.ReadFile(cmd.Args[5])
 	if err != nil {
