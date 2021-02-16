@@ -122,7 +122,14 @@ func TestSignExecutable(t *testing.T) {
 	cli := NewCli(&runner, fs)
 
 	// enclave.json does not exist
-	require.Error(cli.Sign("exefile"))
+	runner.expectedConfig = `ProductID=1
+SecurityVersion=1
+Debug=1
+NumHeapPages=131072
+NumStackPages=1024
+NumTCS=32
+`
+	require.NoError(cli.Sign("exefile"))
 
 	//exe in enclave.json does not match provided exefile
 	require.NoError(fs.WriteFile("enclave.json", []byte(`{"exe":"exefile", "key":"keyfile", "heapSize":3, "debug":true, "productID":4, "securityVersion":5}`), 0))
