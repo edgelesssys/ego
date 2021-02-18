@@ -60,6 +60,10 @@ func GetRemoteReport(reportData []byte) ([]byte, error) {
 // Returns the parsed report if the signature is valid.
 // Returns an error if the signature is invalid.
 func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
+	if len(reportBytes) <= 0 {
+		return attestation.Report{}, attestation.ErrEmptyReport
+	}
+
 	var report C.oe_report_t
 
 	res, _, errno := syscall.Syscall(
