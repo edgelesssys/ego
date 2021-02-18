@@ -7,6 +7,8 @@
 // Package attestation provides attestation data structures.
 package attestation
 
+import "errors"
+
 // Report is a parsed enclave report.
 type Report struct {
 	Data            []byte // The report data that has been included in the report.
@@ -16,3 +18,6 @@ type Report struct {
 	SignerID        []byte // The signer ID for the enclave. For SGX enclaves, this is the MRSIGNER value.
 	ProductID       []byte // The Product ID for the enclave. For SGX enclaves, this is the ISVPRODID value.
 }
+
+// ErrEmptyReport is returned by VerifyRemoteReport if reportBytes is empty.
+var ErrEmptyReport = errors.New("empty report")
