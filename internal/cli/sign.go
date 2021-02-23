@@ -7,6 +7,8 @@
 package cli
 
 import (
+	"debug/elf"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,6 +16,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+
+	"github.com/spf13/afero"
 )
 
 const defaultConfigFilename = "enclave.json"
@@ -76,6 +80,15 @@ func (c *Cli) signWithJSON(conf *config) error {
 	if err := file.Close(); err != nil {
 		return err
 	}
+
+	// Prepare JSON data for embedding to the executable
+	jsonData, err := json.MarshalIndent(conf, "", " ")
+	if err != nil {
+		return err
+	}
+
+	// Embed enclave.json inside executable as payload
+	c.embedConfigAsPayload(conf.Exe, jsonData)
 
 	//create public and private key if private key does not exits
 	c.createDefaultKeypair(conf.Key)
@@ -179,4 +192,95 @@ func (c *Cli) Sign(filename string) error {
 		return c.signWithJSON(conf)
 	}
 	return c.signExecutable(filename)
+}
+
+func (c *Cli) embedConfigAsPayload(path string, jsonData []byte) error {
+	// Load ELF executable
+	f, err := c.fs.OpenFile(path, os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	// Check if a payload already exists
+	payloadSize, oeInfoOffset, err := checkIfPayloadExists(f)
+	if err != nil {
+		return err
+	}
+
+	// If a payload already exists, truncate the file to remove it
+	if payloadSize > 0 {
+		fileStat, err := f.Stat()
+		if err != nil {
+			return err
+		}
+		err = f.Truncate(fileStat.Size() - int64(payloadSize))
+		if err != nil {
+			return err
+		}
+	}
+
+	// Append the new payload size + offset to the .oeinfo header
+	newPayloadSize := make([]byte, 8)
+	newPayloadOffset := make([]byte, 8)
+
+	fileStat, err := f.Stat()
+	if err != nil {
+		return err
+	}
+	filesize := fileStat.Size()
+
+	binary.LittleEndian.PutUint64(newPayloadSize, uint64(len(jsonData)))
+	binary.LittleEndian.PutUint64(newPayloadOffset, uint64(filesize))
+
+	n, err := f.WriteAt(newPayloadOffset, oeInfoOffset+2048)
+	if err != nil {
+		return err
+	} else if n != 8 {
+		return errors.New("failed to embed payload metadata to executable")
+	}
+
+	n, err = f.WriteAt(newPayloadSize, oeInfoOffset+2056)
+	if err != nil {
+		return err
+	} else if n != 8 {
+		return errors.New("failed to embed payload metadata to executable")
+	}
+
+	// And finally, append the payload to the file
+	n, err = f.WriteAt(jsonData, filesize)
+	if err != nil {
+		return err
+	} else if n != len(jsonData) {
+		return errors.New("failed to embed enclave.json as metadata")
+	}
+
+	return nil
+}
+
+func checkIfPayloadExists(f afero.File) (uint64, int64, error) {
+	// .oeinfo + 2056 contains the size of an embedded Edgeless RT data payload.
+	// If it is > 0, a payload already exists.
+
+	elfFile, err := elf.NewFile(f)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	oeInfo := elfFile.Section(".oeinfo")
+	if oeInfo == nil {
+		panic(errors.New("could not find .oeinfo section"))
+	}
+
+	payloadSizeBinary := make([]byte, 8)
+	n, err := oeInfo.ReadAt(payloadSizeBinary, 2056)
+	if err != nil {
+		return 0, 0, err
+	} else if n != 8 {
+		return 0, 0, errors.New("could not read embedded payload size from executable")
+	}
+
+	payloadSize := binary.LittleEndian.Uint64(payloadSizeBinary)
+
+	return payloadSize, int64(oeInfo.Offset), nil
 }
