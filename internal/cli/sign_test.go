@@ -7,6 +7,9 @@
 package cli
 
 import (
+	"debug/elf"
+	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"os/exec"
 	"path/filepath"
@@ -145,6 +148,156 @@ NumTCS=32
 `
 	require.NoError(fs.WriteFile("enclave.json", []byte(`{"exe":"exefile", "key":"keyfile", "heapSize":3, "debug":true, "productID":4, "securityVersion":5}`), 0))
 	require.NoError(cli.Sign("exefile"))
+}
+
+func TestSignJSONExecutablePayload(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
+
+	// Setup test environment
+	fs := afero.Afero{Fs: afero.NewMemMapFs()}
+	hostFs := afero.NewOsFs()
+	runner := signRunner{fs: fs}
+	cli := NewCli(&runner, fs)
+
+	// Copy from hostfs to memfs
+	unsignedExeRealfs, err := hostFs.Open("../test/test_sign_elf_unsigned")
+	require.NoError(err)
+	unsignedExeRealfsStat, err := unsignedExeRealfs.Stat()
+	require.NoError(err)
+	unsignedExeRealfsSize := unsignedExeRealfsStat.Size()
+	copyBuffer := make([]byte, int(unsignedExeRealfsSize))
+	n, err := unsignedExeRealfs.Read(copyBuffer)
+	require.NoError(err)
+	require.EqualValues(unsignedExeRealfsSize, n)
+	err = fs.WriteFile("helloworld_unsigned", copyBuffer, 0644)
+	require.NoError(err)
+
+	// Set hostFs to nil so we do not reuse it by accident
+	err = unsignedExeRealfs.Close()
+	require.NoError(err)
+	hostFs = nil
+
+	// Check if no payload exists
+	unsignedExeMemfs, err := fs.Open("helloworld_unsigned")
+	require.NoError(err)
+	payloadSize, oeInfoOffset, err := checkIfPayloadExists(unsignedExeMemfs)
+	assert.NoError(err)
+	assert.Zero(payloadSize)
+	assert.NotZero(oeInfoOffset)
+	unsignedExeMemfs.Close()
+
+	// Create a default config we want to check
+	testConf := &config{
+		Exe:             "helloworld_signed",
+		Key:             defaultPrivKeyFilename,
+		Debug:           true,
+		HeapSize:        512, //[MB]
+		ProductID:       1,
+		SecurityVersion: 1,
+	}
+
+	// Marshal config
+	jsonData, err := json.MarshalIndent(testConf, "", " ")
+	require.NoError(err)
+	expectedLengthOfPayload := len(jsonData)
+
+	// Sign helloworld_signed
+	err = fs.WriteFile("helloworld_signed", copyBuffer, 0644)
+	require.NoError(err)
+	err = cli.embedConfigAsPayload("helloworld_signed", jsonData)
+	assert.NoError(err)
+
+	// Check if new helloworld_signed now contains signed data
+	signedExeMemfs, err := fs.Open("helloworld_signed")
+	require.NoError(err)
+	payloadSize, oeInfoOffset, err = checkIfPayloadExists(signedExeMemfs)
+	assert.NoError(err)
+	assert.EqualValues(expectedLengthOfPayload, payloadSize)
+	assert.NotZero(oeInfoOffset)
+
+	// Check if we can properly find and reconstruct the JSON based on the ELF section .oeinfo
+	elfFile, err := elf.NewFile(signedExeMemfs)
+	require.NoError(err)
+	oeInfoSection := elfFile.Section(".oeinfo")
+	oeInfoPayloadOffset := make([]byte, 8)
+	oeInfoPayloadSize := make([]byte, 8)
+
+	// .oeinfo + 2048 = payload offset
+	n, err = oeInfoSection.ReadAt(oeInfoPayloadOffset, 2048)
+	require.EqualValues(8, n)
+	require.NoError(err)
+
+	// .oeinfo + 2056 = payload size
+	n, err = oeInfoSection.ReadAt(oeInfoPayloadSize, 2056)
+	require.EqualValues(8, n)
+	require.NoError(err)
+
+	// Parse little-endian uint64 values
+	oeInfoPayloadSizeUint64 := binary.LittleEndian.Uint64(oeInfoPayloadSize)
+	assert.EqualValues(expectedLengthOfPayload, oeInfoPayloadSizeUint64)
+
+	// Offset should be the same as the unsigned executable
+	oeInfoPayloadOffsetUint64 := binary.LittleEndian.Uint64(oeInfoPayloadOffset)
+	assert.EqualValues(unsignedExeRealfsSize, oeInfoPayloadOffsetUint64)
+
+	// Reconstruct the JSON and check equality
+	reconstructedJSON := make([]byte, int(oeInfoPayloadSizeUint64))
+	n, err = signedExeMemfs.ReadAt(reconstructedJSON, int64(oeInfoPayloadOffsetUint64))
+	require.NoError(err)
+	require.EqualValues(oeInfoPayloadSizeUint64, n)
+	assert.EqualValues(jsonData, reconstructedJSON)
+
+	// Now modify the config, redo everything and see if trucate worked fine and everything still lines up
+	testConf.HeapSize = 5120
+	jsonNewData, err := json.MarshalIndent(testConf, "", " ")
+	require.NoError(err)
+	expectedLengthOfNewPayload := len(jsonNewData)
+
+	// Re-sign the already signed executable
+	err = cli.embedConfigAsPayload("helloworld_signed", jsonNewData)
+	assert.NoError(err)
+	payloadSize, oeInfoOffset, err = checkIfPayloadExists(signedExeMemfs)
+	assert.EqualValues(expectedLengthOfNewPayload, payloadSize)
+
+	// And reparse the ELF again
+	elfFile, err = elf.NewFile(signedExeMemfs)
+	require.NoError(err)
+	oeInfoSection = elfFile.Section(".oeinfo")
+	oeInfoPayloadOffset = make([]byte, 8)
+	oeInfoPayloadSize = make([]byte, 8)
+
+	// .oeinfo + 2048 = payload offset
+	n, err = oeInfoSection.ReadAt(oeInfoPayloadOffset, 2048)
+	require.EqualValues(8, n)
+	require.NoError(err)
+
+	// .oeinfo + 2056 = payload size
+	n, err = oeInfoSection.ReadAt(oeInfoPayloadSize, 2056)
+	require.EqualValues(8, n)
+	require.NoError(err)
+
+	// Parse little-endian uint64 values
+	oeInfoPayloadSizeUint64 = binary.LittleEndian.Uint64(oeInfoPayloadSize)
+	assert.NotEqualValues(expectedLengthOfPayload, oeInfoPayloadSizeUint64)
+	assert.EqualValues(expectedLengthOfNewPayload, oeInfoPayloadSizeUint64)
+
+	// Offset should be the same as the unsigned executable (and thus, the same as for the previous run)
+	oeInfoPayloadOffsetUint64 = binary.LittleEndian.Uint64(oeInfoPayloadOffset)
+	assert.EqualValues(unsignedExeRealfsSize, oeInfoPayloadOffsetUint64)
+
+	// Reconstruct the JSON and check if it not the old one, but the new one
+	reconstructedJSON = make([]byte, int(oeInfoPayloadSizeUint64))
+	n, err = signedExeMemfs.ReadAt(reconstructedJSON, int64(oeInfoPayloadOffsetUint64))
+	require.NoError(err)
+	require.EqualValues(oeInfoPayloadSizeUint64, n)
+
+	// Finally, check if we got the new JSON config and not the old one
+	assert.NotEqualValues(jsonData, reconstructedJSON)
+	assert.EqualValues(jsonNewData, reconstructedJSON)
+
+	// Cleanup
+	signedExeMemfs.Close()
 }
 
 type signRunner struct {
