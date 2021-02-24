@@ -42,7 +42,8 @@ make install
 
 ## Samples
 * [helloworld](samples/helloworld) is a minimal example of an enclave application.
-* [remote_attestation](samples/remote_attestation) shows how to do remote attestation in EGo.
+* [remote_attestation](samples/remote_attestation) shows how to use the basic remote attestation API of EGo.
+* [attested_tls](samples/attested_tls) is similar to the above, but uses a higher level API to establish an attested TLS connection.
 * [vault](samples/vault) demonstrates how to port a Go application exemplified by Hashicorp Vault.
 
 ## Documentation
