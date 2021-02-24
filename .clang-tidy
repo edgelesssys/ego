@@ -1,4 +1,5 @@
 WarningsAsErrors: '*'
+HeaderFilterRegex: '\.h$'
 Checks: "*,\
 -cert-err58-cpp,\
 -cppcoreguidelines-avoid-goto,\
@@ -15,13 +16,19 @@ Checks: "*,\
 -google-readability-braces-around-statements,\
 -google-readability-casting,\
 -google-readability-todo,\
+-google-runtime-references,\
 -hicpp-avoid-goto,\
 -hicpp-braces-around-statements,\
 -hicpp-no-array-decay,\
+-hicpp-signed-bitwise,\
 -hicpp-special-member-functions,\
+-llvm-header-guard,\
 -llvm-include-order,\
 -llvm-qualified-auto,\
+-misc-non-private-member-variables-in-classes,\
+-modernize-use-default-member-init,\
 -modernize-use-trailing-return-type,\
+-modernize-use-using,\
 -readability-braces-around-statements,\
 -readability-implicit-bool-conversion,\
 -readability-magic-numbers,\
