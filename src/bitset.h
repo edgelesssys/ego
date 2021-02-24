@@ -7,7 +7,6 @@
 #pragma once
 
 #include <openenclave/bits/defs.h>
-#include <stddef.h>
 
 OE_EXTERNC_BEGIN
 
