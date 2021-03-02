@@ -7,8 +7,6 @@
 package cli
 
 import (
-	"debug/elf"
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -236,37 +234,11 @@ func TestSignJSONExecutablePayload(t *testing.T) {
 	assert.EqualValues(expectedLengthOfNewPayload, payloadSize)
 	assert.EqualValues(unsignedExeMemfsSize, payloadOffset)
 
-	// And check if we can manually parse the data from the ELF
-	elfFile, err := elf.NewFile(signedExeMemfs)
-	require.NoError(err)
-	oeInfoSection := elfFile.Section(".oeinfo")
-	oeInfoPayloadOffset := make([]byte, 8)
-	oeInfoPayloadSize := make([]byte, 8)
-
-	// .oeinfo + 2048 = payload offset
-	n, err = oeInfoSection.ReadAt(oeInfoPayloadOffset, 2048)
-	require.EqualValues(8, n)
-	require.NoError(err)
-
-	// .oeinfo + 2056 = payload size
-	n, err = oeInfoSection.ReadAt(oeInfoPayloadSize, 2056)
-	require.EqualValues(8, n)
-	require.NoError(err)
-
-	// Parse little-endian uint64 values
-	oeInfoPayloadSizeUint64 := binary.LittleEndian.Uint64(oeInfoPayloadSize)
-	assert.NotEqualValues(expectedLengthOfPayload, oeInfoPayloadSizeUint64)
-	assert.EqualValues(expectedLengthOfNewPayload, oeInfoPayloadSizeUint64)
-
-	// Offset should be the same as the unsigned executable (and thus, the same as for the previous run)
-	oeInfoPayloadOffsetUint64 := binary.LittleEndian.Uint64(oeInfoPayloadOffset)
-	assert.EqualValues(unsignedExeMemfsSize, oeInfoPayloadOffsetUint64)
-
 	// Reconstruct the JSON and check if it not the old one, but the new one
-	reconstructedJSON = make([]byte, int(oeInfoPayloadSizeUint64))
-	n, err = signedExeMemfs.ReadAt(reconstructedJSON, int64(oeInfoPayloadOffsetUint64))
+	reconstructedJSON = make([]byte, payloadSize)
+	n, err = signedExeMemfs.ReadAt(reconstructedJSON, payloadOffset)
 	require.NoError(err)
-	require.EqualValues(oeInfoPayloadSizeUint64, n)
+	require.EqualValues(payloadSize, n)
 
 	// Finally, check if we got the new JSON config and not the old one
 	assert.NotEqualValues(jsonData, reconstructedJSON)

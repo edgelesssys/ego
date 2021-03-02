@@ -237,11 +237,10 @@ func (c *Cli) embedConfigAsPayload(path string, jsonData []byte) error {
 	}
 	filesize := fileStat.Size()
 
-	// Write payload offset to .oeinfo header
+	// Write payload offset and size to .oeinfo header
 	if err := writeUint64At(f, uint64(filesize), oeInfoOffset+2048); err != nil {
 		return err
 	}
-	// Write payload size to .oeinfo header
 	if err := writeUint64At(f, uint64(len(jsonData)), oeInfoOffset+2056); err != nil {
 		return err
 	}
