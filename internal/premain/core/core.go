@@ -6,10 +6,19 @@
 
 package core
 
-import "github.com/edgelesssys/marblerun/marble/premain"
+import (
+	"os"
+
+	"github.com/edgelesssys/marblerun/marble/premain"
+)
 
 // PreMain runs before the App's actual main routine and initializes the EGo enclave.
-func PreMain() error {
+func PreMain(payload string) error {
 	// TODO
-	return premain.PreMain()
+	// If program is running as a Marble, continue with Marblerun Premain.
+	if os.Getenv("EDG_EGO_PREMAIN") == "1" {
+		return premain.PreMain()
+	}
+
+	return nil
 }

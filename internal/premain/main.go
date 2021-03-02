@@ -19,8 +19,8 @@ var cargs []*C.char
 func main() {}
 
 //export ert_ego_premain
-func ert_ego_premain(argc *C.int, argv ***C.char) {
-	if err := core.PreMain(); err != nil {
+func ert_ego_premain(argc *C.int, argv ***C.char, payload *C.char) {
+	if err := core.PreMain(C.GoString(payload)); err != nil {
 		panic(err)
 	}
 
