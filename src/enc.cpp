@@ -26,7 +26,10 @@ using namespace ert;
 static int _argc;
 static char** _argv;
 
-extern "C" void ert_ego_premain(int* argc, char*** argv);
+extern "C" void ert_ego_premain(
+    int* argc,
+    char*** argv,
+    const char* payload_data);
 static char** _merge_argv_env(int argc, char** argv, char** envp);
 
 extern "C" __thread char ert_ego_reserved_tls[1024];
@@ -87,12 +90,21 @@ int emain()
     }
 
     const Memfs memfs(_memfs_name);
+
+    // Copy potentially existing payload data into string (for null-termination)
+    // and pass it to ego's premain
+    const auto payload_data_pair = payload::get_data();
+    const string payload_data(
+        static_cast<const char*>(payload_data_pair.first),
+        payload_data_pair.second);
+
+    _log_verbose("invoking premain");
+    ert_ego_premain(&_argc, &_argv, payload_data.c_str());
+    _log_verbose("premain done");
+
     // get args and env
     if (is_marblerun)
     {
-        _log_verbose("invoking premain");
-        ert_ego_premain(&_argc, &_argv);
-        _log_verbose("premain done");
         _argv = _merge_argv_env(_argc, _argv, environ);
     }
     else
