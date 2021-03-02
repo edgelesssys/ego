@@ -17,8 +17,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-
-	"github.com/spf13/afero"
 )
 
 const defaultConfigFilename = "enclave.json"
@@ -219,8 +217,8 @@ func (c *Cli) embedConfigAsPayload(path string, jsonData []byte) error {
 		}
 
 		// Check if payload is at expected location
-		expectedPayloadSize := fileStat.Size() - int64(payloadSize)
-		if expectedPayloadSize != payloadOffset {
+		expectedPayloadOffset := fileStat.Size() - int64(payloadSize)
+		if expectedPayloadOffset != payloadOffset {
 			return errors.New("expected payload location does not match real payload location, cannot safely truncate old payload")
 		}
 
@@ -240,13 +238,11 @@ func (c *Cli) embedConfigAsPayload(path string, jsonData []byte) error {
 	filesize := fileStat.Size()
 
 	// Write payload offset to .oeinfo header
-	err = writeUint64At(f, uint64(filesize), oeInfoOffset+2048)
-	if err != nil {
+	if err := writeUint64At(f, uint64(filesize), oeInfoOffset+2048); err != nil {
 		return err
 	}
 	// Write payload size to .oeinfo header
-	err = writeUint64At(f, uint64(len(jsonData)), oeInfoOffset+2056)
-	if err != nil {
+	if err := writeUint64At(f, uint64(len(jsonData)), oeInfoOffset+2056); err != nil {
 		return err
 	}
 
@@ -261,7 +257,7 @@ func (c *Cli) embedConfigAsPayload(path string, jsonData []byte) error {
 	return nil
 }
 
-func getPayloadInformation(f afero.File) (uint64, int64, int64, error) {
+func getPayloadInformation(f io.ReaderAt) (uint64, int64, int64, error) {
 	// .oeinfo + 2056 contains the size of an embedded Edgeless RT data payload.
 	// If it is > 0, a payload already exists.
 

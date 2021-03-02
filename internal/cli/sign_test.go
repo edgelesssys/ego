@@ -32,10 +32,7 @@ func TestSignEmptyFilename(t *testing.T) {
 	cli := NewCli(&runner, fs)
 
 	// Create executable
-	copyBuffer, err := ioutil.ReadFile("../test/test_sign_elf_unsigned")
-	require.NoError(err)
-	err = fs.WriteFile("exefile", copyBuffer, 0)
-	require.NoError(err)
+	require.NoError(runner.mustWriteTestSignElfUnsigned("exefile"))
 
 	// enclave.json does not exist
 	require.Error(cli.Sign(""))
@@ -106,10 +103,7 @@ func TestSignConfig(t *testing.T) {
 	cli := NewCli(&runner, fs)
 
 	// Create executable
-	copyBuffer, err := ioutil.ReadFile("../test/test_sign_elf_unsigned")
-	require.NoError(err)
-	err = fs.WriteFile("exefile", copyBuffer, 0)
-	require.NoError(err)
+	require.NoError(runner.mustWriteTestSignElfUnsigned("exefile"))
 
 	// key does not exist + custom config name
 	runner.expectedConfig = `ProductID=0
@@ -138,10 +132,7 @@ func TestSignExecutable(t *testing.T) {
 	cli := NewCli(&runner, fs)
 
 	// Create executable
-	copyBuffer, err := ioutil.ReadFile("../test/test_sign_elf_unsigned")
-	require.NoError(err)
-	err = fs.WriteFile("exefile", copyBuffer, 0644)
-	require.NoError(err)
+	require.NoError(runner.mustWriteTestSignElfUnsigned("exefile"))
 
 	// enclave.json does not exist
 	runner.expectedConfig = `ProductID=1
@@ -179,13 +170,11 @@ func TestSignJSONExecutablePayload(t *testing.T) {
 	cli := NewCli(&runner, fs)
 
 	// Copy from hostfs to memfs
-	copyBuffer, err := ioutil.ReadFile("../test/test_sign_elf_unsigned")
-	require.NoError(err)
-	err = fs.WriteFile("helloworld", copyBuffer, 0)
-	require.NoError(err)
+	const exe = "helloworld"
+	require.NoError(runner.mustWriteTestSignElfUnsigned(exe))
 
 	// Check if no payload exists
-	unsignedExeMemfs, err := fs.Open("helloworld")
+	unsignedExeMemfs, err := fs.Open(exe)
 	require.NoError(err)
 	unsignedExeMemfsStat, err := unsignedExeMemfs.Stat()
 	require.NoError(err)
@@ -199,7 +188,7 @@ func TestSignJSONExecutablePayload(t *testing.T) {
 
 	// Create a default config we want to check
 	testConf := &config{
-		Exe:             "helloworld",
+		Exe:             exe,
 		Key:             defaultPrivKeyFilename,
 		Debug:           true,
 		HeapSize:        512, //[MB]
@@ -213,48 +202,25 @@ func TestSignJSONExecutablePayload(t *testing.T) {
 	expectedLengthOfPayload := len(jsonData)
 
 	// Embed json config to helloworld
-	err = cli.embedConfigAsPayload("helloworld", jsonData)
+	err = cli.embedConfigAsPayload(exe, jsonData)
 	assert.NoError(err)
 
 	// Check if new helloworld_signed now contains signed data
-	signedExeMemfs, err := fs.Open("helloworld")
+	signedExeMemfs, err := fs.Open(exe)
 	require.NoError(err)
+	defer signedExeMemfs.Close()
+
 	payloadSize, payloadOffset, oeInfoOffset, err = getPayloadInformation(signedExeMemfs)
 	assert.NoError(err)
 	assert.EqualValues(expectedLengthOfPayload, payloadSize)
 	assert.EqualValues(unsignedExeMemfsSize, payloadOffset)
 	assert.NotZero(oeInfoOffset)
 
-	// Check if we can properly find and reconstruct the JSON based on the ELF section .oeinfo
-	elfFile, err := elf.NewFile(signedExeMemfs)
-	require.NoError(err)
-	oeInfoSection := elfFile.Section(".oeinfo")
-	oeInfoPayloadOffset := make([]byte, 8)
-	oeInfoPayloadSize := make([]byte, 8)
-
-	// .oeinfo + 2048 = payload offset
-	n, err := oeInfoSection.ReadAt(oeInfoPayloadOffset, 2048)
-	require.EqualValues(8, n)
-	require.NoError(err)
-
-	// .oeinfo + 2056 = payload size
-	n, err = oeInfoSection.ReadAt(oeInfoPayloadSize, 2056)
-	require.EqualValues(8, n)
-	require.NoError(err)
-
-	// Parse little-endian uint64 values
-	oeInfoPayloadSizeUint64 := binary.LittleEndian.Uint64(oeInfoPayloadSize)
-	assert.EqualValues(expectedLengthOfPayload, oeInfoPayloadSizeUint64)
-
-	// Offset should be the same as the unsigned executable
-	oeInfoPayloadOffsetUint64 := binary.LittleEndian.Uint64(oeInfoPayloadOffset)
-	assert.EqualValues(unsignedExeMemfsSize, oeInfoPayloadOffsetUint64)
-
 	// Reconstruct the JSON and check equality
-	reconstructedJSON := make([]byte, int(oeInfoPayloadSizeUint64))
-	n, err = signedExeMemfs.ReadAt(reconstructedJSON, int64(oeInfoPayloadOffsetUint64))
+	reconstructedJSON := make([]byte, payloadSize)
+	n, err := signedExeMemfs.ReadAt(reconstructedJSON, payloadOffset)
 	require.NoError(err)
-	require.EqualValues(oeInfoPayloadSizeUint64, n)
+	require.EqualValues(payloadSize, n)
 	assert.EqualValues(jsonData, reconstructedJSON)
 
 	// Now modify the config, redo everything and see if trucate worked fine and everything still lines up
@@ -264,18 +230,18 @@ func TestSignJSONExecutablePayload(t *testing.T) {
 	expectedLengthOfNewPayload := len(jsonNewData)
 
 	// Re-sign the already signed executable
-	err = cli.embedConfigAsPayload("helloworld", jsonNewData)
+	err = cli.embedConfigAsPayload(exe, jsonNewData)
 	assert.NoError(err)
 	payloadSize, payloadOffset, oeInfoOffset, err = getPayloadInformation(signedExeMemfs)
 	assert.EqualValues(expectedLengthOfNewPayload, payloadSize)
 	assert.EqualValues(unsignedExeMemfsSize, payloadOffset)
 
-	// And reparse the ELF again
-	elfFile, err = elf.NewFile(signedExeMemfs)
+	// And check if we can manually parse the data from the ELF
+	elfFile, err := elf.NewFile(signedExeMemfs)
 	require.NoError(err)
-	oeInfoSection = elfFile.Section(".oeinfo")
-	oeInfoPayloadOffset = make([]byte, 8)
-	oeInfoPayloadSize = make([]byte, 8)
+	oeInfoSection := elfFile.Section(".oeinfo")
+	oeInfoPayloadOffset := make([]byte, 8)
+	oeInfoPayloadSize := make([]byte, 8)
 
 	// .oeinfo + 2048 = payload offset
 	n, err = oeInfoSection.ReadAt(oeInfoPayloadOffset, 2048)
@@ -288,12 +254,12 @@ func TestSignJSONExecutablePayload(t *testing.T) {
 	require.NoError(err)
 
 	// Parse little-endian uint64 values
-	oeInfoPayloadSizeUint64 = binary.LittleEndian.Uint64(oeInfoPayloadSize)
+	oeInfoPayloadSizeUint64 := binary.LittleEndian.Uint64(oeInfoPayloadSize)
 	assert.NotEqualValues(expectedLengthOfPayload, oeInfoPayloadSizeUint64)
 	assert.EqualValues(expectedLengthOfNewPayload, oeInfoPayloadSizeUint64)
 
 	// Offset should be the same as the unsigned executable (and thus, the same as for the previous run)
-	oeInfoPayloadOffsetUint64 = binary.LittleEndian.Uint64(oeInfoPayloadOffset)
+	oeInfoPayloadOffsetUint64 := binary.LittleEndian.Uint64(oeInfoPayloadOffset)
 	assert.EqualValues(unsignedExeMemfsSize, oeInfoPayloadOffsetUint64)
 
 	// Reconstruct the JSON and check if it not the old one, but the new one
@@ -305,9 +271,6 @@ func TestSignJSONExecutablePayload(t *testing.T) {
 	// Finally, check if we got the new JSON config and not the old one
 	assert.NotEqualValues(jsonData, reconstructedJSON)
 	assert.EqualValues(jsonNewData, reconstructedJSON)
-
-	// Cleanup
-	signedExeMemfs.Close()
 }
 
 type signRunner struct {
@@ -358,4 +321,17 @@ func (s signRunner) CombinedOutput(cmd *exec.Cmd) ([]byte, error) {
 
 func (signRunner) ExitCode(cmd *exec.Cmd) int {
 	panic(cmd.Path)
+}
+
+func (s signRunner) mustWriteTestSignElfUnsigned(filename string) error {
+	copyBuffer, err := ioutil.ReadFile("../test/test_sign_elf_unsigned")
+	if err != nil {
+		return err
+	}
+	err = s.fs.WriteFile(filename, copyBuffer, 0)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
