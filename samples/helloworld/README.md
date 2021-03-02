@@ -16,3 +16,20 @@ To run it in simulation mode:
 ```sh
 OE_SIMULATION=1 ego run helloworld
 ```
+
+You should see an output similar to:
+```
+[erthost] loading enclave ...
+[erthost] entering enclave ...
+[ego] starting application ...
+hello
+world
+world
+hello
+hello
+world
+world
+hello
+hello
+world
+```
