@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -82,13 +83,15 @@ func (c *Cli) signWithJSON(conf *config) error {
 	}
 
 	// Prepare JSON data for embedding to the executable
-	jsonData, err := json.MarshalIndent(conf, "", " ")
+	jsonData, err := json.Marshal(conf)
 	if err != nil {
 		return err
 	}
 
 	// Embed enclave.json inside executable as payload
-	c.embedConfigAsPayload(conf.Exe, jsonData)
+	if err := c.embedConfigAsPayload(conf.Exe, jsonData); err != nil {
+		return err
+	}
 
 	//create public and private key if private key does not exits
 	c.createDefaultKeypair(conf.Key)
@@ -196,14 +199,14 @@ func (c *Cli) Sign(filename string) error {
 
 func (c *Cli) embedConfigAsPayload(path string, jsonData []byte) error {
 	// Load ELF executable
-	f, err := c.fs.OpenFile(path, os.O_RDWR, 0644)
+	f, err := c.fs.OpenFile(path, os.O_RDWR, 0)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
 	// Check if a payload already exists
-	payloadSize, oeInfoOffset, err := checkIfPayloadExists(f)
+	payloadSize, payloadOffset, oeInfoOffset, err := getPayloadInformation(f)
 	if err != nil {
 		return err
 	}
@@ -214,41 +217,41 @@ func (c *Cli) embedConfigAsPayload(path string, jsonData []byte) error {
 		if err != nil {
 			return err
 		}
-		err = f.Truncate(fileStat.Size() - int64(payloadSize))
+
+		// Check if payload is at expected location
+		expectedPayloadSize := fileStat.Size() - int64(payloadSize)
+		if expectedPayloadSize != payloadOffset {
+			return errors.New("expected payload location does not match real payload location, cannot safely truncate old payload")
+		}
+
+		err = f.Truncate(payloadOffset)
 		if err != nil {
 			return err
 		}
+	} else if (payloadSize == 0) != (payloadOffset == 0) {
+		return errors.New("payload information in header is inconsistent, cannot continue")
 	}
 
-	// Append the new payload size + offset to the .oeinfo header
-	newPayloadSize := make([]byte, 8)
-	newPayloadOffset := make([]byte, 8)
-
+	// Get current file size to determine offset
 	fileStat, err := f.Stat()
 	if err != nil {
 		return err
 	}
 	filesize := fileStat.Size()
 
-	binary.LittleEndian.PutUint64(newPayloadSize, uint64(len(jsonData)))
-	binary.LittleEndian.PutUint64(newPayloadOffset, uint64(filesize))
-
-	n, err := f.WriteAt(newPayloadOffset, oeInfoOffset+2048)
+	// Write payload offset to .oeinfo header
+	err = writeUint64At(f, uint64(filesize), oeInfoOffset+2048)
 	if err != nil {
 		return err
-	} else if n != 8 {
-		return errors.New("failed to embed payload metadata to executable")
 	}
-
-	n, err = f.WriteAt(newPayloadSize, oeInfoOffset+2056)
+	// Write payload size to .oeinfo header
+	err = writeUint64At(f, uint64(len(jsonData)), oeInfoOffset+2056)
 	if err != nil {
 		return err
-	} else if n != 8 {
-		return errors.New("failed to embed payload metadata to executable")
 	}
 
 	// And finally, append the payload to the file
-	n, err = f.WriteAt(jsonData, filesize)
+	n, err := f.WriteAt(jsonData, filesize)
 	if err != nil {
 		return err
 	} else if n != len(jsonData) {
@@ -258,29 +261,55 @@ func (c *Cli) embedConfigAsPayload(path string, jsonData []byte) error {
 	return nil
 }
 
-func checkIfPayloadExists(f afero.File) (uint64, int64, error) {
+func getPayloadInformation(f afero.File) (uint64, int64, int64, error) {
 	// .oeinfo + 2056 contains the size of an embedded Edgeless RT data payload.
 	// If it is > 0, a payload already exists.
 
 	elfFile, err := elf.NewFile(f)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, err
 	}
 
 	oeInfo := elfFile.Section(".oeinfo")
 	if oeInfo == nil {
-		panic(errors.New("could not find .oeinfo section"))
+		return 0, 0, 0, errors.New("could not find .oeinfo section")
 	}
 
-	payloadSizeBinary := make([]byte, 8)
-	n, err := oeInfo.ReadAt(payloadSizeBinary, 2056)
+	payloadOffset, err := readUint64At(oeInfo, 2048)
 	if err != nil {
-		return 0, 0, err
-	} else if n != 8 {
-		return 0, 0, errors.New("could not read embedded payload size from executable")
+		return 0, 0, 0, err
+	}
+	payloadSize, err := readUint64At(oeInfo, 2056)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	payloadSize := binary.LittleEndian.Uint64(payloadSizeBinary)
+	return payloadSize, int64(payloadOffset), int64(oeInfo.Offset), nil
+}
 
-	return payloadSize, int64(oeInfo.Offset), nil
+func writeUint64At(w io.WriterAt, x uint64, off int64) error {
+	xByte := make([]byte, 8)
+	binary.LittleEndian.PutUint64(xByte, x)
+
+	n, err := w.WriteAt(xByte, off)
+	if err != nil {
+		return err
+	} else if n != 8 {
+		return errors.New("did not write expected number of bytes")
+	}
+
+	return nil
+}
+
+func readUint64At(r io.ReaderAt, off int64) (uint64, error) {
+	xByte := make([]byte, 8)
+
+	n, err := r.ReadAt(xByte, off)
+	if err != nil {
+		return 0, err
+	} else if n != 8 {
+		return 0, errors.New("did not read expected number of bytes")
+	}
+
+	return binary.LittleEndian.Uint64(xByte), nil
 }
