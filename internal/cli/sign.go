@@ -17,36 +17,15 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+
+	"github.com/edgelesssys/ego/internal/config"
 )
 
 const defaultConfigFilename = "enclave.json"
 const defaultPrivKeyFilename = "private.pem"
 const defaultPubKeyFilename = "public.pem"
 
-type config struct {
-	Exe             string `json:"exe"`
-	Key             string `json:"key"`
-	Debug           bool   `json:"debug"`
-	HeapSize        int    `json:"heapSize"`
-	ProductID       int    `json:"productID"`
-	SecurityVersion int    `json:"securityVersion"`
-}
-
-// Validate Exe, Key, HeapSize
-func (c *config) validate() error {
-	if c.HeapSize == 0 {
-		return fmt.Errorf("heapSize not set in config file")
-	}
-	if c.Exe == "" {
-		return fmt.Errorf("exe not set in config file")
-	}
-	if c.Key == "" {
-		return fmt.Errorf("key not set in config file")
-	}
-	return nil
-}
-
-func (c *Cli) signWithJSON(conf *config) error {
+func (c *Cli) signWithJSON(conf *config.Config) error {
 	//write temp .conf file
 	cProduct := "ProductID=" + strconv.Itoa(conf.ProductID) + "\n"
 	cSecurityVersion := "SecurityVersion=" + strconv.Itoa(conf.SecurityVersion) + "\n"
@@ -117,7 +96,7 @@ func (c *Cli) signExecutable(path string) error {
 	}
 
 	//sane default values
-	conf = &config{
+	conf = &config.Config{
 		Exe:             path,
 		Key:             defaultPrivKeyFilename,
 		Debug:           true,
@@ -141,18 +120,18 @@ func (c *Cli) signExecutable(path string) error {
 // after some basic sanity check are performed it is returned
 // err != nil indicates that the file could not be read or the
 // JSON could not be unmarshalled
-func (c *Cli) readConfigJSONtoStruct(path string) (*config, error) {
+func (c *Cli) readConfigJSONtoStruct(path string) (*config.Config, error) {
 	data, err := c.fs.ReadFile(path)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var conf config
+	var conf config.Config
 	if err := json.Unmarshal(data, &conf); err != nil {
 		return nil, err
 	}
-	if err := conf.validate(); err != nil {
+	if err := conf.Validate(); err != nil {
 		return nil, err
 	}
 	return &conf, nil
