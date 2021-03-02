@@ -7,7 +7,9 @@
 package cli
 
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -26,6 +28,9 @@ func TestSignEmptyFilename(t *testing.T) {
 	fs := afero.Afero{Fs: afero.NewMemMapFs()}
 	runner := signRunner{fs: fs}
 	cli := NewCli(&runner, fs)
+
+	// Create executable
+	require.NoError(runner.mustWriteTestSignElfUnsigned("exefile"))
 
 	// enclave.json does not exist
 	require.Error(cli.Sign(""))
@@ -95,6 +100,9 @@ func TestSignConfig(t *testing.T) {
 	runner := signRunner{fs: fs}
 	cli := NewCli(&runner, fs)
 
+	// Create executable
+	require.NoError(runner.mustWriteTestSignElfUnsigned("exefile"))
+
 	// key does not exist + custom config name
 	runner.expectedConfig = `ProductID=0
 SecurityVersion=0
@@ -121,6 +129,9 @@ func TestSignExecutable(t *testing.T) {
 	runner := signRunner{fs: fs}
 	cli := NewCli(&runner, fs)
 
+	// Create executable
+	require.NoError(runner.mustWriteTestSignElfUnsigned("exefile"))
+
 	// enclave.json does not exist
 	runner.expectedConfig = `ProductID=1
 SecurityVersion=1
@@ -145,6 +156,93 @@ NumTCS=32
 `
 	require.NoError(fs.WriteFile("enclave.json", []byte(`{"exe":"exefile", "key":"keyfile", "heapSize":3, "debug":true, "productID":4, "securityVersion":5}`), 0))
 	require.NoError(cli.Sign("exefile"))
+}
+
+func TestSignJSONExecutablePayload(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
+
+	// Setup test environment
+	fs := afero.Afero{Fs: afero.NewMemMapFs()}
+	runner := signRunner{fs: fs}
+	cli := NewCli(&runner, fs)
+
+	// Copy from hostfs to memfs
+	const exe = "helloworld"
+	require.NoError(runner.mustWriteTestSignElfUnsigned(exe))
+
+	// Check if no payload exists
+	unsignedExeMemfs, err := fs.Open(exe)
+	require.NoError(err)
+	unsignedExeMemfsStat, err := unsignedExeMemfs.Stat()
+	require.NoError(err)
+	unsignedExeMemfsSize := unsignedExeMemfsStat.Size()
+	payloadSize, payloadOffset, oeInfoOffset, err := getPayloadInformation(unsignedExeMemfs)
+	assert.NoError(err)
+	assert.Zero(payloadSize)
+	assert.Zero(payloadOffset)
+	assert.NotZero(oeInfoOffset)
+	unsignedExeMemfs.Close()
+
+	// Create a default config we want to check
+	testConf := &config{
+		Exe:             exe,
+		Key:             defaultPrivKeyFilename,
+		Debug:           true,
+		HeapSize:        512, //[MB]
+		ProductID:       1,
+		SecurityVersion: 1,
+	}
+
+	// Marshal config
+	jsonData, err := json.Marshal(testConf)
+	require.NoError(err)
+	expectedLengthOfPayload := len(jsonData)
+
+	// Embed json config to helloworld
+	err = cli.embedConfigAsPayload(exe, jsonData)
+	assert.NoError(err)
+
+	// Check if new helloworld_signed now contains signed data
+	signedExeMemfs, err := fs.Open(exe)
+	require.NoError(err)
+	defer signedExeMemfs.Close()
+
+	payloadSize, payloadOffset, oeInfoOffset, err = getPayloadInformation(signedExeMemfs)
+	assert.NoError(err)
+	assert.EqualValues(expectedLengthOfPayload, payloadSize)
+	assert.EqualValues(unsignedExeMemfsSize, payloadOffset)
+	assert.NotZero(oeInfoOffset)
+
+	// Reconstruct the JSON and check equality
+	reconstructedJSON := make([]byte, payloadSize)
+	n, err := signedExeMemfs.ReadAt(reconstructedJSON, payloadOffset)
+	require.NoError(err)
+	require.EqualValues(payloadSize, n)
+	assert.EqualValues(jsonData, reconstructedJSON)
+
+	// Now modify the config, redo everything and see if trucate worked fine and everything still lines up
+	testConf.HeapSize = 5120
+	jsonNewData, err := json.Marshal(testConf)
+	require.NoError(err)
+	expectedLengthOfNewPayload := len(jsonNewData)
+
+	// Re-sign the already signed executable
+	err = cli.embedConfigAsPayload(exe, jsonNewData)
+	assert.NoError(err)
+	payloadSize, payloadOffset, oeInfoOffset, err = getPayloadInformation(signedExeMemfs)
+	assert.EqualValues(expectedLengthOfNewPayload, payloadSize)
+	assert.EqualValues(unsignedExeMemfsSize, payloadOffset)
+
+	// Reconstruct the JSON and check if it not the old one, but the new one
+	reconstructedJSON = make([]byte, payloadSize)
+	n, err = signedExeMemfs.ReadAt(reconstructedJSON, payloadOffset)
+	require.NoError(err)
+	require.EqualValues(payloadSize, n)
+
+	// Finally, check if we got the new JSON config and not the old one
+	assert.NotEqualValues(jsonData, reconstructedJSON)
+	assert.EqualValues(jsonNewData, reconstructedJSON)
 }
 
 type signRunner struct {
@@ -195,4 +293,17 @@ func (s signRunner) CombinedOutput(cmd *exec.Cmd) ([]byte, error) {
 
 func (signRunner) ExitCode(cmd *exec.Cmd) int {
 	panic(cmd.Path)
+}
+
+func (s signRunner) mustWriteTestSignElfUnsigned(filename string) error {
+	copyBuffer, err := ioutil.ReadFile("../test/test_sign_elf_unsigned")
+	if err != nil {
+		return err
+	}
+	err = s.fs.WriteFile(filename, copyBuffer, 0)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
