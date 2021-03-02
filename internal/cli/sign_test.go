@@ -16,6 +16,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/edgelesssys/ego/internal/config"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -227,7 +228,7 @@ func TestSignJSONExecutablePayload(t *testing.T) {
 	unsignedExeMemfs.Close()
 
 	// Create a default config we want to check
-	testConf := &config{
+	testConf := &config.Config{
 		Exe:             exe,
 		Key:             defaultPrivKeyFilename,
 		Debug:           true,
