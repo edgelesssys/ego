@@ -24,6 +24,36 @@ ego sign vault
 ```
 
 Then you can run Vault:
+```sh
+ego run vault server -dev -dev-no-store-token -dev-root-token-id mytoken
 ```
-ego run vault server -dev
+
+Use it from another terminal:
+```sh
+$ export VAULT_ADDR=http://127.0.0.1:8200
+$ export VAULT_TOKEN=mytoken
+
+$ ./vault kv put secret/hello foo=world
+
+Key              Value
+---              -----
+created_time     2021-03-03T15:30:16.376988478Z
+deletion_time    n/a
+destroyed        false
+version          1
+
+$ ./vault kv get secret/hello
+
+====== Metadata ======
+Key              Value
+---              -----
+created_time     2021-03-03T15:30:16.376988478Z
+deletion_time    n/a
+destroyed        false
+version          1
+
+=== Data ===
+Key    Value
+---    -----
+foo    world
 ```
