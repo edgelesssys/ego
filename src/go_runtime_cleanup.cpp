@@ -16,6 +16,7 @@
 #include <iostream>
 #include <mutex>
 #include <stdexcept>
+#include <thread>
 #include <vector>
 #include "bitset.h"
 
@@ -96,6 +97,10 @@ int go_rc_munmap(void* addr, size_t length)
 void go_rc_kill_threads()
 {
     const lock_guard<mutex> lock(_mux);
+
+    // mitigate races, e.g., a thread may hold some global spinlock in OE
+    this_thread::sleep_for(100ms);
+
     for (const auto thread : threads)
     {
         const int ret = pthread_cancel(thread);
