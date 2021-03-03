@@ -45,10 +45,25 @@ func (c *Config) Validate() error {
 	// Validate file system mounts
 	alreadyUsedMountPoints := make(map[string]bool, len(c.Mounts))
 	for _, mountPoint := range c.Mounts {
+		// Check if target is defined
+		if mountPoint.Target == "" {
+			return fmt.Errorf("missing target for mount declaration")
+		}
+
 		// Check if a target is defined multiple times. This will cause the syscall in the premain to return an error.
 		if _, ok := alreadyUsedMountPoints[mountPoint.Target]; ok {
 			fmt.Printf("ERROR: '%s': Mount point was defined multiple times. Check your configuration.", mountPoint.Target)
 			return fmt.Errorf("mount target '%s' was defined multiple times", mountPoint.Target)
+		}
+
+		// Check if type is defined
+		if mountPoint.Type == "" {
+			return fmt.Errorf("missing type for mount target '%s'", mountPoint.Target)
+		}
+
+		// Check if source is not empty when using hostfs
+		if mountPoint.Type == "hostfs" && mountPoint.Source == "" {
+			return fmt.Errorf("no source given for mount target '%s", mountPoint.Target)
 		}
 
 		// Check if 'hostfs' or 'memfs' was set as type

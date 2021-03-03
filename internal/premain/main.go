@@ -10,17 +10,21 @@ import "C"
 
 import (
 	"os"
+	"syscall"
 
 	"github.com/edgelesssys/ego/internal/premain/core"
 )
 
 var cargs []*C.char
 
+// SyscallMounter uses an Open Enclave syscall to mount the filesystems in the Premain
+type SyscallMounter struct{}
+
 func main() {}
 
 //export ert_ego_premain
 func ert_ego_premain(argc *C.int, argv ***C.char, payload *C.char) {
-	if err := core.PreMain(C.GoString(payload)); err != nil {
+	if err := core.PreMain(C.GoString(payload), &SyscallMounter{}); err != nil {
 		panic(err)
 	}
 
@@ -31,4 +35,9 @@ func ert_ego_premain(argc *C.int, argv ***C.char, payload *C.char) {
 
 	*argc = C.int(len(os.Args))
 	*argv = &cargs[0]
+}
+
+// Mount for SyscallMounter redirects to syscall.Mount
+func (m *SyscallMounter) Mount(source string, target string, filesystem string, flags uintptr, data string) error {
+	return syscall.Mount(source, target, filesystem, flags, data)
 }
