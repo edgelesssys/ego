@@ -8,7 +8,7 @@ The server creates a `tls.Config` object using [CreateAttestationServerTLSConfig
 The server runs HTTPS and serves the following:
 * `/secret` receives the secret via a query parameter named `s`.
 
-The client creates a `tls.Config` object using [CreateAttestationClientTLSConfig()](https://pkg.go.dev/github.com/edgelesssys/ego/ehost#CreateAttestationClientTLSConfig). In a callback function properties of the remote report are checked. The validity of the certificate is automatically checked by the `tls.Config`. The client uses this config to send its secret via an `http.Client`.
+The client creates a `tls.Config` object using [CreateAttestationClientTLSConfig()](https://pkg.go.dev/github.com/edgelesssys/ego/eclient#CreateAttestationClientTLSConfig). In a callback function properties of the remote report are checked. The validity of the certificate is automatically checked by the `tls.Config`. The client uses this config to send its secret via an `http.Client`.
 
 Some error handling in this sample is omitted for brevity.
 

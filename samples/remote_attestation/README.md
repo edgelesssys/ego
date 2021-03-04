@@ -10,7 +10,7 @@ The server runs HTTPS and serves the following:
 * `/report` returns the remote report.
 * `/secret` receives the secret via a query parameter named `s`.
 
-The client first gets the certificate and the report skipping TLS certificate verification. Then it verifies the certificate using the report via [VerifyRemoteReport()](https://pkg.go.dev/github.com/edgelesssys/ego/ehost#VerifyRemoteReport). From there on it can establish a secure connection to the enclave server and send its secret.
+The client first gets the certificate and the report skipping TLS certificate verification. Then it verifies the certificate using the report via [VerifyRemoteReport()](https://pkg.go.dev/github.com/edgelesssys/ego/eclient#VerifyRemoteReport). From there on it can establish a secure connection to the enclave server and send its secret.
 
 Some error handling in this sample is omitted for brevity.
 
