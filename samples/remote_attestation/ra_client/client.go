@@ -13,7 +13,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/edgelesssys/ego/ehost"
+	"github.com/edgelesssys/ego/eclient"
 )
 
 func main() {
@@ -54,7 +54,7 @@ func main() {
 }
 
 func verifyReport(reportBytes, certBytes, signer []byte) error {
-	report, err := ehost.VerifyRemoteReport(reportBytes)
+	report, err := eclient.VerifyRemoteReport(reportBytes)
 	if err != nil {
 		return err
 	}

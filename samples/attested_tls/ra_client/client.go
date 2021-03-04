@@ -12,7 +12,7 @@ import (
 	"net/http"
 
 	"github.com/edgelesssys/ego/attestation"
-	"github.com/edgelesssys/ego/ehost"
+	"github.com/edgelesssys/ego/eclient"
 )
 
 var signer []byte
@@ -34,7 +34,7 @@ func main() {
 	}
 
 	// Create a TLS config that verifies a certificate with embedded report.
-	tlsConfig := ehost.CreateAttestationClientTLSConfig(verifyReport)
+	tlsConfig := eclient.CreateAttestationClientTLSConfig(verifyReport)
 
 	httpGet(tlsConfig, "https://"+*serverAddr+"/secret?s=mySecret")
 	fmt.Println("Sent secret over attested TLS channel.")

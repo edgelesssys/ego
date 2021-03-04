@@ -49,8 +49,8 @@ github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:Htrtb
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21/go.mod h1:+020luEh2TKB4/GOp8oxxtq0Daoen/Cii55CzbTV6DU=
 github.com/eapache/queue v1.1.0/go.mod h1:6eCeP0CKFpHLu8blIFXhExK/dRa7WDZfr6jVFPTqq+I=
-github.com/edgelesssys/ego v0.1.1-0.20210225093004-e7261512e841 h1:Ufgx1aYEuCyDed17alBjbqMGlRzlEHEBcUR4kXDkVTo=
-github.com/edgelesssys/ego v0.1.1-0.20210225093004-e7261512e841/go.mod h1:JAUTNu7B0OXGSSePEXAF2TZsfWk50zb9dPXBE8iJrYE=
+github.com/edgelesssys/ego v0.1.1 h1:3mpQjhnsHNMtrSSx+YMjOr+LHCaJMbgZu6viYVfhz0A=
+github.com/edgelesssys/ego v0.1.1/go.mod h1:V58+LnHTAicOC+A0Aj4i/Bsef0Y/SUYxto++VVizFLA=
 github.com/edgelesssys/ertgolib v0.1.3/go.mod h1:1E8jAgXZp9wyP3n43wCsLCiEGXxjBQ35+uzxUkypBNs=
 github.com/edgelesssys/marblerun v0.2.0/go.mod h1:SfPX0ip+xQJu6MzZUhtiEgVGCsc3GCAKa7A90av3n4U=
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
@@ -417,7 +417,7 @@ google.golang.org/grpc v1.26.0/go.mod h1:qbnxyOmOxrQa7FizSgH+ReBfzJrCY1pSN7KXBS8
 google.golang.org/grpc v1.27.0/go.mod h1:qbnxyOmOxrQa7FizSgH+ReBfzJrCY1pSN7KXBS8abTk=
 google.golang.org/grpc v1.29.1/go.mod h1:itym6AZVZYACWQqET3MqgPpjcuV5QH3BxFS3IjizoKk=
 google.golang.org/grpc v1.33.1/go.mod h1:fr5YgcSWrqhRRxogOsw7RzIpsmvOZ6IcH4kBYTpR3n0=
-google.golang.org/grpc v1.35.0/go.mod h1:qjiiYl8FncCW8feJPdyg3v6XW24KsRHe+dy9BAGRRjU=
+google.golang.org/grpc v1.36.0/go.mod h1:qjiiYl8FncCW8feJPdyg3v6XW24KsRHe+dy9BAGRRjU=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
 google.golang.org/protobuf v0.0.0-20200221191635-4d8936d0db64/go.mod h1:kwYJMbMJ01Woi6D6+Kah6886xMZcty6N08ah7+eCXa0=
 google.golang.org/protobuf v0.0.0-20200228230310-ab0ca4ff8a60/go.mod h1:cfTl7dwQJ+fmap5saPgwCLgHXTUD7jkjRqWcaiX5VyM=
