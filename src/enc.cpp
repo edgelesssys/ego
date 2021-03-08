@@ -165,25 +165,8 @@ ert_args_t ert_get_args()
 
     assert(env);
 
-    //
-    // Keep all env vars that begin with EDG_
-    //
-
-    size_t edg_count = 0;
-
-    for (size_t i = 0; env[i]; ++i)
-    {
-        if (memcmp(env[i], "EDG_", 4) == 0)
-        {
-            env[edg_count] = env[i];
-            ++edg_count;
-        }
-    }
-
-    env[edg_count] = nullptr;
-
     ert_args_t result{};
-    result.envc = static_cast<int>(edg_count);
+    result.envc = args.envc;
     result.envp = env;
 
     //
