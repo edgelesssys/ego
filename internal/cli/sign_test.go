@@ -48,6 +48,8 @@ var elfUnsigned = func() []byte {
 	cmd := exec.Command(filepath.Join(goroot, "bin", "go"), "build", srcFile)
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), "GOROOT="+goroot)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
