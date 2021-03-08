@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -21,6 +22,47 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// create an unsigned EGo executable
+var elfUnsigned = func() []byte {
+	const outFile = "hello"
+	const srcFile = outFile + ".go"
+
+	goroot, err := filepath.Abs(filepath.Join("..", "..", "_ertgo"))
+	if err != nil {
+		panic(err)
+	}
+
+	dir, err := ioutil.TempDir("", "")
+	if err != nil {
+		panic(err)
+	}
+	defer os.RemoveAll(dir)
+
+	// write minimal source file
+	const src = `package main;import _"time";func main(){}`
+	if err := ioutil.WriteFile(filepath.Join(dir, srcFile), []byte(src), 0400); err != nil {
+		panic(err)
+	}
+
+	// compile
+	cmd := exec.Command(filepath.Join(goroot, "bin", "go"), "build", srcFile)
+	cmd.Dir = dir
+	cmd.Env = append(os.Environ(), "GOROOT="+goroot)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
+	// read resulting executable
+	data, err := ioutil.ReadFile(filepath.Join(dir, outFile))
+	if err != nil {
+		panic(err)
+	}
+
+	return data
+}()
+
 func TestSignEmptyFilename(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
@@ -30,7 +72,7 @@ func TestSignEmptyFilename(t *testing.T) {
 	cli := NewCli(&runner, fs)
 
 	// Create executable
-	require.NoError(runner.mustWriteTestSignElfUnsigned("exefile"))
+	require.NoError(fs.WriteFile("exefile", elfUnsigned, 0))
 
 	// enclave.json does not exist
 	require.Error(cli.Sign(""))
@@ -101,7 +143,7 @@ func TestSignConfig(t *testing.T) {
 	cli := NewCli(&runner, fs)
 
 	// Create executable
-	require.NoError(runner.mustWriteTestSignElfUnsigned("exefile"))
+	require.NoError(fs.WriteFile("exefile", elfUnsigned, 0))
 
 	// key does not exist + custom config name
 	runner.expectedConfig = `ProductID=0
@@ -130,7 +172,7 @@ func TestSignExecutable(t *testing.T) {
 	cli := NewCli(&runner, fs)
 
 	// Create executable
-	require.NoError(runner.mustWriteTestSignElfUnsigned("exefile"))
+	require.NoError(fs.WriteFile("exefile", elfUnsigned, 0))
 
 	// enclave.json does not exist
 	runner.expectedConfig = `ProductID=1
@@ -169,7 +211,7 @@ func TestSignJSONExecutablePayload(t *testing.T) {
 
 	// Copy from hostfs to memfs
 	const exe = "helloworld"
-	require.NoError(runner.mustWriteTestSignElfUnsigned(exe))
+	require.NoError(fs.WriteFile(exe, elfUnsigned, 0))
 
 	// Check if no payload exists
 	unsignedExeMemfs, err := fs.Open(exe)
@@ -293,17 +335,4 @@ func (s signRunner) CombinedOutput(cmd *exec.Cmd) ([]byte, error) {
 
 func (signRunner) ExitCode(cmd *exec.Cmd) int {
 	panic(cmd.Path)
-}
-
-func (s signRunner) mustWriteTestSignElfUnsigned(filename string) error {
-	copyBuffer, err := ioutil.ReadFile("../test/test_sign_elf_unsigned")
-	if err != nil {
-		return err
-	}
-	err = s.fs.WriteFile(filename, copyBuffer, 0)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
