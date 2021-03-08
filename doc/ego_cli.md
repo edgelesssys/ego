@@ -102,12 +102,24 @@ An enclave configuration is defined in JSON and applied when signing an executab
 Here is an example configuration:
 ```json
 {
- "exe": "helloworld",
- "key": "private.pem",
- "debug": true,
- "heapSize": 512,
- "productID": 1,
- "securityVersion": 1
+    "exe": "helloworld",
+    "key": "private.pem",
+    "debug": true,
+    "heapSize": 512,
+    "productID": 1,
+    "securityVersion": 1,
+    "mounts": [
+        {
+            "source": "/home/user",
+            "target": "/data",
+            "type": "hostfs",
+            "readOnly": false
+        },
+        {
+            "target": "/tmp",
+            "type": "memfs"
+        }
+    ]
 }
 ```
 
@@ -125,3 +137,10 @@ If `debug` is true, the enclave will be debuggable.
 A `productID` (SGX: ISVPRODID) is assigned by the developer and enables the attester to distinguish between different enclaves signed with the same key.
 
 The developer should increment the `securityVersion` (SGX: ISVSVN) whenever a security fix is made to the enclave code.
+
+`mounts` defines custom mount points which apply to the file system presented to the enclave. This can be `null` if no mounts other than the default mounts should be performed, or you can define multiple entries with the following parameters:
+
+  * `source` (required for `hostfs`): The directory from host file system which should be mounted in the enclave when using `hostfs`. For `memfs`, this value will be ignored and can be omitted.
+  * `target` (required): Defines the mount path in the enclave.
+  * `type` (required): Either `hostfs` if you want to mount a path from the host's file system in the enclave, or `memfs` if you want to use a temporary file system similar to *tmpfs* on UNIX systems.
+  * `readOnly`: Can be `true` or `false` depending on if you want to mount the path as read-only or read-write. When omitted, will default to read-write.
