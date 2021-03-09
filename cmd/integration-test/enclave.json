@@ -16,5 +16,15 @@
             "target": "/memfs",
             "type": "memfs"
         }
+    ],
+    "env": [
+        {
+            "Name": "HELLO_WORLD",
+            "Value": "Let's hope this passes the test :)"
+        },
+        {
+            "Name": "PWD",
+            "fromHost": true
+        }
     ]
 }

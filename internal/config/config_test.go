@@ -10,9 +10,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestValidate(t *testing.T) {
+func TestValidateMinimalConfig(t *testing.T) {
 	assert := assert.New(t)
 
 	config := Config{}
@@ -31,6 +32,19 @@ func TestValidate(t *testing.T) {
 	// Set key, should pass now
 	config.Key = "somekey.key"
 	assert.NoError(config.Validate())
+}
+
+func TestValidateFileSystemMounts(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	config := Config{}
+
+	// Set minimal parameters for config
+	config.HeapSize = 512
+	config.Exe = "text_exe"
+	config.Key = "somekey.key"
+	require.NoError(config.Validate())
 
 	// Set two valid mount options, should pass
 	config.Mounts = make([]FileSystemMount, 2)
@@ -62,5 +76,44 @@ func TestValidate(t *testing.T) {
 
 	// Specify garbage fs, should fail
 	config.Mounts[0] = FileSystemMount{Source: "/makesNoSense", Target: "/bin", Type: "rubbishfs", ReadOnly: true}
+	assert.Error(config.Validate())
+}
+
+func TestValidateEnvVars(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	config := Config{}
+
+	// Set minimal parameters for config
+	config.HeapSize = 512
+	config.Exe = "text_exe"
+	config.Key = "somekey.key"
+	require.NoError(config.Validate())
+
+	// Set an empty env var definition, should fail
+	config.Env = make([]EnvVar, 1)
+	assert.Error(config.Validate())
+
+	// Set an valid env var definition, should pass
+	config.Env[0] = EnvVar{Name: "HELLO_WORLD", Value: "1"}
+	assert.NoError(config.Validate())
+
+	// Set an valid env var definition with copy from host when existing, should pass
+	config.Env[0] = EnvVar{Name: "HELLO_WORLD", Value: "1", FromHost: true}
+	assert.NoError(config.Validate())
+
+	// Add disallowed char to EnvVarName, should fail
+	config.Env[0] = EnvVar{Name: "=HELLO_WORLD", Value: "1", FromHost: true}
+	assert.Error(config.Validate())
+
+	// Add env var with no value specified nor copying it from host, should trigger a warning and will not be added, but should pass
+	config.Env[0] = EnvVar{Name: "HELLO_WORLD"}
+	assert.NoError(config.Validate())
+
+	// Add multiple entries with the same name, should fail
+	config.Env = make([]EnvVar, 2)
+	config.Env[0] = EnvVar{Name: "HELLO_WORLD", Value: "1", FromHost: true}
+	config.Env[1] = EnvVar{Name: "HELLO_WORLD", Value: "1", FromHost: true}
 	assert.Error(config.Validate())
 }

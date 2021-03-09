@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 	"syscall"
 	"testing"
 
@@ -37,6 +39,7 @@ func TestPremain(t *testing.T) {
 		ProductID:       1,
 		SecurityVersion: 1,
 		Mounts:          []config.FileSystemMount{{Source: "/", Target: "/memfs", Type: "memfs", ReadOnly: false}, {Source: "/home/benjaminfranklin", Target: "/data", Type: "hostfs", ReadOnly: true}},
+		Env:             []config.EnvVar{{Name: "HELLO_WORLD", Value: "2"}, {Name: "PWD", Value: "/tmp/somedir", FromHost: true}},
 	}
 
 	// Supply valid payload, no Marble
@@ -124,4 +127,67 @@ func (a *assertionMounter) Mount(source string, target string, filesystem string
 	a.usedTargets[currentMountPoint.Target] = true
 
 	return nil
+}
+
+func TestAddEnvVars(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	// Restore current env vars on exit
+	defer restoreExistingEnvVars(os.Environ())
+
+	// Get existing PWD env var from host system
+	existingPwdEnvVar := os.Getenv("PWD")
+	require.NotEmpty(os.Getenv("PWD"))
+
+	// Set some existing env var which should vanish
+	os.Setenv("EGO_INTEGRATION_TEST_PLS_FAIL_IF_I_EXIST", "bad")
+	os.Setenv("EDG_WILL_I_SURVIVE?", "hopefully")
+
+	//sane default values
+	conf := &config.Config{
+		Exe:             "helloworld",
+		Key:             "privatekey",
+		Debug:           true,
+		HeapSize:        512, //[MB]
+		ProductID:       1,
+		SecurityVersion: 1,
+		Env:             []config.EnvVar{{Name: "HELLO_WORLD", Value: "2"}, {Name: "PWD", Value: "/tmp/somedir", FromHost: true}, {Name: "NOT_EXISTING_ON_HOST", FromHost: true}, {Name: "NOT_EXISTING_ON_HOST_BUT_INITIALIZED", Value: "42", FromHost: true}},
+	}
+
+	// Apply env vars
+	assert.NoError(addEnvVars(*conf))
+
+	// Check if HELLO_WORLD was set correctly
+	assert.Equal("2", os.Getenv("HELLO_WORLD"))
+
+	// Check if PWD was taken correctly from host
+	assert.Equal(existingPwdEnvVar, os.Getenv("PWD"))
+
+	// Check if some other env var disappeared after applying
+	envValue, envExists := os.LookupEnv("EGO_INTEGRATION_TEST_PLS_FAIL_IF_I_EXIST")
+	assert.Empty(envValue)
+	assert.False(envExists)
+
+	// Check if EDG_ variables are preserved
+	assert.Equal("hopefully", os.Getenv("EDG_WILL_I_SURVIVE?"))
+
+	// Check if not existing fromHost variable is initialized empty if not existing
+	envValue, envExists = os.LookupEnv("NOT_EXISTING_ON_HOST")
+	assert.Empty(envValue)
+	assert.False(envExists)
+
+	// Check if not existing fromHost variable is initalized with the given tag if existing
+	assert.Equal("42", os.Getenv("NOT_EXISTING_ON_HOST_BUT_INITIALIZED"))
+}
+
+func restoreExistingEnvVars(environ []string) {
+	// Clear test environment
+	os.Clearenv()
+
+	// Restore all previously existing environment variables
+	for _, envVar := range environ {
+		splitString := strings.Split(envVar, "=")
+		os.Setenv(splitString[0], splitString[1])
+	}
 }
