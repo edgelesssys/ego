@@ -60,7 +60,7 @@ func (c *Config) Validate() error {
 
 		// Check if a target is defined multiple times. This will cause the syscall in the premain to return an error.
 		if _, ok := alreadyUsedMountPoints[mountPoint.Target]; ok {
-			fmt.Printf("ERROR: '%s': Mount point was defined multiple times. Check your configuration.", mountPoint.Target)
+			fmt.Printf("ERROR: '%s': Mount point was defined multiple times. Check your configuration.\n", mountPoint.Target)
 			return fmt.Errorf("mount target '%s' was defined multiple times", mountPoint.Target)
 		}
 
@@ -76,18 +76,18 @@ func (c *Config) Validate() error {
 
 		// Check if 'hostfs' or 'memfs' was set as type
 		if mountPoint.Type != "hostfs" && mountPoint.Type != "memfs" {
-			fmt.Printf("ERROR: '%s': Only mount types 'hostfs' and 'memfs' are accepted.", mountPoint.Target)
+			fmt.Printf("ERROR: '%s': Only mount types 'hostfs' and 'memfs' are accepted.\n", mountPoint.Target)
 			return fmt.Errorf("an invalid mount type was specified: %s", mountPoint.Type)
 		}
 
 		// Warn user that 'memfs' source does nothing
 		if mountPoint.Type == "memfs" && mountPoint.Source != "" && mountPoint.Source != "/" {
-			fmt.Printf("WARNING: '%s': The mount point of type 'memfs' specified a source directory, will be ignored.", mountPoint.Target)
+			fmt.Printf("WARNING: '%s': The mount point of type 'memfs' specified a source directory, will be ignored.\n", mountPoint.Target)
 		}
 
 		// Warn user that a read-only 'memfs' is useless
 		if mountPoint.Type == "memfs" && mountPoint.ReadOnly {
-			fmt.Printf("WARNING: '%s': The mount point of type 'memfs' is set as read-only, making it effectively useless. Check your configuration.", mountPoint.Target)
+			fmt.Printf("WARNING: '%s': The mount point of type 'memfs' is set as read-only, making it effectively useless. Check your configuration.\n", mountPoint.Target)
 		}
 
 		// Add already existing target to map of used targets for redefiniton checks
