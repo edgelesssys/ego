@@ -8,6 +8,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Config defines the structure of enclave.json, containing the settings for the enclave runtime
@@ -102,9 +103,19 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("missing name for environment variable definition in config")
 		}
 
+		// Check if name contains '=', which technically is only allowed on Windows, not on Unix
+		if strings.Contains(envVar.Name, "=") {
+			return fmt.Errorf("'%s': = is a disallowed character for the environment variable name", envVar.Name)
+		}
+
+		// Check if value is not supposed to be copied from host but also does not contain any value
+		if !envVar.FromHost && envVar.Value == "" {
+			fmt.Printf("WARNING: '%s': Trying to initialize an environment variable without a value specified, nor copying it from the host system. Will be ignored. \n", envVar.Name)
+		}
+
 		// Check if environment variable was declared multiple times
 		if _, ok := alreadyUsedEnvVars[envVar.Name]; ok {
-			fmt.Printf("ERROR: '%s': Environment variable was defined multiple times. Check your configuration.", envVar.Name)
+			fmt.Printf("ERROR: '%s': Environment variable was defined multiple times. Check your configuration.\n", envVar.Name)
 			return fmt.Errorf("envrionment variable '%s' was defined multiple times", envVar.Name)
 		}
 

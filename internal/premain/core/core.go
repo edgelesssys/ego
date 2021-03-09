@@ -96,7 +96,10 @@ func addEnvVars(config config.Config) error {
 
 	// Copy all environment variable definitions from the enclave config
 	for _, configEnvVar := range config.Env {
-		newEnvVars[configEnvVar.Name] = configEnvVar.Value
+		// Only create new environment variable if value is not empty
+		if configEnvVar.Value != "" {
+			newEnvVars[configEnvVar.Name] = configEnvVar.Value
+		}
 
 		// Check if we can copy the env var from host
 		if envVarFromHost := os.Getenv(configEnvVar.Name); configEnvVar.FromHost && envVarFromHost != "" {
