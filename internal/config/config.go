@@ -19,6 +19,7 @@ type Config struct {
 	ProductID       int               `json:"productID"`
 	SecurityVersion int               `json:"securityVersion"`
 	Mounts          []FileSystemMount `json:"mounts"`
+	Env             []EnvVar          `json:"env"`
 }
 
 // FileSystemMount defines a single mount point for the enclave's filesystem
@@ -28,6 +29,13 @@ type FileSystemMount struct {
 	Target   string `json:"target"`
 	Type     string `json:"type"`
 	ReadOnly bool   `json:"readOnly"`
+}
+
+// EnvVar defines an environment variable for the enclave, which can be either user-defined, or copied from the host.
+type EnvVar struct {
+	Name     string `json:"name"`
+	Value    string `json:"value"`
+	FromHost bool   `json:"fromHost"`
 }
 
 // Validate Exe, Key, HeapSize and Mounts
@@ -84,6 +92,23 @@ func (c *Config) Validate() error {
 
 		// Add already existing target to map of used targets for redefiniton checks
 		alreadyUsedMountPoints[mountPoint.Target] = true
+	}
+
+	// Validate environment variables
+	alreadyUsedEnvVars := make(map[string]bool, len(c.Env))
+	for _, envVar := range c.Env {
+		// Check if name is missing for environment variable
+		if envVar.Name == "" {
+			return fmt.Errorf("missing name for environment variable definition in config")
+		}
+
+		// Check if environment variable was declared multiple times
+		if _, ok := alreadyUsedEnvVars[envVar.Name]; ok {
+			fmt.Printf("ERROR: '%s': Environment variable was defined multiple times. Check your configuration.", envVar.Name)
+			return fmt.Errorf("envrionment variable '%s' was defined multiple times", envVar.Name)
+		}
+
+		alreadyUsedEnvVars[envVar.Name] = true
 	}
 
 	return nil

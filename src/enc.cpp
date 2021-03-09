@@ -26,7 +26,7 @@ using namespace ert;
 static int _argc;
 static char** _argv;
 
-extern "C" void ert_ego_premain(
+extern "C" char** ert_ego_premain(
     int* argc,
     char*** argv,
     const char* payload_data);
@@ -99,18 +99,15 @@ int emain()
         payload_data_pair.second);
 
     _log_verbose("invoking premain");
-    ert_ego_premain(&_argc, &_argv, payload_data.c_str());
+    auto new_environ = ert_ego_premain(&_argc, &_argv, payload_data.c_str());
     _log_verbose("premain done");
 
     // get args and env
-    if (is_marblerun)
-    {
-        _argv = _merge_argv_env(_argc, _argv, environ);
-    }
-    else
+    _argv = _merge_argv_env(_argc, _argv, new_environ);
+
+    if (!is_marblerun)
     {
         _argc = ert_get_argc();
-        _argv = ert_get_argv();
 
         const char* const cwd = getenv("EDG_CWD");
         if (!cwd || !*cwd || chdir(cwd) != 0)

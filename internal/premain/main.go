@@ -11,6 +11,7 @@ import "C"
 import (
 	"os"
 	"syscall"
+	"unsafe"
 
 	"github.com/edgelesssys/ego/internal/premain/core"
 )
@@ -23,8 +24,9 @@ type SyscallMounter struct{}
 func main() {}
 
 //export ert_ego_premain
-func ert_ego_premain(argc *C.int, argv ***C.char, payload *C.char) {
-	if err := core.PreMain(C.GoString(payload), &SyscallMounter{}); err != nil {
+func ert_ego_premain(argc *C.int, argv ***C.char, payload *C.char) **C.char {
+	goNewEnviron, err := core.PreMain(C.GoString(payload), &SyscallMounter{})
+	if err != nil {
 		panic(err)
 	}
 
@@ -35,6 +37,16 @@ func ert_ego_premain(argc *C.int, argv ***C.char, payload *C.char) {
 
 	*argc = C.int(len(os.Args))
 	*argv = &cargs[0]
+
+	// Build and return new environ to use
+	cNewEnviron := C.malloc(C.size_t(len(goNewEnviron)) * C.size_t(unsafe.Sizeof(uintptr(0))))
+	cNewEnvironIndexable := (*[1<<30 - 1]*C.char)(cNewEnviron)
+
+	for index, value := range goNewEnviron {
+		cNewEnvironIndexable[index] = C.CString(value)
+	}
+
+	return (**C.char)(cNewEnviron)
 }
 
 // Mount for SyscallMounter redirects to syscall.Mount

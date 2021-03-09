@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"strings"
 	"syscall"
 
 	"github.com/edgelesssys/ego/internal/config"
@@ -22,26 +23,34 @@ type Mounter interface {
 }
 
 // PreMain runs before the App's actual main routine and initializes the EGo enclave.
-func PreMain(payload string, mounter Mounter) error {
+func PreMain(payload string, mounter Mounter) ([]string, error) {
+	var config config.Config
 	if len(payload) > 0 {
 		// Load config from embedded payload
-		var config config.Config
 		if err := json.Unmarshal([]byte(payload), &config); err != nil {
-			return err
+			return nil, err
 		}
 
 		// Perform mounts based on embedded config
 		if err := performMounts(config, mounter); err != nil {
-			return err
+			return nil, err
 		}
+	}
+
+	// Extract new environment variables
+	if err := addEnvVars(config); err != nil {
+		return nil, err
 	}
 
 	// If program is running as a Marble, continue with Marblerun Premain.
 	if os.Getenv("EDG_EGO_PREMAIN") == "1" {
-		return premain.PreMain()
+		if err := premain.PreMain(); err != nil {
+			return nil, err
+		}
 	}
 
-	return nil
+	// Return new environment variables to the caller
+	return os.Environ(), nil
 }
 
 func performMounts(config config.Config, mounter Mounter) error {
@@ -65,6 +74,40 @@ func performMounts(config config.Config, mounter Mounter) error {
 		}
 
 		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func addEnvVars(config config.Config) error {
+	// Copy all environment variables from host, and start from scratch
+	existingEnvVars := os.Environ()
+	newEnvVars := make(map[string]string)
+
+	// Copy all special EDG_ environment variables
+	for _, envVar := range existingEnvVars {
+		if strings.HasPrefix(envVar, "EDG_") {
+			splitString := strings.Split(envVar, "=")
+			newEnvVars[splitString[0]] = os.Getenv(splitString[0])
+		}
+	}
+
+	// Copy all environment variable definitions from the enclave config
+	for _, configEnvVar := range config.Env {
+		newEnvVars[configEnvVar.Name] = configEnvVar.Value
+
+		// Check if we can copy the env var from host
+		if envVarFromHost := os.Getenv(configEnvVar.Name); configEnvVar.FromHost && envVarFromHost != "" {
+			newEnvVars[configEnvVar.Name] = envVarFromHost
+		}
+	}
+
+	// Now that we gathered the environment variables we want to keep or set, reset the environment and set all values
+	os.Clearenv()
+	for key, value := range newEnvVars {
+		if err := os.Setenv(key, value); err != nil {
 			return err
 		}
 	}
