@@ -23,34 +23,31 @@ type Mounter interface {
 }
 
 // PreMain runs before the App's actual main routine and initializes the EGo enclave.
-func PreMain(payload string, mounter Mounter) ([]string, error) {
+func PreMain(payload string, mounter Mounter) error {
 	var config config.Config
 	if len(payload) > 0 {
 		// Load config from embedded payload
 		if err := json.Unmarshal([]byte(payload), &config); err != nil {
-			return nil, err
+			return err
 		}
 
 		// Perform mounts based on embedded config
 		if err := performMounts(config, mounter); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	// Extract new environment variables
 	if err := addEnvVars(config); err != nil {
-		return nil, err
+		return err
 	}
 
 	// If program is running as a Marble, continue with Marblerun Premain.
 	if os.Getenv("EDG_EGO_PREMAIN") == "1" {
-		if err := premain.PreMain(); err != nil {
-			return nil, err
-		}
+		return premain.PreMain()
 	}
 
-	// Return new environment variables to the caller
-	return os.Environ(), nil
+	return nil
 }
 
 func performMounts(config config.Config, mounter Mounter) error {

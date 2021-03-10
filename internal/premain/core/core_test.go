@@ -44,18 +44,17 @@ func TestPremain(t *testing.T) {
 
 	// Supply valid payload, no Marble
 	mounter := assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool)}
-	_, err := PreMain("", &mounter)
-	assert.NoError(err)
+	assert.NoError(PreMain("", &mounter))
+
 	// Supply valid payload, no Marble
 	payload, err := json.Marshal(conf)
 	require.NoError(err)
 	mounter = assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool)}
-	_, err = PreMain(string(payload), &mounter)
-	assert.NoError(err)
+	assert.NoError(PreMain(string(payload), &mounter))
+
 	// Supply invalid payload, should fail
 	payload = []byte("blablarubbish")
-	_, err = PreMain(string(payload), &mounter)
-	assert.Error(err)
+	assert.Error(PreMain(string(payload), &mounter))
 }
 
 func TestPerformMounts(t *testing.T) {
