@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.2
 
 FROM alpine/git:latest AS pull
-RUN git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/edgelesssys/ego /ego
+RUN git clone --depth 1 --recurse-submodules --shallow-submodules -b v0.1.x https://github.com/edgelesssys/ego /ego
 
 FROM ghcr.io/edgelesssys/edgelessrt-dev AS build
 COPY --from=pull /ego /ego
