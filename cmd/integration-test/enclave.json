@@ -19,11 +19,11 @@
     ],
     "env": [
         {
-            "Name": "HELLO_WORLD",
-            "Value": "Let's hope this passes the test :)"
+            "name": "HELLO_WORLD",
+            "value": "Let's hope this passes the test :)"
         },
         {
-            "Name": "PWD",
+            "name": "PWD",
             "fromHost": true
         }
     ]

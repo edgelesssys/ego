@@ -107,8 +107,6 @@ int emain()
 
     if (!is_marblerun)
     {
-        _argc = ert_get_argc();
-
         const char* const cwd = getenv("EDG_CWD");
         if (!cwd || !*cwd || chdir(cwd) != 0)
         {

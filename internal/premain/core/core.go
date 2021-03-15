@@ -83,11 +83,14 @@ func addEnvVars(config config.Config) error {
 	existingEnvVars := os.Environ()
 	newEnvVars := make(map[string]string)
 
+	// Set OE_IS_ENCLAVE to 1
+	newEnvVars["OE_IS_ENCLAVE"] = "1"
+
 	// Copy all special EDG_ environment variables
 	for _, envVar := range existingEnvVars {
 		if strings.HasPrefix(envVar, "EDG_") {
 			splitString := strings.Split(envVar, "=")
-			newEnvVars[splitString[0]] = os.Getenv(splitString[0])
+			newEnvVars[splitString[0]] = splitString[1]
 		}
 	}
 

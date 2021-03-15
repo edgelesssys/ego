@@ -49,6 +49,9 @@ func testEnvVars(assert *assert.Assertions, require *require.Assertions) {
 	require.NoError(err)
 	assert.Equal(currentPwd, os.Getenv("PWD"))
 
-	// Test if no existing env vars were taken over
-	assert.Empty(os.Getenv("OE_IS_ENCLAVE"))
+	// Test if OE_IS_ENCLAVE is set
+	assert.Equal("1", os.Getenv("OE_IS_ENCLAVE"))
+
+	// Check if other env vars were not taken over by using a common one to check against (here: LANG)
+	assert.Empty(os.Getenv("LANG"))
 }
