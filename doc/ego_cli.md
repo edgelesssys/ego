@@ -119,6 +119,16 @@ Here is an example configuration:
             "target": "/tmp",
             "type": "memfs"
         }
+    ],
+    "env": [
+        {
+            "name": "LANG",
+            "value": "en_US.UTF-8"
+        },
+        {
+            "name": "PWD",
+            "fromHost": true
+        }
     ]
 }
 ```
@@ -144,3 +154,9 @@ The developer should increment the `securityVersion` (SGX: ISVSVN) whenever a se
   * `target` (required): Defines the mount path in the enclave.
   * `type` (required): Either `hostfs` if you want to mount a path from the host's file system in the enclave, or `memfs` if you want to use a temporary file system similar to *tmpfs* on UNIX systems.
   * `readOnly`: Can be `true` or `false` depending on if you want to mount the path as read-only or read-write. When omitted, will default to read-write.
+
+`env` holds environment variables to set or take over from the host inside the enclave. By default, all environment variables not starting with `EDG_` are dropped when entering the enclave (except for `OE_IS_ENCLAVE`, which can be used as an indicator that we are inside an enclave).
+
+  * `name` (required): The name of the environment variable (what you put before `=`)
+  * `value` (required if not `fromHost`): The value of the environment variable (what you put after `=`)
+  * `fromHost`: When set to `true`, the current value of the requested environment variable will be copied over if it exists on the host. If the host does not hold this variable, it will either fall back to the value set in `value` (if it exists), or will not be created at all.

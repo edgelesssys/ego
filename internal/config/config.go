@@ -8,6 +8,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Config defines the structure of enclave.json, containing the settings for the enclave runtime
@@ -19,6 +20,7 @@ type Config struct {
 	ProductID       int               `json:"productID"`
 	SecurityVersion int               `json:"securityVersion"`
 	Mounts          []FileSystemMount `json:"mounts"`
+	Env             []EnvVar          `json:"env"`
 }
 
 // FileSystemMount defines a single mount point for the enclave's filesystem
@@ -28,6 +30,13 @@ type FileSystemMount struct {
 	Target   string `json:"target"`
 	Type     string `json:"type"`
 	ReadOnly bool   `json:"readOnly"`
+}
+
+// EnvVar defines an environment variable for the enclave, which can be either user-defined, or copied from the host.
+type EnvVar struct {
+	Name     string `json:"name"`
+	Value    string `json:"value"`
+	FromHost bool   `json:"fromHost"`
 }
 
 // Validate Exe, Key, HeapSize and Mounts
@@ -52,7 +61,7 @@ func (c *Config) Validate() error {
 
 		// Check if a target is defined multiple times. This will cause the syscall in the premain to return an error.
 		if _, ok := alreadyUsedMountPoints[mountPoint.Target]; ok {
-			fmt.Printf("ERROR: '%s': Mount point was defined multiple times. Check your configuration.", mountPoint.Target)
+			fmt.Printf("ERROR: '%s': Mount point was defined multiple times. Check your configuration.\n", mountPoint.Target)
 			return fmt.Errorf("mount target '%s' was defined multiple times", mountPoint.Target)
 		}
 
@@ -68,22 +77,49 @@ func (c *Config) Validate() error {
 
 		// Check if 'hostfs' or 'memfs' was set as type
 		if mountPoint.Type != "hostfs" && mountPoint.Type != "memfs" {
-			fmt.Printf("ERROR: '%s': Only mount types 'hostfs' and 'memfs' are accepted.", mountPoint.Target)
+			fmt.Printf("ERROR: '%s': Only mount types 'hostfs' and 'memfs' are accepted.\n", mountPoint.Target)
 			return fmt.Errorf("an invalid mount type was specified: %s", mountPoint.Type)
 		}
 
 		// Warn user that 'memfs' source does nothing
 		if mountPoint.Type == "memfs" && mountPoint.Source != "" && mountPoint.Source != "/" {
-			fmt.Printf("WARNING: '%s': The mount point of type 'memfs' specified a source directory, will be ignored.", mountPoint.Target)
+			fmt.Printf("WARNING: '%s': The mount point of type 'memfs' specified a source directory, will be ignored.\n", mountPoint.Target)
 		}
 
 		// Warn user that a read-only 'memfs' is useless
 		if mountPoint.Type == "memfs" && mountPoint.ReadOnly {
-			fmt.Printf("WARNING: '%s': The mount point of type 'memfs' is set as read-only, making it effectively useless. Check your configuration.", mountPoint.Target)
+			fmt.Printf("WARNING: '%s': The mount point of type 'memfs' is set as read-only, making it effectively useless. Check your configuration.\n", mountPoint.Target)
 		}
 
 		// Add already existing target to map of used targets for redefiniton checks
 		alreadyUsedMountPoints[mountPoint.Target] = true
+	}
+
+	// Validate environment variables
+	alreadyUsedEnvVars := make(map[string]bool, len(c.Env))
+	for _, envVar := range c.Env {
+		// Check if name is missing for environment variable
+		if envVar.Name == "" {
+			return fmt.Errorf("missing name for environment variable definition in config")
+		}
+
+		// Check if name contains '=', which technically is only allowed on Windows, not on Unix
+		if strings.Contains(envVar.Name, "=") {
+			return fmt.Errorf("'%s': = is a disallowed character for the environment variable name", envVar.Name)
+		}
+
+		// Check if value is not supposed to be copied from host but also does not contain any value
+		if !envVar.FromHost && envVar.Value == "" {
+			fmt.Printf("WARNING: '%s': Trying to initialize an environment variable without a value specified, nor copying it from the host system. Will be ignored. \n", envVar.Name)
+		}
+
+		// Check if environment variable was declared multiple times
+		if _, ok := alreadyUsedEnvVars[envVar.Name]; ok {
+			fmt.Printf("ERROR: '%s': Environment variable was defined multiple times. Check your configuration.\n", envVar.Name)
+			return fmt.Errorf("envrionment variable '%s' was defined multiple times", envVar.Name)
+		}
+
+		alreadyUsedEnvVars[envVar.Name] = true
 	}
 
 	return nil

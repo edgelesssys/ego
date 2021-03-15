@@ -103,15 +103,10 @@ int emain()
     _log_verbose("premain done");
 
     // get args and env
-    if (is_marblerun)
-    {
-        _argv = _merge_argv_env(_argc, _argv, environ);
-    }
-    else
-    {
-        _argc = ert_get_argc();
-        _argv = ert_get_argv();
+    _argv = _merge_argv_env(_argc, _argv, environ);
 
+    if (!is_marblerun)
+    {
         const char* const cwd = getenv("EDG_CWD");
         if (!cwd || !*cwd || chdir(cwd) != 0)
         {
@@ -165,25 +160,8 @@ ert_args_t ert_get_args()
 
     assert(env);
 
-    //
-    // Keep all env vars that begin with EDG_
-    //
-
-    size_t edg_count = 0;
-
-    for (size_t i = 0; env[i]; ++i)
-    {
-        if (memcmp(env[i], "EDG_", 4) == 0)
-        {
-            env[edg_count] = env[i];
-            ++edg_count;
-        }
-    }
-
-    env[edg_count] = nullptr;
-
     ert_args_t result{};
-    result.envc = static_cast<int>(edg_count);
+    result.envc = args.envc;
     result.envp = env;
 
     //
@@ -222,4 +200,15 @@ static char** _merge_argv_env(int argc, char** argv, char** envp)
     memcpy(p, envp, (size_t)envc * sizeof *envp);
 
     return result;
+}
+
+// unsetenv+cgo is broken in Go < 1.15. This is a temporary fix until we update
+// ertgo.
+extern "C" void x_cgo_unsetenv(char** arg)
+{
+    unsetenv(arg[0]);
+}
+extern "C" void x_cgo_setenv(char** arg)
+{
+    setenv(arg[0], arg[1], 1);
 }

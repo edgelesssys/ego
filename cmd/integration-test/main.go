@@ -9,6 +9,7 @@ package main
 import (
 	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/edgelesssys/ego/internal/test"
 	"github.com/stretchr/testify/assert"
@@ -24,6 +25,7 @@ func main() {
 
 	log.Println("Welcome to the enclave.")
 	testFileSystemMounts(assert, require)
+	testEnvVars(assert, require)
 }
 
 func testFileSystemMounts(assert *assert.Assertions, require *require.Assertions) {
@@ -37,4 +39,19 @@ func testFileSystemMounts(assert *assert.Assertions, require *require.Assertions
 	require.NoError(err)
 	newFileContent, err := ioutil.ReadFile("/memfs/test-file.txt")
 	assert.Equal("It works!", string(newFileContent))
+}
+
+func testEnvVars(assert *assert.Assertions, require *require.Assertions) {
+	// Test if new env vars were set
+	log.Println("Testing env vars...")
+	assert.Equal("Let's hope this passes the test :)", os.Getenv("HELLO_WORLD"))
+	currentPwd, err := os.Getwd()
+	require.NoError(err)
+	assert.Equal(currentPwd, os.Getenv("PWD"))
+
+	// Test if OE_IS_ENCLAVE is set
+	assert.Equal("1", os.Getenv("OE_IS_ENCLAVE"))
+
+	// Check if other env vars were not taken over by using a common one to check against (here: LANG)
+	assert.Empty(os.Getenv("LANG"))
 }
