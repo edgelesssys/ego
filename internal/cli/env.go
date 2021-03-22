@@ -13,7 +13,7 @@ import (
 )
 
 // Env runs a command in the EGo environment.
-func (c *Cli) Env(filename string, args []string) int {
+func (c *Cli) Env(filename string, args []string) (int, error) {
 	if filename == "go" {
 		// "ego env go" should resolve to our Go compiler
 		filename = filepath.Join(c.egoPath, "go", "bin", "go")

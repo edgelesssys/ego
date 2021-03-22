@@ -24,7 +24,7 @@ func main() {
 
 	cmd := os.Args[1]
 	args := os.Args[2:]
-	cli := cli.NewCli(runner{}, afero.NewOsFs())
+	c := cli.NewCli(runner{}, afero.NewOsFs())
 
 	switch cmd {
 	case "sign":
@@ -32,8 +32,13 @@ func main() {
 		if len(args) > 0 {
 			filename = args[0]
 		}
-		err := cli.Sign(filename)
+		err := c.Sign(filename)
 		if err == nil {
+			return
+		}
+		if err == cli.ErrNoOEInfo {
+			fmt.Println("ERROR: The Open Enclave info section is missing in the binary.")
+			fmt.Println("Maybe the binary was not built with 'ego-go build'?")
 			return
 		}
 		fmt.Println(err)
@@ -45,15 +50,33 @@ func main() {
 		fmt.Println()
 	case "run":
 		if len(args) > 0 {
-			os.Exit(cli.Run(args[0], args[1:]))
+			x, err := c.Run(args[0], args[1:])
+			if err != nil {
+				switch err {
+				case cli.ErrElfNoPie:
+					fmt.Println("ERROR: The binary could not be run by Open Enclave.")
+					fmt.Println("Possibly the binary was not build with 'ego-go build'?")
+				case cli.ErrValidAttr0:
+					fmt.Println("ERROR: The binary could not be run by Open Enclave.")
+					fmt.Println("Maybe the binary was not previous signed with 'ego sign'?")
+				case cli.ErrEnclIniFail:
+					fmt.Println("ERROR: The initialziation of the enclave failed.")
+					fmt.Println("Try to resign the binary with 'ego sign' and rerun afterwards.")
+				default:
+					fmt.Println(err)
+				}
+			}
+			os.Exit(x)
 		}
 	case "marblerun":
 		if len(args) == 1 {
-			os.Exit(cli.Marblerun(args[0]))
+			x, err := c.Marblerun(args[0])
+			fmt.Println(err)
+			os.Exit(x)
 		}
 	case "signerid":
 		if len(args) == 1 {
-			id, err := cli.Signerid(args[0])
+			id, err := c.Signerid(args[0])
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -62,7 +85,7 @@ func main() {
 		}
 	case "uniqueid":
 		if len(args) == 1 {
-			id, err := cli.Uniqueid(args[0])
+			id, err := c.Uniqueid(args[0])
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -71,7 +94,9 @@ func main() {
 		}
 	case "env":
 		if len(args) > 0 {
-			os.Exit(cli.Env(args[0], args[1:]))
+			x, err := c.Env(args[0], args[1:])
+			fmt.Println(err)
+			os.Exit(x)
 		}
 	case "help":
 		if len(args) == 1 {
@@ -167,6 +192,14 @@ type runner struct{}
 
 func (runner) Run(cmd *exec.Cmd) error {
 	return cmd.Run()
+}
+
+func (runner) Start(cmd *exec.Cmd) error {
+	return cmd.Start()
+}
+
+func (runner) Wait(cmd *exec.Cmd) error {
+	return cmd.Wait()
 }
 
 func (runner) Output(cmd *exec.Cmd) ([]byte, error) {

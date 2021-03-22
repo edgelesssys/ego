@@ -25,6 +25,9 @@ const defaultConfigFilename = "enclave.json"
 const defaultPrivKeyFilename = "private.pem"
 const defaultPubKeyFilename = "public.pem"
 
+// ErrNoOEInfo defines an error when no .oeinfo section could be found. This likely occures whend the binary to sign was not built with ego-go.
+var ErrNoOEInfo = errors.New("could not find .oeinfo section")
+
 func (c *Cli) signWithJSON(conf *config.Config) error {
 	//write temp .conf file
 	cProduct := "ProductID=" + strconv.Itoa(conf.ProductID) + "\n"
@@ -92,7 +95,7 @@ func (c *Cli) signExecutable(path string) error {
 	} else if conf.Exe == path {
 		return c.signWithJSON(conf)
 	} else {
-		return fmt.Errorf("Provided path to executable does not match the one in enclave.json")
+		return fmt.Errorf("provided path to executable does not match the one in enclave.json")
 	}
 
 	//sane default values
@@ -246,7 +249,7 @@ func getPayloadInformation(f io.ReaderAt) (uint64, int64, int64, error) {
 
 	oeInfo := elfFile.Section(".oeinfo")
 	if oeInfo == nil {
-		return 0, 0, 0, errors.New("could not find .oeinfo section")
+		return 0, 0, 0, ErrNoOEInfo
 	}
 
 	payloadOffset, err := readUint64At(oeInfo, 2048)
