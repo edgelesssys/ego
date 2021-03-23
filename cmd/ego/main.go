@@ -54,14 +54,18 @@ func main() {
 			if err != nil {
 				switch err {
 				case cli.ErrElfNoPie:
-					fmt.Println("ERROR: The binary could not be run by Open Enclave.")
+					fmt.Println("ERROR: Binary could not be run by Open Enclave.")
 					fmt.Println("Possibly the binary was not build with 'ego-go build'?")
 				case cli.ErrValidAttr0:
-					fmt.Println("ERROR: The binary could not be run by Open Enclave.")
+					fmt.Println("ERROR: Binary could not be run by Open Enclave.")
 					fmt.Println("Maybe the binary was not previous signed with 'ego sign'?")
 				case cli.ErrEnclIniFail:
-					fmt.Println("ERROR: The initialziation of the enclave failed.")
+					fmt.Println("ERROR: Initialziation of the enclave failed.")
 					fmt.Println("Try to resign the binary with 'ego sign' and rerun afterwards.")
+				case cli.ErrSGXOpenFail:
+					fmt.Println("ERROR: Failed to open Intel SGX device.")
+					fmt.Println("Maybe your hardware does not support SGX or a required module is missing.")
+					fmt.Println("You can use 'OE_SIMULATION=1 ego run ...' to run your enclaved app on non-SGX hardware.")
 				default:
 					fmt.Println(err)
 				}

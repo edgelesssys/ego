@@ -90,6 +90,8 @@ func findCommonError(s string) error {
 		return ErrValidAttr0
 	case strings.Contains(s, "ELF image is not a PIE or shared object"):
 		return ErrElfNoPie
+	case strings.Contains(s, "Failed to open Intel SGX device"):
+		return ErrSGXOpenFail
 	default:
 		return nil
 	}
@@ -118,3 +120,7 @@ var ErrValidAttr0 = fmt.Errorf("%w: oe_sgx_is_valid_attributes failed: attribute
 // ErrElfNoPie is an Open Enclave error where the ELF image is not a PIE or shared object.
 // This likely occures if a binary is run which was not built with ego-go.
 var ErrElfNoPie = fmt.Errorf("%w: ELF image is not a PIE or shared object", ErrOEInvalidImg)
+
+// ErrSGXOpenFail is an Open Enclave error where OE failes to open the Intel SGX device.
+// This likely occures if a system does not support SGX or the required module is missing.
+var ErrSGXOpenFail = fmt.Errorf("%w: Failed to open Intel SGX device", ErrOEPlatform)
