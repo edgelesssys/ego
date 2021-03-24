@@ -19,15 +19,6 @@ func (r *runner) Run(cmd *exec.Cmd) error {
 	return nil
 }
 
-func (r *runner) Start(cmd *exec.Cmd) error {
-	r.run = append(r.run, cmd)
-	return nil
-}
-
-func (r *runner) Wait(cmd *exec.Cmd) error {
-	return nil
-}
-
 func (*runner) Output(cmd *exec.Cmd) ([]byte, error) {
 	panic(cmd.Path)
 }

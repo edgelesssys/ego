@@ -98,9 +98,7 @@ func main() {
 		}
 	case "env":
 		if len(args) > 0 {
-			x, err := c.Env(args[0], args[1:])
-			fmt.Println(err)
-			os.Exit(x)
+			os.Exit(c.Env(args[0], args[1:]))
 		}
 	case "help":
 		if len(args) == 1 {
@@ -196,14 +194,6 @@ type runner struct{}
 
 func (runner) Run(cmd *exec.Cmd) error {
 	return cmd.Run()
-}
-
-func (runner) Start(cmd *exec.Cmd) error {
-	return cmd.Start()
-}
-
-func (runner) Wait(cmd *exec.Cmd) error {
-	return cmd.Wait()
 }
 
 func (runner) Output(cmd *exec.Cmd) ([]byte, error) {

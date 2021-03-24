@@ -7,9 +7,9 @@
 package cli
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,8 +21,6 @@ import (
 // Runner runs Cmd objects.
 type Runner interface {
 	Run(cmd *exec.Cmd) error
-	Start(cmd *exec.Cmd) error
-	Wait(cmd *exec.Cmd) error
 	Output(cmd *exec.Cmd) ([]byte, error)
 	CombinedOutput(cmd *exec.Cmd) ([]byte, error)
 	ExitCode(cmd *exec.Cmd) int
@@ -48,38 +46,42 @@ func NewCli(runner Runner, fs afero.Fs) *Cli {
 	}
 }
 
-func (c *Cli) run(cmd *exec.Cmd) (exit int, reterr error) {
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
-	stdout, err := cmd.StdoutPipe()
+func (c *Cli) run(cmd *exec.Cmd) (int, error) {
+	// force line buffering for stdout
+	// otherwise it will be fully buffered because our stdout is not a tty
+	path, err := exec.LookPath("stdbuf")
 	if err != nil {
-		panic(err)
+		return 1, err
 	}
-	if err := c.runner.Start(cmd); err != nil {
-		panic(err)
-	}
-	reader := bufio.NewReader(stdout)
-	for {
-		s, err := reader.ReadString('\n')
-		if err != nil {
-			break
-		}
-		if reterr = findCommonError(s); reterr != nil {
-			break
-		}
-		fmt.Print(s)
-	}
-	if err := c.runner.Wait(cmd); err != nil {
+	cmd.Path = path
+	cmd.Args = append([]string{"stdbuf", "-oL"}, cmd.Args...)
+
+	cmd.Stdin = os.Stdin
+
+	// capture stdout and stderr
+	var stdout, stderr cappedBuffer
+	cmd.Stdout = io.MultiWriter(os.Stdout, &stdout)
+	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
+
+	if err := c.runner.Run(cmd); err != nil {
 		if _, ok := err.(*exec.ExitError); !ok {
-			panic(err)
+			return 1, err
 		}
 	}
-	exit = c.runner.ExitCode(cmd)
-	return
+	return c.runner.ExitCode(cmd), findCommonError(string(stdout) + string(stderr))
 }
 
 func (c *Cli) getOesignPath() string {
 	return filepath.Join(c.egoPath, "bin", "ego-oesign")
+}
+
+type cappedBuffer []byte
+
+func (b *cappedBuffer) Write(p []byte) (int, error) {
+	if len(*b) < 1000 {
+		*b = append(*b, p...)
+	}
+	return len(p), nil
 }
 
 func findCommonError(s string) error {

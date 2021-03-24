@@ -46,14 +46,6 @@ func (signeridRunner) Run(cmd *exec.Cmd) error {
 	panic(cmd.Path)
 }
 
-func (signeridRunner) Start(cmd *exec.Cmd) error {
-	panic(cmd.Path)
-}
-
-func (signeridRunner) Wait(cmd *exec.Cmd) error {
-	return errors.New("Implement Wait() if needed.")
-}
-
 func (signeridRunner) Output(cmd *exec.Cmd) ([]byte, error) {
 	if filepath.Base(cmd.Path) != "ego-oesign" || len(cmd.Args) != 4 {
 		return nil, errors.New("unexpected cmd")

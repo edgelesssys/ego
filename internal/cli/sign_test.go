@@ -312,14 +312,6 @@ func (s signRunner) Run(cmd *exec.Cmd) error {
 	return errors.New("unexpected cmd: " + cmd.Path)
 }
 
-func (s signRunner) Start(cmd *exec.Cmd) error {
-	return errors.New("Implement Start() if needed.")
-}
-
-func (s signRunner) Wait(cmd *exec.Cmd) error {
-	return errors.New("Implement Wait() if needed.")
-}
-
 func (signRunner) Output(cmd *exec.Cmd) ([]byte, error) {
 	panic(cmd.Path)
 }

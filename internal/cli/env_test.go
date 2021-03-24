@@ -22,8 +22,7 @@ func TestEnvNoArgs(t *testing.T) {
 	runner := runner{}
 	cli := NewCli(&runner, afero.NewMemMapFs())
 
-	exitcode, _ := cli.Env("foo", nil)
-	assert.Equal(2, exitcode)
+	assert.Equal(2, cli.Env("foo", nil))
 	require.Len(runner.run, 1)
 	cmd := runner.run[0]
 	assert.Equal("foo", cmd.Path)
@@ -37,8 +36,7 @@ func TestEnvArgs(t *testing.T) {
 	runner := runner{}
 	cli := NewCli(&runner, afero.NewMemMapFs())
 
-	exitcode, _ := cli.Env("foo", []string{"arg1", "arg2"})
-	assert.Equal(2, exitcode)
+	assert.Equal(2, cli.Env("foo", []string{"arg1", "arg2"}))
 	require.Len(runner.run, 1)
 	cmd := runner.run[0]
 	assert.Equal("foo", cmd.Path)
@@ -54,8 +52,7 @@ func TestEnvGo(t *testing.T) {
 	runner := runner{}
 	cli := NewCli(&runner, afero.NewMemMapFs())
 
-	exitcode, _ := cli.Env("go", nil)
-	assert.Equal(2, exitcode)
+	assert.Equal(2, cli.Env("go", nil))
 	require.Len(runner.run, 1)
 	path := runner.run[0].Path
 	assert.Equal("go", filepath.Base(path))
