@@ -5,7 +5,7 @@
 [![GitHub license][license-badge]](LICENSE)
 [![Go Report Card][go-report-card-badge]][go-report-card]
 [![PkgGoDev][go-pkg-badge]][go-pkg]
-[![Gitter Chat][gitter-badge]][gitter]
+[![Discord Chat][discord-badge]][discord]
 
 [EGo](https://ego.dev) is a framework for building *confidential apps* in Go. Confidential apps run in always-encrypted and verifiable enclaves on Intel SGX-enabled hardware. EGo simplifies enclave development by providing two user-friendly tools:
 
@@ -63,5 +63,5 @@ Now you are ready to build applications with EGo! To start, check out the follow
 [go-report-card]: https://goreportcard.com/report/github.com/edgelesssys/ego
 [go-report-card-badge]: https://goreportcard.com/badge/github.com/edgelesssys/ego
 [license-badge]: https://img.shields.io/github/license/edgelesssys/ego
-[gitter]: https://gitter.im/edgeless-systems/community
-[gitter-badge]: https://badges.gitter.im/edgeless-systems/Marblerun.svg
+[discord]: https://discord.gg/rH8QTH56JN
+[discord-badge]: https://img.shields.io/badge/chat-on%20Discord-blue
