@@ -49,6 +49,7 @@ Now you are ready to build applications with EGo! To start, check out the follow
 * [attested_tls](samples/attested_tls) is similar to the above, but uses a higher level API to establish an attested TLS connection.
 * [vault](samples/vault) demonstrates how to port a Go application exemplified by Hashicorp Vault.
 * [cgo](samples/cgo) demonstrates the experimental cgo support.
+* [azure_attestation](samples/azure_attestation) shows how to use Microsoft Azure Attestation for remote attestation.
 
 ## Documentation
 * The [EGo API](https://pkg.go.dev/github.com/edgelesssys/ego) provides access to *remote attestation* and *sealing* to your confidential app at runtime.
