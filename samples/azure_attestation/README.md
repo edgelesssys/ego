@@ -5,7 +5,7 @@ This sample shows how to do remote attestation of an EGo enclave in combination 
 
 ## How it works
 
-![azure attestation sample](az_attestation_sample.png)
+![azure attestation sample](illustration.svg)
 
 1. The server generates a self-signed certificate and a report for remote attestation using EGo's [GetRemoteReport()](https://pkg.go.dev/github.com/edgelesssys/ego/enclave#GetRemoteReport) function that includes the certificate's hash. It thereby binds the certificate to the enclave's identity.
 
@@ -36,9 +36,9 @@ ego sign server
 ego run server
 ```
 
-The client can be built using `ego-go` (or a recent Go compiler):
+The client can be built using a recent Go compiler:
 ```sh
-ego-go build ra_client/client.go
+go build ra_client/client.go
 ```
 
 The client expects the `signer ID` (`MRSIGNER`) as an argument. The `signer ID` can be derived from the signer's public key using `ego signerid`:

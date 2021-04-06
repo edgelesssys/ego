@@ -16,7 +16,6 @@ import (
 	"math/big"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/edgelesssys/ego/enclave"
@@ -35,14 +34,10 @@ func main() {
 	fmt.Println("🆗 Got a report from the enclave.")
 
 	// Create Attestation Request
-	data := rtdata{Data: base64URLEncodeToString(cert), DataType: "Binary"}
-	attReq := attestOERequest{Report: base64URLEncodeToString(report), RuntimeData: data}
-	fmt.Println("📨 Sent Attestation Request which contains report and cerificate.")
-	attResp := azureAttestation(attReq, "https://shareduks.uks.attest.azure.net")
-	fmt.Println("📨 Recived Attestation Response with token.")
+	token := azureAttestation(report, cert, "https://shareduks.uks.attest.azure.net")
 
 	// Create HTTPS server.
-	http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte(attResp.Token)) })
+	http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte(token)) })
 	http.HandleFunc("/secret", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("📫 %v sent secret %v\n", r.RemoteAddr, r.URL.Query()["s"])
 	})
@@ -57,8 +52,8 @@ func main() {
 	}
 
 	server := http.Server{Addr: serverAddr, TLSConfig: &tlsCfg}
-	fmt.Printf("📎 Token now available under %s\n", serverAddr+"/token")
-	fmt.Printf("👂 Listening on %s for secrets...\n", serverAddr+"/secret")
+	fmt.Printf("📎 Token now available under https://%s/token\n", serverAddr)
+	fmt.Printf("👂 Listening on https://%s/secret for secrets...\n", serverAddr)
 	err = server.ListenAndServeTLS("", "")
 	fmt.Println(err)
 }
@@ -89,7 +84,9 @@ type attestationResponse struct {
 	Token string `json:"token"`
 }
 
-func azureAttestation(q attestOERequest, uri string) *attestationResponse {
+func azureAttestation(report, data []byte, uri string) string {
+	rtd := rtdata{Data: base64.RawURLEncoding.EncodeToString(data), DataType: "Binary"}
+	attReq := attestOERequest{Report: base64.RawURLEncoding.EncodeToString(report), RuntimeData: rtd}
 	// Build URL.
 	azUrl, err := url.Parse(uri)
 	if err != nil {
@@ -102,14 +99,15 @@ func azureAttestation(q attestOERequest, uri string) *attestationResponse {
 	azUrl = azUrl.ResolveReference(azPath)
 
 	// Send POST request with JSON body.
-	jsonVal, err := json.Marshal(q)
+	jsonVal, err := json.Marshal(attReq)
 	if err != nil {
 		panic(err)
 	}
-	resp, err := http.Post(azUrl.String(), "application/json", bytes.NewBuffer(jsonVal))
+	resp, err := http.Post(azUrl.String(), "application/json", bytes.NewReader(jsonVal))
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("📨 Sent Attestation Request which contains report and cerificate.")
 
 	// Check and parse response.
 	defer resp.Body.Close()
@@ -119,16 +117,9 @@ func azureAttestation(q attestOERequest, uri string) *attestationResponse {
 		panic(resp.Status)
 	}
 	body := new(attestationResponse)
-	err = json.NewDecoder(resp.Body).Decode(body)
-	if err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(body); err != nil {
 		panic(err)
 	}
-	return body
-}
-
-func base64URLEncodeToString(b []byte) string {
-	s := base64.StdEncoding.EncodeToString(b)
-	s = strings.Replace(s, "+", "-", -1)
-	s = strings.Replace(s, "/", "_", -1)
-	return s
+	fmt.Println("📨 Recived Attestation Response with token.")
+	return body.Token
 }

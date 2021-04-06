@@ -51,7 +51,11 @@ func main() {
 	// Parse token.
 	parts := strings.Split(string(tokenBytes), ".")
 	for i, part := range parts {
-		parts[i] = string(base64URLDecode(part))
+		p, err := base64.RawURLEncoding.DecodeString(part)
+		if err != nil {
+			panic(err)
+		}
+		parts[i] = string(p)
 	}
 	var header JOSEHeader
 	if err := json.Unmarshal([]byte(parts[0]), &header); err != nil {
@@ -80,7 +84,10 @@ func main() {
 	mustVerifyTokenClaims(claims, *signer)
 
 	// Verify certificate.
-	certBytes := base64URLDecode(claims["x-ms-sgx-ehd"].(string))
+	certBytes, err := base64.RawURLEncoding.DecodeString(claims["x-ms-sgx-ehd"].(string))
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println("🆗 Server certificate extracted from token.")
 
 	// Create a TLS config that uses the server certificate as root
@@ -198,16 +205,4 @@ type JOSEHeader struct {
 	Jku string `json:"jku"`
 	Kid string `json:"kid"`
 	Typ string `json:"typ"`
-}
-
-func base64URLDecode(s string) []byte {
-	s = strings.Replace(s, "-", "+", -1)
-	s = strings.Replace(s, "_", "/", -1)
-	padlen := (4 - len(s)%4) % 4
-	s += strings.Repeat("=", padlen)
-	b, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		panic(err)
-	}
-	return b
 }
