@@ -115,7 +115,7 @@ var ErrExtUnknown = errors.New("unknown external error")
 // This likely occures if the signature of the binary is invalid and the binary needs to be resigned.
 var ErrEnclIniFail = fmt.Errorf("%w: enclave_initialize failed (err=0x1001)", ErrOEPlatform)
 
-// ErrVaildAttr0 is an Open Enclave error where oe_sgx_is_valid_attributes fails.
+// ErrValidAttr0 is an Open Enclave error where oe_sgx_is_valid_attributes fails.
 // This likely occures if an unsigned binary is run.
 var ErrValidAttr0 = fmt.Errorf("%w: oe_sgx_is_valid_attributes failed: attributes = 0", ErrOEFailure)
 

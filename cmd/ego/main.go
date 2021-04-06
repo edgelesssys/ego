@@ -37,7 +37,7 @@ func main() {
 			return
 		}
 		if err == cli.ErrNoOEInfo {
-			fmt.Println("ERROR: The Open Enclave info section is missing in the binary.")
+			fmt.Println("ERROR: The .oeinfo section is missing in the binary.")
 			fmt.Println("Maybe the binary was not built with 'ego-go build'?")
 			return
 		}
@@ -50,33 +50,15 @@ func main() {
 		fmt.Println()
 	case "run":
 		if len(args) > 0 {
-			x, err := c.Run(args[0], args[1:])
-			if err != nil {
-				switch err {
-				case cli.ErrElfNoPie:
-					fmt.Println("ERROR: Binary could not be run by Open Enclave.")
-					fmt.Println("Possibly the binary was not build with 'ego-go build'?")
-				case cli.ErrValidAttr0:
-					fmt.Println("ERROR: Binary could not be run by Open Enclave.")
-					fmt.Println("Maybe the binary was not previous signed with 'ego sign'?")
-				case cli.ErrEnclIniFail:
-					fmt.Println("ERROR: Initialziation of the enclave failed.")
-					fmt.Println("Try to resign the binary with 'ego sign' and rerun afterwards.")
-				case cli.ErrSGXOpenFail:
-					fmt.Println("ERROR: Failed to open Intel SGX device.")
-					fmt.Println("Maybe your hardware does not support SGX or a required module is missing.")
-					fmt.Println("You can use 'OE_SIMULATION=1 ego run ...' to run your enclaved app on non-SGX hardware.")
-				default:
-					fmt.Println(err)
-				}
-			}
-			os.Exit(x)
+			exitCode, err := c.Run(args[0], args[1:])
+			handleErr(err)
+			os.Exit(exitCode)
 		}
 	case "marblerun":
 		if len(args) == 1 {
-			x, err := c.Marblerun(args[0])
-			fmt.Println(err)
-			os.Exit(x)
+			exitCode, err := c.Marblerun(args[0])
+			handleErr(err)
+			os.Exit(exitCode)
 		}
 	case "signerid":
 		if len(args) == 1 {
@@ -108,6 +90,27 @@ func main() {
 	}
 
 	help(cmd)
+}
+
+func handleErr(err error) {
+	switch err {
+	case nil:
+	case cli.ErrElfNoPie:
+		fmt.Println("ERROR: Binary could not be loaded.")
+		fmt.Println("Possibly the binary was not build with 'ego-go build'?")
+	case cli.ErrValidAttr0:
+		fmt.Println("ERROR: Binary could not be loaded")
+		fmt.Println("Maybe the binary was not previous signed with 'ego sign'?")
+	case cli.ErrEnclIniFail:
+		fmt.Println("ERROR: Initialziation of the enclave failed.")
+		fmt.Println("Try to resign the binary with 'ego sign' and rerun afterwards.")
+	case cli.ErrSGXOpenFail:
+		fmt.Println("ERROR: Failed to open Intel SGX device.")
+		fmt.Println("Maybe your hardware does not support SGX or a required module is missing.")
+		fmt.Println("You can use 'OE_SIMULATION=1 ego run ...' to run your enclaved app on non-SGX hardware.")
+	default:
+		fmt.Println(err)
+	}
 }
 
 func help(cmd string) {
