@@ -24,7 +24,7 @@ func main() {
 
 	cmd := os.Args[1]
 	args := os.Args[2:]
-	cli := cli.NewCli(runner{}, afero.NewOsFs())
+	c := cli.NewCli(runner{}, afero.NewOsFs())
 
 	switch cmd {
 	case "sign":
@@ -32,8 +32,13 @@ func main() {
 		if len(args) > 0 {
 			filename = args[0]
 		}
-		err := cli.Sign(filename)
+		err := c.Sign(filename)
 		if err == nil {
+			return
+		}
+		if err == cli.ErrNoOEInfo {
+			fmt.Println("ERROR: The .oeinfo section is missing in the binary.")
+			fmt.Println("Maybe the binary was not built with 'ego-go build'?")
 			return
 		}
 		fmt.Println(err)
@@ -45,15 +50,19 @@ func main() {
 		fmt.Println()
 	case "run":
 		if len(args) > 0 {
-			os.Exit(cli.Run(args[0], args[1:]))
+			exitCode, err := c.Run(args[0], args[1:])
+			handleErr(err)
+			os.Exit(exitCode)
 		}
 	case "marblerun":
 		if len(args) == 1 {
-			os.Exit(cli.Marblerun(args[0]))
+			exitCode, err := c.Marblerun(args[0])
+			handleErr(err)
+			os.Exit(exitCode)
 		}
 	case "signerid":
 		if len(args) == 1 {
-			id, err := cli.Signerid(args[0])
+			id, err := c.Signerid(args[0])
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -62,7 +71,7 @@ func main() {
 		}
 	case "uniqueid":
 		if len(args) == 1 {
-			id, err := cli.Uniqueid(args[0])
+			id, err := c.Uniqueid(args[0])
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -71,7 +80,7 @@ func main() {
 		}
 	case "env":
 		if len(args) > 0 {
-			os.Exit(cli.Env(args[0], args[1:]))
+			os.Exit(c.Env(args[0], args[1:]))
 		}
 	case "help":
 		if len(args) == 1 {
@@ -81,6 +90,27 @@ func main() {
 	}
 
 	help(cmd)
+}
+
+func handleErr(err error) {
+	switch err {
+	case nil:
+	case cli.ErrElfNoPie:
+		fmt.Println("ERROR: Binary could not be loaded.")
+		fmt.Println("Possibly the binary was not build with 'ego-go build'?")
+	case cli.ErrValidAttr0:
+		fmt.Println("ERROR: Binary could not be loaded")
+		fmt.Println("Maybe the binary was not previous signed with 'ego sign'?")
+	case cli.ErrEnclIniFail:
+		fmt.Println("ERROR: Initialziation of the enclave failed.")
+		fmt.Println("Try to resign the binary with 'ego sign' and rerun afterwards.")
+	case cli.ErrSGXOpenFail:
+		fmt.Println("ERROR: Failed to open Intel SGX device.")
+		fmt.Println("Maybe your hardware does not support SGX or a required module is missing.")
+		fmt.Println("You can use 'OE_SIMULATION=1 ego run ...' to run your enclaved app on non-SGX hardware.")
+	default:
+		fmt.Println(err)
+	}
 }
 
 func help(cmd string) {

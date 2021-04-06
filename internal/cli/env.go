@@ -23,5 +23,16 @@ func (c *Cli) Env(filename string, args []string) int {
 		"CGO_ENABLED=1",
 		"PATH="+filepath.Join(c.egoPath, "go", "bin")+":"+os.Getenv("PATH"),
 		"GOROOT="+filepath.Join(c.egoPath, "go"))
-	return c.run(cmd)
+
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := c.runner.Run(cmd); err != nil {
+		if _, ok := err.(*exec.ExitError); !ok {
+			panic(err)
+		}
+	}
+
+	return c.runner.ExitCode(cmd)
 }
