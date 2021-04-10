@@ -9,8 +9,11 @@ package cli
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type eradump struct {
@@ -21,14 +24,24 @@ type eradump struct {
 }
 
 func (c *Cli) signeridByKey(path string) (string, error) {
-	out, err := c.runner.Output(exec.Command(c.getOesignPath(), "signerid", "-k", path))
-	if err != nil {
-		if err, ok := err.(*exec.ExitError); ok {
+	outBytes, err := c.runner.Output(exec.Command(c.getOesignPath(), "signerid", "-k", path))
+	out := string(outBytes)
+	if err == nil {
+		return out, nil
+	}
+
+	if err, ok := err.(*exec.ExitError); ok {
+		// oesign tends to print short errors to stderr and logs to stdout
+		if len(err.Stderr) > 0 {
 			return "", errors.New(string(err.Stderr))
 		}
-		return "", err
+		fmt.Fprintln(os.Stderr, out)
+		if strings.Contains(out, ErrOECrypto.Error()) {
+			return "", ErrOECrypto
+		}
 	}
-	return string(out), nil
+
+	return "", err
 }
 
 func (c *Cli) readEradumpJSONtoStruct(path string) (*eradump, error) {
