@@ -37,14 +37,12 @@ func main() {
 			return
 		}
 		if err == cli.ErrNoOEInfo {
-			fmt.Println("ERROR: The .oeinfo section is missing in the binary.")
-			fmt.Println("Maybe the binary was not built with 'ego-go build'?")
-			return
+			log.Fatalln("ERROR: The .oeinfo section is missing in the binary.\nMaybe the binary was not built with 'ego-go build'?")
 		}
 		fmt.Println(err)
 		if !os.IsNotExist(err) {
 			// print error only
-			return
+			os.Exit(1)
 		}
 		// also print usage
 		fmt.Println()
@@ -63,6 +61,9 @@ func main() {
 	case "signerid":
 		if len(args) == 1 {
 			id, err := c.Signerid(args[0])
+			if err == cli.ErrOECrypto {
+				log.Fatalf("ERROR: signerid failed with %v.\nMake sure to pass a valid public key.\n", err)
+			}
 			if err != nil {
 				log.Fatalln(err)
 			}

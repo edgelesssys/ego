@@ -108,6 +108,9 @@ var ErrOEFailure = errors.New("OE_FAILURE")
 // ErrOEPlatform is a representation of Open Enclaves OE_PLATFORM_ERROR return code.
 var ErrOEPlatform = errors.New("OE_PLATFORM_ERROR")
 
+// ErrOECrypto is a representation of Open Enclaves OE_CRYPTO_ERROR return code.
+var ErrOECrypto = errors.New("OE_CRYPTO_ERROR")
+
 // ErrExtUnknown is a unknown error from an external tool.
 var ErrExtUnknown = errors.New("unknown external error")
 
