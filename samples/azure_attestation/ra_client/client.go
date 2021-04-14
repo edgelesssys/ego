@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
@@ -62,7 +63,7 @@ func main() {
 	if err := token.Claims(&keySet, &publicClaims, &privateClaims); err != nil {
 		panic(err)
 	}
-	fmt.Println("✅ Token is valid.")
+	fmt.Println("✅ Token has a valid signature.")
 
 	// Verify token claims.
 	if err := verifyTokenClaims(publicClaims, privateClaims, *signer); err != nil {
@@ -91,7 +92,7 @@ func main() {
 // and JWT as well as OpenID Connect specification to determine which parameters need
 // to be verified.
 func verifyTokenClaims(publicClaims jwt.Claims, privateClaims privateClaims, signer string) error {
-	if err := publicClaims.Validate(jwt.Expected{Issuer: issAddr}); err != nil {
+	if err := publicClaims.Validate(jwt.Expected{Issuer: issAddr, Time: time.Now()}); err != nil {
 		return fmt.Errorf("issuer of token could not be verified: %v", err)
 	}
 	fmt.Printf("✅ Issuer of token is %s.\n", publicClaims.Issuer)
