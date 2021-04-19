@@ -115,13 +115,10 @@ int emain()
     // get args and env
     _argv = _merge_argv_env(_argc, _argv, environ);
 
-    if (!is_marblerun)
+    if (chdir(memfs_mount_path) != 0)
     {
-        if (chdir(memfs_mount_path) != 0)
-        {
-            _log("cannot set cwd");
-            return EXIT_FAILURE;
-        }
+        _log("cannot set cwd");
+        return EXIT_FAILURE;
     }
 
     // cleanup go runtime

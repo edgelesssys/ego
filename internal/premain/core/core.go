@@ -58,7 +58,7 @@ func PreMain(payload string, mounter Mounter, fs afero.Fs) error {
 
 	// If program is running as a Marble, continue with Marblerun Premain.
 	if os.Getenv("EDG_EGO_PREMAIN") == "1" {
-		return premain.PreMain()
+		return premain.PreMainEgo()
 	}
 
 	return nil
