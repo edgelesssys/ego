@@ -9,13 +9,25 @@ package core
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
+	"path"
+	"sort"
 	"strings"
 	"syscall"
 
 	"github.com/edgelesssys/ego/internal/config"
 	"github.com/edgelesssys/marblerun/marble/premain"
 )
+
+// memfsMountSourceDirectory contains the 'global' memfs <-> 'mounted' memfs base directory
+const memfsMountSourceDirectory = "/edg/mnt"
+
+// mountTypeHostFS is the parameter for the mount filesystem type of the host filesystem in Open Enclave / Edgeless RT
+const mountTypeHostFS = "oe_host_file_system"
+
+// mountTypeMemfsFS is the paramter for the mount filesystem type of the in-memory filesystem in Edgeless RT
+const mountTypeMemFS = "edg_memfs"
 
 // Mounter defines an interface to use to mount the filesystem (usually syscall, mainly differs for unit tests)
 type Mounter interface {
@@ -51,26 +63,78 @@ func PreMain(payload string, mounter Mounter) error {
 }
 
 func performMounts(config config.Config, mounter Mounter) error {
+	// Check if / is mounted (handled in enc.cpp, should be memfs)
+	_, err := os.Stat("/")
+	if err != nil {
+		return errors.New("no root filesystem mounted")
+	}
+
+	// Sort slice by length of target, so that we can catch "/" as special case without having to double loop or build another data structure
+	sort.Slice(config.Mounts, func(i, j int) bool {
+		return len(config.Mounts[i].Target) < len(config.Mounts[j].Target)
+	})
+
+	// Prepare the mounts specified in the config
+	var rootIsHostFS bool
 	for _, mountPoint := range config.Mounts {
+		// Oh oh, special case!
+		// Check if user specified to remount root as hostfs (possibly insecure)
+		// Unmount premounted root if "/" was specified as target
+		if !rootIsHostFS && mountPoint.Target == "/" && mountPoint.Type == "hostfs" {
+			if err := syscall.Unmount("/", syscall.MNT_FORCE); err != nil {
+				return err
+			}
+			fmt.Println("WARNING: Remounted '/' to hostfs. This is insecure. Please only use this for testing purposes.")
+			// Remounting memfs to /edg/mnt, we just keep it as base for memfs mounts
+			if err := mounter.Mount("/", "/", "oe_host_file_system", 0, ""); err != nil {
+				return err
+			}
+			if err := mounter.Mount("/", "/edg/mnt", "edg_memfs", 0, ""); err != nil {
+				return err
+			}
+
+			rootIsHostFS = true
+			continue
+		}
+
 		// Setup flags for read-only or read-write
 		var flags uintptr
 		if mountPoint.ReadOnly {
 			flags = syscall.MS_RDONLY
 		}
 
-		// Mount filesystem
-		var err error
+		// Select either hostfs (oe_host_file_system) and memfs (edg_memfs)
+		var filesystem string
 		switch mountPoint.Type {
 		case "hostfs":
-			err = mounter.Mount(mountPoint.Source, mountPoint.Target, "oe_host_file_system", flags, "")
+			filesystem = mountTypeHostFS
 		case "memfs":
-			err = mounter.Mount("/", mountPoint.Target, "edg_memfs", flags, "")
+			filesystem = mountTypeMemFS
+
+			memfsMountSourceFull := path.Join(memfsMountSourceDirectory, mountPoint.Target)
+
+			if err := os.MkdirAll(memfsMountSourceFull, 0777); err != nil {
+				return err
+			}
+
+			// BEWARE: Confusion lies ahead.
+			// The source is expected to be the *relative* path from the memfs root
+			// Open Enclave / Edgeless RT does not fully resolve the path based on previous mounts
+			// Thus, we either have / (if not remouted) or /edg/memfs (if remouted) as base for the memfs.
+			// Depending on that, we need to shorten the source path for the latter case. Otherwise, use the full one.
+
+			if rootIsHostFS {
+				mountPoint.Source = mountPoint.Target
+			} else {
+				mountPoint.Source = memfsMountSourceFull
+			}
 		// This should not happen, as 'ego sign' is supposed to validate the config before embedding & signing it
 		default:
 			return errors.New("encountered an unknown filesystem type in configuration")
 		}
 
-		if err != nil {
+		// Perform the mount
+		if err := mounter.Mount(mountPoint.Source, mountPoint.Target, filesystem, flags, ""); err != nil {
 			return err
 		}
 	}

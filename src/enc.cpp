@@ -81,15 +81,25 @@ int emain()
     const char* const env_is_marblerun = getenv(_premain_env_key);
     const bool is_marblerun = env_is_marblerun && *env_is_marblerun == '1';
 
-    // mount hostfs
-    const auto mount_path = is_marblerun ? "/edg/hostfs" : "/";
-    if (mount("/", mount_path, OE_HOST_FILE_SYSTEM, 0, nullptr) != 0)
+    // mount hostfs when running under marblerun
+    const auto hostfs_mount_path = "/edg/hostfs";
+    if (is_marblerun)
     {
-        _log("mount hostfs failed");
-        return EXIT_FAILURE;
+        if (mount("/", hostfs_mount_path, OE_HOST_FILE_SYSTEM, 0, nullptr) != 0)
+        {
+            _log("mount hostfs failed");
+            return EXIT_FAILURE;
+        }
     }
 
+    // Initialize & mount memfs as root path by default
     const Memfs memfs(_memfs_name);
+    const auto memfs_mount_path = "/";
+    if (mount("/", memfs_mount_path, _memfs_name, 0, nullptr) != 0)
+    {
+        _log("mount memfs failed");
+        return EXIT_FAILURE;
+    }
 
     // Copy potentially existing payload data into string (for null-termination)
     // and pass it to ego's premain
@@ -107,8 +117,7 @@ int emain()
 
     if (!is_marblerun)
     {
-        const char* const cwd = getenv("EDG_CWD");
-        if (!cwd || !*cwd || chdir(cwd) != 0)
+        if (chdir(memfs_mount_path) != 0)
         {
             _log("cannot set cwd");
             return EXIT_FAILURE;
