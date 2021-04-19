@@ -86,7 +86,7 @@ func performMounts(config config.Config, mounter Mounter, fs afero.Fs) error {
 			if err := mounter.Unmount("/", syscall.MNT_FORCE); err != nil {
 				return err
 			}
-			fmt.Println("WARNING: Remounted '/' to hostfs. This is insecure. Please only use this for testing purposes.")
+			fmt.Println("WARNING: Remounted '/' to hostfs. This might be insecure. Please only use this for testing purposes.")
 			// Remounting memfs to /edg/mnt, we just keep it as base for memfs mounts
 			if err := mounter.Mount("/", "/", "oe_host_file_system", 0, ""); err != nil {
 				return err

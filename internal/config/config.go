@@ -91,6 +91,10 @@ func (c *Config) Validate() error {
 			fmt.Printf("WARNING: '%s': The mount point of type 'memfs' is set as read-only, making it effectively useless. Check your configuration.\n", mountPoint.Target)
 		}
 
+		if mountPoint.Target == "/" && mountPoint.Type == "hostfs" {
+			fmt.Printf("WARNING: '%s' is defined as 'hostfs'. This might be insecure, please make sure you explicitly allow the paths you want to expose to the enclave.\n", mountPoint.Target)
+		}
+
 		// Add already existing target to map of used targets for redefiniton checks
 		alreadyUsedMountPoints[mountPoint.Target] = true
 	}
