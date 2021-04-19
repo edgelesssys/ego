@@ -18,6 +18,7 @@ import (
 
 	"github.com/edgelesssys/ego/internal/config"
 	"github.com/edgelesssys/marblerun/marble/premain"
+	"github.com/spf13/afero"
 )
 
 // memfsMountSourceDirectory contains the 'global' memfs <-> 'mounted' memfs base directory
@@ -32,10 +33,11 @@ const mountTypeMemFS = "edg_memfs"
 // Mounter defines an interface to use to mount the filesystem (usually syscall, mainly differs for unit tests)
 type Mounter interface {
 	Mount(source string, target string, filesystem string, flags uintptr, data string) error
+	Unmount(target string, flags int) error
 }
 
 // PreMain runs before the App's actual main routine and initializes the EGo enclave.
-func PreMain(payload string, mounter Mounter) error {
+func PreMain(payload string, mounter Mounter, fs afero.Fs) error {
 	var config config.Config
 	if len(payload) > 0 {
 		// Load config from embedded payload
@@ -44,7 +46,7 @@ func PreMain(payload string, mounter Mounter) error {
 		}
 
 		// Perform mounts based on embedded config
-		if err := performMounts(config, mounter); err != nil {
+		if err := performMounts(config, mounter, fs); err != nil {
 			return err
 		}
 	}
@@ -62,7 +64,7 @@ func PreMain(payload string, mounter Mounter) error {
 	return nil
 }
 
-func performMounts(config config.Config, mounter Mounter) error {
+func performMounts(config config.Config, mounter Mounter, fs afero.Fs) error {
 	// Check if / is mounted (handled in enc.cpp, should be memfs)
 	_, err := os.Stat("/")
 	if err != nil {
@@ -81,7 +83,7 @@ func performMounts(config config.Config, mounter Mounter) error {
 		// Check if user specified to remount root as hostfs (possibly insecure)
 		// Unmount premounted root if "/" was specified as target
 		if !rootIsHostFS && mountPoint.Target == "/" && mountPoint.Type == "hostfs" {
-			if err := syscall.Unmount("/", syscall.MNT_FORCE); err != nil {
+			if err := mounter.Unmount("/", syscall.MNT_FORCE); err != nil {
 				return err
 			}
 			fmt.Println("WARNING: Remounted '/' to hostfs. This is insecure. Please only use this for testing purposes.")
@@ -113,7 +115,7 @@ func performMounts(config config.Config, mounter Mounter) error {
 
 			memfsMountSourceFull := path.Join(memfsMountSourceDirectory, mountPoint.Target)
 
-			if err := os.MkdirAll(memfsMountSourceFull, 0777); err != nil {
+			if err := fs.MkdirAll(memfsMountSourceFull, 0777); err != nil {
 				return err
 			}
 

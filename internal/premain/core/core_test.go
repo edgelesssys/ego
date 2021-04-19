@@ -16,19 +16,23 @@ import (
 	"testing"
 
 	"github.com/edgelesssys/ego/internal/config"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 type assertionMounter struct {
-	assert      *assert.Assertions
-	config      *config.Config
-	usedTargets map[string]bool
+	assert          *assert.Assertions
+	config          *config.Config
+	usedTargets     map[string]bool
+	remountAsHostFS bool
 }
 
 func TestPremain(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
+
+	fs := afero.NewMemMapFs()
 
 	//sane default values
 	conf := &config.Config{
@@ -43,22 +47,24 @@ func TestPremain(t *testing.T) {
 	}
 
 	// Supply valid payload, no Marble
-	mounter := assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool)}
-	assert.NoError(PreMain("", &mounter))
+	mounter := assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool), remountAsHostFS: false}
+	assert.NoError(PreMain("", &mounter, fs))
 
 	// Supply valid payload, no Marble
 	payload, err := json.Marshal(conf)
 	require.NoError(err)
-	mounter = assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool)}
-	assert.NoError(PreMain(string(payload), &mounter))
+	mounter = assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool), remountAsHostFS: false}
+	assert.NoError(PreMain(string(payload), &mounter, fs))
 
 	// Supply invalid payload, should fail
 	payload = []byte("blablarubbish")
-	assert.Error(PreMain(string(payload), &mounter))
+	assert.Error(PreMain(string(payload), &mounter, fs))
 }
 
 func TestPerformMounts(t *testing.T) {
 	assert := assert.New(t)
+
+	fs := afero.NewMemMapFs()
 
 	//sane default values
 	conf := &config.Config{
@@ -71,14 +77,39 @@ func TestPerformMounts(t *testing.T) {
 		Mounts:          []config.FileSystemMount{{Source: "/", Target: "/memfs", Type: "memfs", ReadOnly: false}, {Source: "/home/benjaminfranklin", Target: "/data", Type: "hostfs", ReadOnly: true}},
 	}
 
-	mounter := assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool)}
-	assert.NoError(performMounts(*conf, &mounter))
+	// Same as above, but with remounting the hostfs as root
+	confWithRemount := &config.Config{
+		Exe:             "helloworld",
+		Key:             "privatekey",
+		Debug:           true,
+		HeapSize:        512, //[MB]
+		ProductID:       1,
+		SecurityVersion: 1,
+		Mounts:          []config.FileSystemMount{{Source: "/", Target: "/", Type: "hostfs", ReadOnly: false}, {Source: "/", Target: "/memfs", Type: "memfs", ReadOnly: true}},
+	}
+
+	mounter := assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool), remountAsHostFS: false}
+	assert.NoError(performMounts(*conf, &mounter, fs))
 
 	conf.Mounts = []config.FileSystemMount{{Source: "/home/benjaminfranklin", Target: "/data", Type: "rubbishfs", ReadOnly: true}}
-	assert.Error(performMounts(*conf, &mounter))
+	assert.Error(performMounts(*conf, &mounter, fs))
+
+	// Test '/' as host fs special case. Should work without an error, but we do not recommend doing this
+	mounter = assertionMounter{assert: assert, config: confWithRemount, usedTargets: make(map[string]bool), remountAsHostFS: true}
+	assert.NoError(performMounts(*confWithRemount, &mounter, fs))
 }
 
 func (a *assertionMounter) Mount(source string, target string, filesystem string, flags uintptr, data string) error {
+	// Skip special mount calls for unit test, as we cannot check them against the configuration
+	if target == "/" {
+		a.assert.EqualValues(mountTypeHostFS, filesystem)
+		return nil
+	}
+	if target == "/edg/mnt" {
+		a.assert.EqualValues(mountTypeMemFS, filesystem)
+		return nil
+	}
+
 	// Find corresponding mount point in config by searching for the target
 	var currentMountPoint config.FileSystemMount
 
@@ -96,16 +127,23 @@ func (a *assertionMounter) Mount(source string, target string, filesystem string
 	}
 
 	// We should not end up here, use this when we did not find any entry in the config
+	// Skip this check if we remount the host fs, as this will cause additional unspecified mount operations
 	if currentMountPoint.Type == "" {
-		return errors.New("could not find equal mount declaration in supplied config")
+		if !a.remountAsHostFS {
+			return errors.New("could not find equal mount declaration in supplied config")
+		}
 	}
 
-	if filesystem == "oe_host_file_system" {
+	if filesystem == mountTypeHostFS {
 		a.assert.EqualValues(currentMountPoint.Source, source)
 		a.assert.EqualValues(currentMountPoint.Target, target)
 		a.assert.EqualValues("hostfs", currentMountPoint.Type)
-	} else if filesystem == "edg_memfs" {
-		a.assert.EqualValues("/", source)
+	} else if filesystem == mountTypeMemFS {
+		if !a.remountAsHostFS {
+			a.assert.EqualValues(memfsMountSourceDirectory+currentMountPoint.Target, source)
+		} else {
+			a.assert.EqualValues(currentMountPoint.Target, source)
+		}
 		a.assert.EqualValues(currentMountPoint.Target, target)
 		a.assert.EqualValues("memfs", currentMountPoint.Type)
 	} else {
@@ -124,6 +162,15 @@ func (a *assertionMounter) Mount(source string, target string, filesystem string
 
 	// Add to usedTargets list for duplication check
 	a.usedTargets[currentMountPoint.Target] = true
+
+	return nil
+}
+
+func (a *assertionMounter) Unmount(target string, flags int) error {
+	// We only unmount the root memfs
+	// Everything else what calls Unmount should fail
+	a.assert.Equal("/", target)
+	a.assert.Equal(syscall.MNT_FORCE, flags)
 
 	return nil
 }
