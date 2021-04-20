@@ -82,7 +82,7 @@ func testEnvVars(assert *assert.Assertions, require *require.Assertions) {
 	assert.Equal("Let's hope this passes the test :)", os.Getenv("HELLO_WORLD"))
 	currentPwd, err := os.Getwd()
 	require.NoError(err)
-	assert.Equal(currentPwd, "/data")
+	assert.Equal("/data", currentPwd)
 
 	// Test if OE_IS_ENCLAVE is set
 	assert.Equal("1", os.Getenv("OE_IS_ENCLAVE"))

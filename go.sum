@@ -164,8 +164,8 @@ github.com/edgelesssys/era v0.3.0/go.mod h1:5OB1KAIEjbCqrs+5VOK5Im28wbcNiyc/RD3A
 github.com/edgelesssys/ertgolib v0.1.1/go.mod h1:QV27eWmoYHCNMkPMnz2XcER13+XdhPyG5qLQu5iDL0I=
 github.com/edgelesssys/ertgolib v0.1.5-0.20210208080427-0d5e24e2f855/go.mod h1:1E8jAgXZp9wyP3n43wCsLCiEGXxjBQ35+uzxUkypBNs=
 github.com/edgelesssys/marblerun v0.2.1-0.20210312084731-95118a77f617/go.mod h1:8HWnA9SmYZeK3Jmq0meqOwp6/avuLAMTMgtwRlnhRRw=
-github.com/edgelesssys/marblerun v0.3.2-0.20210419145600-46982f4b888e h1:1G3BSVqKia2i+WI3WMd8BBBbCroOtkTYwlwto99uO7s=
-github.com/edgelesssys/marblerun v0.3.2-0.20210419145600-46982f4b888e/go.mod h1:X+l1OC7rrRqwbmqK4OahspGCann/WidGocuRJzHRVWg=
+github.com/edgelesssys/marblerun v0.3.2-0.20210420103257-91e2ec7e5140 h1:V1zqGpn0VHwfCN2+fzdKvUektrs11yq9coVAfMIeDzg=
+github.com/edgelesssys/marblerun v0.3.2-0.20210420103257-91e2ec7e5140/go.mod h1:X+l1OC7rrRqwbmqK4OahspGCann/WidGocuRJzHRVWg=
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
 github.com/elazarl/goproxy v0.0.0-20180725130230-947c36da3153/go.mod h1:/Zj4wYkgs4iZTTu3o/KG3Itv/qCCa8VVMlb3i9OVuzc=
 github.com/emicklei/go-restful v0.0.0-20170410110728-ff4f55a20633/go.mod h1:otzb+WCGbkyDHkqmQmT5YD2WR4BBwUdeQoFo8l/7tVs=

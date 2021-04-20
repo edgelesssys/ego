@@ -96,7 +96,7 @@ int emain()
     // Assume environment variables & mounts were performed in ert_ego_premain
 
     // If user specified PWD, try to set is as current working directory
-    // Otherwise fall back to / (which should be memfs by default)
+    // Otherwise we should be in / (which should be memfs by default)
     const char* const pwd = getenv("PWD");
 
     if (pwd && chdir(pwd) != 0)
@@ -104,12 +104,6 @@ int emain()
         _log("cannot set cwd to specified pwd");
         return EXIT_FAILURE;
     }
-    if (!pwd && chdir("/") != 0)
-    {
-        _log("cannot set cwd to root");
-        return EXIT_FAILURE;
-    }
-
     // cleanup go runtime
     _log_verbose("cleaning up the old goruntime: go_rc_kill_threads");
     go_rc_kill_threads();

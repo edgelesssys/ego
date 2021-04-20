@@ -48,10 +48,7 @@ type Mounter interface {
 // PreMain runs before the App's actual main routine and initializes the EGo enclave.
 func PreMain(payload string, mounter Mounter, fs afero.Fs) error {
 	// Check if we run as a Marble or a normal EGo application
-	var isMarble bool
-	if os.Getenv(marblerunEnvVarFlag) == "1" {
-		isMarble = true
-	}
+	isMarble := os.Getenv(marblerunEnvVarFlag) == "1"
 
 	// Perform predefined mounts
 	if err := performPredefinedMounts(mounter, isMarble); err != nil {
