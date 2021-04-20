@@ -18,7 +18,6 @@
 #include "go_runtime_cleanup.h"
 
 static const auto _memfs_name = "edg_memfs";
-static const auto _premain_env_key = "EDG_EGO_PREMAIN";
 static const auto _verbose_env_key = "EDG_EGO_VERBOSE";
 
 using namespace std;
@@ -77,29 +76,8 @@ int emain()
         return EXIT_FAILURE;
     }
 
-    // check for premain
-    const char* const env_is_marblerun = getenv(_premain_env_key);
-    const bool is_marblerun = env_is_marblerun && *env_is_marblerun == '1';
-
-    // mount hostfs when running under marblerun
-    const auto hostfs_mount_path = "/edg/hostfs";
-    if (is_marblerun)
-    {
-        if (mount("/", hostfs_mount_path, OE_HOST_FILE_SYSTEM, 0, nullptr) != 0)
-        {
-            _log("mount hostfs failed");
-            return EXIT_FAILURE;
-        }
-    }
-
-    // Initialize & mount memfs as root path by default
+    // Initialize memfs
     const Memfs memfs(_memfs_name);
-    const auto memfs_mount_path = "/";
-    if (mount("/", memfs_mount_path, _memfs_name, 0, nullptr) != 0)
-    {
-        _log("mount memfs failed");
-        return EXIT_FAILURE;
-    }
 
     // Copy potentially existing payload data into string (for null-termination)
     // and pass it to ego's premain
@@ -115,9 +93,20 @@ int emain()
     // get args and env
     _argv = _merge_argv_env(_argc, _argv, environ);
 
-    if (chdir(memfs_mount_path) != 0)
+    // Assume environment variables & mounts were performed in ert_ego_premain
+
+    // If user specified PWD, try to set is as current working directory
+    // Otherwise fall back to / (which should be memfs by default)
+    const char* const pwd = getenv("PWD");
+
+    if (pwd && chdir(pwd) != 0)
     {
-        _log("cannot set cwd");
+        _log("cannot set cwd to specified pwd");
+        return EXIT_FAILURE;
+    }
+    if (!pwd && chdir("/") != 0)
+    {
+        _log("cannot set cwd to root");
         return EXIT_FAILURE;
     }
 

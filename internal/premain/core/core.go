@@ -21,6 +21,15 @@ import (
 	"github.com/spf13/afero"
 )
 
+// marblerunHostFSDirectory contains the expected path for the automatic host filesystem mount for Marbles
+const marblerunHostFSDirectory = "/edg/hostfs"
+
+// marblerunEnvVarFlag contains the name of the environment variable which holds the flag if we run a Marble
+const marblerunEnvVarFlag = "EDG_EGO_PREMAIN"
+
+// memfsDefaultMountDirectory contains the path where the default memfs should be mounted
+const memfsDefaultMountDirectory = "/"
+
 // memfsMountSourceDirectory contains the 'global' memfs <-> 'mounted' memfs base directory
 const memfsMountSourceDirectory = "/edg/mnt"
 
@@ -38,6 +47,17 @@ type Mounter interface {
 
 // PreMain runs before the App's actual main routine and initializes the EGo enclave.
 func PreMain(payload string, mounter Mounter, fs afero.Fs) error {
+	// Check if we run as a Marble or a normal EGo application
+	var isMarble bool
+	if os.Getenv(marblerunEnvVarFlag) == "1" {
+		isMarble = true
+	}
+
+	// Perform predefined mounts
+	if err := performPredefinedMounts(mounter, isMarble); err != nil {
+		return err
+	}
+
 	var config config.Config
 	if len(payload) > 0 {
 		// Load config from embedded payload
@@ -45,8 +65,8 @@ func PreMain(payload string, mounter Mounter, fs afero.Fs) error {
 			return err
 		}
 
-		// Perform mounts based on embedded config
-		if err := performMounts(config, mounter, fs); err != nil {
+		// Perform user mounts based on embedded config
+		if err := performUserMounts(config, mounter, fs); err != nil {
 			return err
 		}
 	}
@@ -57,20 +77,30 @@ func PreMain(payload string, mounter Mounter, fs afero.Fs) error {
 	}
 
 	// If program is running as a Marble, continue with Marblerun Premain.
-	if os.Getenv("EDG_EGO_PREMAIN") == "1" {
+	if isMarble {
 		return premain.PreMainEgo()
 	}
 
 	return nil
 }
 
-func performMounts(config config.Config, mounter Mounter, fs afero.Fs) error {
-	// Check if / is mounted (handled in enc.cpp, should be memfs)
-	_, err := os.Stat("/")
-	if err != nil {
-		return errors.New("no root filesystem mounted")
+func performPredefinedMounts(mounter Mounter, isMarble bool) error {
+	// Mount host filesystem by default if running as a Marble
+	if isMarble {
+		if err := mounter.Mount("/", marblerunHostFSDirectory, mountTypeHostFS, 0, ""); err != nil {
+			return err
+		}
 	}
 
+	// Mount memory filesystem by default as root path
+	if err := mounter.Mount("/", memfsDefaultMountDirectory, mountTypeMemFS, 0, ""); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func performUserMounts(config config.Config, mounter Mounter, fs afero.Fs) error {
 	// Sort slice by length of target, so that we can catch "/" as special case without having to double loop or build another data structure
 	sort.Slice(config.Mounts, func(i, j int) bool {
 		return len(config.Mounts[i].Target) < len(config.Mounts[j].Target)

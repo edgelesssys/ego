@@ -24,7 +24,7 @@
         },
         {
             "name": "PWD",
-            "fromHost": true
+            "value": "/data"
         }
     ]
 }

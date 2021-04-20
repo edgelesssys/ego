@@ -89,20 +89,19 @@ func TestPerformMounts(t *testing.T) {
 	}
 
 	mounter := assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool), remountAsHostFS: false}
-	assert.NoError(performMounts(*conf, &mounter, fs))
+	assert.NoError(performUserMounts(*conf, &mounter, fs))
 
 	conf.Mounts = []config.FileSystemMount{{Source: "/home/benjaminfranklin", Target: "/data", Type: "rubbishfs", ReadOnly: true}}
-	assert.Error(performMounts(*conf, &mounter, fs))
+	assert.Error(performUserMounts(*conf, &mounter, fs))
 
 	// Test '/' as host fs special case. Should work without an error, but we do not recommend doing this
 	mounter = assertionMounter{assert: assert, config: confWithRemount, usedTargets: make(map[string]bool), remountAsHostFS: true}
-	assert.NoError(performMounts(*confWithRemount, &mounter, fs))
+	assert.NoError(performUserMounts(*confWithRemount, &mounter, fs))
 }
 
 func (a *assertionMounter) Mount(source string, target string, filesystem string, flags uintptr, data string) error {
 	// Skip special mount calls for unit test, as we cannot check them against the configuration
 	if target == "/" {
-		a.assert.EqualValues(mountTypeHostFS, filesystem)
 		return nil
 	}
 	if target == "/edg/mnt" {
