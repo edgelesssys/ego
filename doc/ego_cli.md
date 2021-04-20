@@ -164,3 +164,5 @@ By default, `/` is initialized as an empty `memfs` file system. To expose certai
   * `name` (required): The name of the environment variable (what you put before `=`)
   * `value` (required if not `fromHost`): The value of the environment variable (what you put after `=`)
   * `fromHost`: When set to `true`, the current value of the requested environment variable will be copied over if it exists on the host. If the host does not hold this variable, it will either fall back to the value set in `value` (if it exists), or will not be created at all.
+
+A special environment variable is `PWD`. Depending on the mount options you have set in your configuration, you can set the initial working directory of your enclave by specifying your desired path as value for `PWD`. Note that this directory needs to exist in the context of the enclave, not your host file system.
