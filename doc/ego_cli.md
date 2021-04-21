@@ -123,11 +123,11 @@ Here is an example configuration:
     "env": [
         {
             "name": "LANG",
-            "value": "en_US.UTF-8"
+            "fromHost": true
         },
         {
             "name": "PWD",
-            "fromHost": true
+            "value": "/data"
         }
     ]
 }
