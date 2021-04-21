@@ -61,7 +61,7 @@ func TestValidateFileSystemMounts(t *testing.T) {
 	config.Mounts[1] = FileSystemMount{Source: "/home/benjaminfranklin", Target: "/data", Type: "hostfs", ReadOnly: false}
 	assert.NoError(config.Validate())
 
-	// Specify source path for memfs & set it as read only. Really makes no sense and throws warnings, but should pass.
+	// Specify source path for memfs, should pass.
 	config.Mounts[0] = FileSystemMount{Source: "/blabla", Target: "/data_memfs", Type: "memfs", ReadOnly: true}
 	assert.NoError(config.Validate())
 

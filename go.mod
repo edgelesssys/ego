@@ -3,7 +3,7 @@ module github.com/edgelesssys/ego
 go 1.14
 
 require (
-	github.com/edgelesssys/marblerun v0.3.1
+	github.com/edgelesssys/marblerun v0.3.2-0.20210420103257-91e2ec7e5140
 	github.com/google/go-cmp v0.5.5
 	github.com/spf13/afero v1.5.1
 	github.com/stretchr/testify v1.7.0
