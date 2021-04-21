@@ -26,8 +26,8 @@ If you are on Ubuntu 18.04 or above and do not want to build EGo from source, yo
 ```bash
 wget -qO- https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add
 sudo add-apt-repository 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main'
-wget https://github.com/edgelesssys/ego/releases/download/v0.1.3/ego_0.1.3_amd64.deb
-sudo apt install ./ego_0.1.3_amd64.deb build-essential
+wget https://github.com/edgelesssys/ego/releases/download/v0.2.0/ego_0.2.0_amd64.deb
+sudo apt install ./ego_0.2.0_amd64.deb build-essential
 ```
 
 ### Build from Source
