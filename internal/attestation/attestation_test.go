@@ -41,21 +41,9 @@ func TestTLSConfig(t *testing.T) {
 		}, nil
 	}
 
-	//
-	// Create server.
-	//
-
-	serverConfig, err := CreateAttestationServerTLSConfig(getRemoteReport)
-	require.NoError(err)
-
-	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, "hello")
-	}))
-	server.TLS = serverConfig
-
-	//
-	// Create client.
-	//
+	failToVerifyRemoteReport := func(reportBytes []byte) (attestation.Report, error) {
+		return attestation.Report{}, errors.New("invalid remote report")
+	}
 
 	verifyReport := func(report attestation.Report) error {
 		if report.SecurityVersion != 2 {
@@ -64,22 +52,71 @@ func TestTLSConfig(t *testing.T) {
 		return nil
 	}
 
-	clientConfig := CreateAttestationClientTLSConfig(verifyRemoteReport, verifyReport)
-
-	client := http.Client{Transport: &http.Transport{TLSClientConfig: clientConfig}}
+	failToVerifyReport := func(report attestation.Report) error {
+		return errors.New("invalid report")
+	}
 
 	//
-	// Test connection.
+	// Create Test Cases
 	//
 
-	server.StartTLS()
-	defer server.Close()
+	tests := []struct {
+		name               string
+		getRemoteReport    func([]byte) ([]byte, error)
+		verifyRemoteReport func([]byte) (attestation.Report, error)
+		verifyReport       func(attestation.Report) error
+		expectErr          bool
+	}{
+		{"basic", getRemoteReport, verifyRemoteReport, verifyReport, false},
+		{"invalid remote report", getRemoteReport, failToVerifyRemoteReport, verifyReport, true},
+		{"invalid report", getRemoteReport, verifyRemoteReport, failToVerifyReport, true},
+		{"invalid remote report and report", getRemoteReport, failToVerifyRemoteReport, failToVerifyReport, true},
+	}
 
-	resp, err := client.Get(server.URL)
-	require.NoError(err)
-	defer resp.Body.Close()
+	//
+	// Run Tests.
+	//
 
-	body, err := ioutil.ReadAll(resp.Body)
-	require.NoError(err)
-	assert.EqualValues("hello", body)
+	for _, test := range tests {
+		t.Logf("Subtest: %v", test.name)
+		//
+		// Create server.
+		//
+
+		serverConfig, err := CreateAttestationServerTLSConfig(test.getRemoteReport)
+		require.NoError(err)
+
+		server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			io.WriteString(w, "hello")
+		}))
+		server.TLS = serverConfig
+
+		//
+		// Create client.
+		//
+
+		clientConfig := CreateAttestationClientTLSConfig(test.verifyRemoteReport, test.verifyReport)
+		client := http.Client{Transport: &http.Transport{TLSClientConfig: clientConfig}}
+
+		//
+		// Test connection.
+		//
+
+		func() {
+			server.StartTLS()
+			defer server.Close()
+
+			resp, err := client.Get(server.URL)
+			if test.expectErr {
+				require.Error(err)
+				return
+			}
+			require.NoError(err)
+			defer resp.Body.Close()
+
+			body, err := ioutil.ReadAll(resp.Body)
+			require.NoError(err)
+			assert.EqualValues("hello", body)
+		}()
+	}
 }
