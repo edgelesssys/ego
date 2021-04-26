@@ -62,9 +62,9 @@ func TestTLSConfig(t *testing.T) {
 
 	tests := []struct {
 		name               string
-		getRemoteReport    interface{}
-		verifyRemoteReport interface{}
-		verifyReport       interface{}
+		getRemoteReport    func([]byte) ([]byte, error)
+		verifyRemoteReport func([]byte) (attestation.Report, error)
+		verifyReport       func(attestation.Report) error
 		expectErr          bool
 	}{
 		{"basic", getRemoteReport, verifyRemoteReport, verifyReport, false},
@@ -83,7 +83,7 @@ func TestTLSConfig(t *testing.T) {
 		// Create server.
 		//
 
-		serverConfig, err := CreateAttestationServerTLSConfig(test.getRemoteReport.(func([]byte) ([]byte, error)))
+		serverConfig, err := CreateAttestationServerTLSConfig(test.getRemoteReport)
 		require.NoError(err)
 
 		server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -95,28 +95,28 @@ func TestTLSConfig(t *testing.T) {
 		// Create client.
 		//
 
-		clientConfig := CreateAttestationClientTLSConfig(test.verifyRemoteReport.(func([]byte) (attestation.Report, error)), test.verifyReport.(func(attestation.Report) error))
+		clientConfig := CreateAttestationClientTLSConfig(test.verifyRemoteReport, test.verifyReport)
 		client := http.Client{Transport: &http.Transport{TLSClientConfig: clientConfig}}
 
 		//
 		// Test connection.
 		//
 
-		server.StartTLS()
+		func() {
+			server.StartTLS()
+			defer server.Close()
 
-		resp, err := client.Get(server.URL)
-		if test.expectErr {
-			require.Error(err)
-			continue
-		} else {
+			resp, err := client.Get(server.URL)
+			if test.expectErr {
+				require.Error(err)
+				return
+			}
 			require.NoError(err)
-		}
+			defer resp.Body.Close()
 
-		body, err := ioutil.ReadAll(resp.Body)
-		require.NoError(err)
-		assert.EqualValues("hello", body)
-
-		server.Close()
-		resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			require.NoError(err)
+			assert.EqualValues("hello", body)
+		}()
 	}
 }
