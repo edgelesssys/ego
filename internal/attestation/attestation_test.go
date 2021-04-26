@@ -14,7 +14,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/edgelesssys/ego/attestation"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,28 +30,28 @@ func TestTLSConfig(t *testing.T) {
 		return append([]byte{2}, reportData...), nil
 	}
 
-	verifyRemoteReport := func(reportBytes []byte) (attestation.Report, error) {
+	verifyRemoteReport := func(reportBytes []byte) (Report, error) {
 		if len(reportBytes) != 33 || reportBytes[0] != 2 {
-			return attestation.Report{}, errors.New("invalid remote report")
+			return Report{}, errors.New("invalid remote report")
 		}
-		return attestation.Report{
+		return Report{
 			Data:            reportBytes[1:],
 			SecurityVersion: 2,
 		}, nil
 	}
 
-	failToVerifyRemoteReport := func(reportBytes []byte) (attestation.Report, error) {
-		return attestation.Report{}, errors.New("invalid remote report")
+	failToVerifyRemoteReport := func(reportBytes []byte) (Report, error) {
+		return Report{}, errors.New("invalid remote report")
 	}
 
-	verifyReport := func(report attestation.Report) error {
+	verifyReport := func(report Report) error {
 		if report.SecurityVersion != 2 {
 			return errors.New("invalid report")
 		}
 		return nil
 	}
 
-	failToVerifyReport := func(report attestation.Report) error {
+	failToVerifyReport := func(report Report) error {
 		return errors.New("invalid report")
 	}
 
@@ -63,8 +62,8 @@ func TestTLSConfig(t *testing.T) {
 	tests := []struct {
 		name               string
 		getRemoteReport    func([]byte) ([]byte, error)
-		verifyRemoteReport func([]byte) (attestation.Report, error)
-		verifyReport       func(attestation.Report) error
+		verifyRemoteReport func([]byte) (Report, error)
+		verifyReport       func(Report) error
 		expectErr          bool
 	}{
 		{"basic", getRemoteReport, verifyRemoteReport, verifyReport, false},

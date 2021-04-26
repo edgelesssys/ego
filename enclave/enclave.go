@@ -11,11 +11,13 @@ package enclave
 import "C"
 
 import (
+	"crypto/sha256"
 	"errors"
 	"syscall"
 	"unsafe"
 
 	"github.com/edgelesssys/ego/attestation"
+	internal "github.com/edgelesssys/ego/internal/attestation"
 )
 
 const sysGetRemoteReport = 1000
@@ -128,6 +130,19 @@ func GetSealKey(keyInfo []byte) ([]byte, error) {
 	key := C.GoBytes(unsafe.Pointer(keyBuffer), C.int(keySize))
 	syscall.Syscall(sysFreeSealKey, uintptr(unsafe.Pointer(keyBuffer)), 0, 0)
 	return key, nil
+}
+
+// CreateAzureAttestationToken creates a Microsoft Azure Attestation Token by creating an
+// remote report and sending the report to an Attestation Provider, who is reachable
+// under baseurl. The Attestation Provider will verify the remote Report.
+// A JSON Web Token in compact serialization is returned.
+func CreateAzureAttestationToken(data []byte, url string) (string, error) {
+	hash := sha256.Sum256(data)
+	report, err := GetRemoteReport(hash[:])
+	if err != nil {
+		return "", err
+	}
+	return internal.CreateAzureAttestationToken(report, data, url)
 }
 
 func getSealKeyByPolicy(sealPolicy uintptr) (key, keyInfo []byte, err error) {

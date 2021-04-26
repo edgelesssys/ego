@@ -7,7 +7,11 @@
 // Package attestation provides attestation data structures.
 package attestation
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/edgelesssys/ego/internal/attestation"
+)
 
 // Report is a parsed enclave report.
 type Report struct {
@@ -21,3 +25,21 @@ type Report struct {
 
 // ErrEmptyReport is returned by VerifyRemoteReport if reportBytes is empty.
 var ErrEmptyReport = errors.New("empty report")
+
+// VerifyAzureAttestationToken takes a Microsoft Azure Attestation Token in JSON Web Token compact
+// serialization format and verifies the tokens public claims and signature. The Attestation providers
+// keys are loaded from url/certs over TLS and need to be in JSON Web Key format. The validation is based
+// on the trust in this TLS channel. Note, that the token's issuer (iss) has to equal the url.
+func VerifyAzureAttestationToken(token string, url string) (Report, error) {
+	report, err := attestation.VerifyAzureAttestationToken(token, url)
+	if err != nil {
+		return Report{}, err
+	}
+	return Report{
+		Data:            report.Data,
+		SecurityVersion: report.SecurityVersion,
+		Debug:           report.Debug,
+		UniqueID:        report.UniqueID,
+		SignerID:        report.SignerID,
+		ProductID:       report.ProductID}, nil
+}
