@@ -89,6 +89,7 @@ int emain()
     _log_verbose("invoking premain");
     ert_ego_premain(&_argc, &_argv, payload_data.c_str());
     _log_verbose("premain done");
+    ert_init_ttls(getenv("MARBLE_TTLS_CONFIG"));
 
     // get args and env
     _argv = _merge_argv_env(_argc, _argv, environ);
