@@ -59,6 +59,7 @@ target_link_libraries(ego-enclave
   openenclave::oehostsock
   ${CMAKE_BINARY_DIR}/premain.a
   openenclave::ertlibc
+  openenclave::ertttls
   -Wl,--whole-archive
   openenclave::oelibc
   -Wl,--no-whole-archive
