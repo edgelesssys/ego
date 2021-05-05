@@ -7,12 +7,12 @@
 package main
 
 import (
+	"ego/cli"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
 
-	"github.com/edgelesssys/ego/internal/cli"
 	"github.com/spf13/afero"
 )
 

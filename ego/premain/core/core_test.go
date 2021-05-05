@@ -7,6 +7,7 @@
 package core
 
 import (
+	"ego/config"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,7 +16,6 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/edgelesssys/ego/internal/config"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

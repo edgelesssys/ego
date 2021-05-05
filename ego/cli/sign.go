@@ -8,6 +8,7 @@ package cli
 
 import (
 	"debug/elf"
+	"ego/config"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -17,8 +18,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-
-	"github.com/edgelesssys/ego/internal/config"
 )
 
 const defaultConfigFilename = "enclave.json"

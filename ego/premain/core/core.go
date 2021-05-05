@@ -7,6 +7,7 @@
 package core
 
 import (
+	"ego/config"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,7 +17,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/edgelesssys/ego/internal/config"
 	"github.com/edgelesssys/marblerun/marble/premain"
 	"github.com/spf13/afero"
 )
