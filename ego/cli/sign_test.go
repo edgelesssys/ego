@@ -7,6 +7,7 @@
 package cli
 
 import (
+	"ego/config"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -16,7 +17,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgelesssys/ego/internal/config"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"

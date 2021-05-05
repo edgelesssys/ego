@@ -7,9 +7,9 @@
 package main
 
 import (
+	"ego/test"
 	"os"
 
-	"github.com/edgelesssys/ego/internal/test"
 	"github.com/stretchr/testify/assert"
 )
 

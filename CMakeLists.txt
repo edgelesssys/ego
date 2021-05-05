@@ -33,9 +33,9 @@ target_link_libraries(ego-enclave-lib PRIVATE openenclave::oe_includes)
 
 add_custom_command(
   OUTPUT premain.a
-  DEPENDS internal/premain/main.go internal/premain/core/core.go
+  DEPENDS ego/premain/main.go ego/premain/core/core.go
   COMMAND ertgo build -buildmode=c-archive -o ${CMAKE_BINARY_DIR}
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/internal/premain)
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/premain)
 add_custom_target(premainbuild DEPENDS premain.a)
 
 # Both ego-enclave and the payload use the local-exec TLS model. This means that TLS memory
@@ -70,9 +70,9 @@ target_link_libraries(ego-enclave
 
 add_custom_command(
   OUTPUT ego
-  DEPENDS cmd/ego/main.go ${CMAKE_SOURCE_DIR}/internal/cli/*.go ${CMAKE_SOURCE_DIR}/internal/config/*.go
+  DEPENDS ego/cmd/ego/main.go ${CMAKE_SOURCE_DIR}/ego/cli/*.go ${CMAKE_SOURCE_DIR}/ego/config/*.go
   COMMAND go build -o ${CMAKE_CURRENT_BINARY_DIR}/ego
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/cmd/ego)
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/cmd/ego)
 add_custom_target(egobuild ALL DEPENDS ego)
 
 #
@@ -135,20 +135,20 @@ add_custom_command(
 # build the test marble with ertgo and sign it with oesign
 add_custom_command(
   OUTPUT test-marble
-  DEPENDS ego-enclave test_private.pem cmd/test-marble/enclave.conf cmd/test-marble/main.go internal/test/t.go
+  DEPENDS ego-enclave test_private.pem ego/cmd/test-marble/enclave.conf ego/cmd/test-marble/main.go ego/test/t.go
   COMMAND ${CMAKE_COMMAND} -E env GOROOT=${CMAKE_SOURCE_DIR}/_ertgo ${CMAKE_SOURCE_DIR}/_ertgo/bin/go build -o ${CMAKE_BINARY_DIR}
   COMMAND oesign sign
     -e ${CMAKE_BINARY_DIR}/ego-enclave
-    -c ${CMAKE_SOURCE_DIR}/cmd/test-marble/enclave.conf
+    -c ${CMAKE_SOURCE_DIR}/ego/cmd/test-marble/enclave.conf
     -k ${CMAKE_BINARY_DIR}/test_private.pem
     --payload ${CMAKE_BINARY_DIR}/test-marble
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/cmd/test-marble)
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/cmd/test-marble)
 
 add_custom_command(
   OUTPUT marble-test
-  DEPENDS cmd/marble-test/main.go internal/test/t.go
+  DEPENDS ego/cmd/marble-test/main.go ego/test/t.go
   COMMAND go build -o ${CMAKE_BINARY_DIR}
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/cmd/marble-test)
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/cmd/marble-test)
 
 add_custom_target(marbletest ALL DEPENDS test-marble marble-test)
 
