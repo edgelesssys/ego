@@ -14,7 +14,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/hex"
 	"encoding/json"
 	"math/big"
 	"net/http"
@@ -215,8 +214,8 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 		privateClaims := privateClaims{
 			Data:            base64.RawURLEncoding.EncodeToString(data),
 			Debug:           true,
-			UniqueID:        hex.EncodeToString(uniqueID),
-			SignerID:        hex.EncodeToString(signerID),
+			UniqueID:        string(uniqueID),
+			SignerID:        string(signerID),
 			ProductID:       123,
 			SecurityVersion: 321,
 		}
