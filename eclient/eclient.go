@@ -4,7 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Package eclient provides functionality for Go programs that interact with enclave programs.
 package eclient
 
 import (
@@ -22,6 +21,7 @@ import (
 //
 // Returns the parsed report if the signature is valid.
 // Returns an error if the signature is invalid.
+// The returned report's content must still be verified.
 func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 	report, err := verifyRemoteReport(reportBytes)
 	return toAttestationReport(report), err

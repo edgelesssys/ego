@@ -4,7 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Package attestation provides attestation data structures.
 package attestation
 
 import (
@@ -29,7 +28,8 @@ var ErrEmptyReport = errors.New("empty report")
 // VerifyAzureAttestationToken takes a Microsoft Azure Attestation Token in JSON Web Token compact
 // serialization format and verifies the tokens public claims and signature. The Attestation providers
 // keys are loaded from providerURL/certs over TLS and need to be in JSON Web Key format. The validation
-// is based on the trust in this TLS channel. Note, that the token's issuer (iss) has to equal the providerURL.
+// is based on the trust in this TLS channel. Note, that the token's issuer (iss) has to equal the providerURL,
+// and providerURL must use the HTTPS scheme.
 //
 // Since an enclave hasn't got a set of root CA certificates, there is no default way to establish a
 // trusted TLS connection to the Attestation Provider for getting the certificate the token was signed with.
