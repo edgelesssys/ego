@@ -1,5 +1,5 @@
 # EGo
-<img src="doc/logo.svg" alt="EGo logo" width="40%"/>
+<img src="src/logo.svg" alt="EGo logo" width="40%"/>
 
 [![GitHub Actions Status][github-actions-badge]][github-actions]
 [![GitHub license][license-badge]](LICENSE)
@@ -50,9 +50,8 @@ Now you're ready to build applications with EGo! To start, check out the followi
 * [azure_attestation](samples/azure_attestation) shows how to use Microsoft Azure Attestation for remote attestation.
 
 ## Documentation
+* The [EGo documentation](https://ego.dev/docs/introduction/) covers building, signing, running, and debugging confidential apps.
 * The [EGo API](https://pkg.go.dev/github.com/edgelesssys/ego) provides access to *remote attestation* and *sealing* to your confidential app at runtime.
-* [`ego` command reference](doc/ego_cli.md)
-* [Debugging](doc/debugging.md)
 
 <!-- refs -->
 [github-actions]: https://github.com/edgelesssys/ego/actions
