@@ -21,8 +21,8 @@ ego run hello
 
 ## Install
 
-### From Release
-If you are on Ubuntu 18.04 or above and do not want to build EGo from source, you can install the binary release:
+### From release
+If you're on Ubuntu 18.04 or above, you can install the binary release:
 ```bash
 wget -qO- https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add
 sudo add-apt-repository 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main'
@@ -30,7 +30,7 @@ wget https://github.com/edgelesssys/ego/releases/download/v0.2.1/ego_0.2.1_amd64
 sudo apt install ./ego_0.2.1_amd64.deb build-essential
 ```
 
-### Build from Source
+### Build from source
 *Prerequisite*: [Edgeless RT](https://github.com/edgelesssys/edgelessrt) is installed and sourced.
 
 ```sh
@@ -40,10 +40,8 @@ cmake ..
 make
 make install
 ```
-## Getting Started
-Now you are ready to build applications with EGo! To start, check out the following [samples](#samples).
-
-### Samples
+## Getting started
+Now you're ready to build applications with EGo! To start, check out the following samples:
 * [helloworld](samples/helloworld) is a minimal example of an enclave application.
 * [remote_attestation](samples/remote_attestation) shows how to use the basic remote attestation API of EGo.
 * [attested_tls](samples/attested_tls) is similar to the above, but uses a higher level API to establish an attested TLS connection.
