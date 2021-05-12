@@ -9,6 +9,8 @@ github.com/edgelesssys/ego v0.2.2-0.20210505153424-094516d2450a h1:nmqyA/xvnnQtO
 github.com/edgelesssys/ego v0.2.2-0.20210505153424-094516d2450a/go.mod h1:vVLpcld7iG/H0CWa91jQ7C5oQ/iM3SPbD0PdXE0qE8A=
 github.com/edgelesssys/ego v0.2.2-0.20210506072534-c7ca62b2c6c1 h1:zKnVSx1TyXKsxNcUn4sKNzAjeRs7rUMyqsbk+TPRlzk=
 github.com/edgelesssys/ego v0.2.2-0.20210506072534-c7ca62b2c6c1/go.mod h1:vVLpcld7iG/H0CWa91jQ7C5oQ/iM3SPbD0PdXE0qE8A=
+github.com/edgelesssys/ego v0.2.2-0.20210512121405-188f41e16c74 h1:sq8Ox2TMCV4o+i/YRDjjzY7kU/pt532JDO9wjJum7HA=
+github.com/edgelesssys/ego v0.2.2-0.20210512121405-188f41e16c74/go.mod h1:vVLpcld7iG/H0CWa91jQ7C5oQ/iM3SPbD0PdXE0qE8A=
 github.com/google/go-cmp v0.5.5 h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/kr/pretty v0.2.0 h1:s5hAObm+yFO5uHYt5dYjxi2rXrsnmRpJx4OYvIWUaQs=

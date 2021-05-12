@@ -7,6 +7,7 @@
 package attestation
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -19,8 +20,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"reflect"
-	"strings"
 	"testing"
 	"time"
 
@@ -53,11 +52,7 @@ func TestCreateAzureAttestationToken(t *testing.T) {
 		// Mock attestation provider.
 		//
 		createToken := func(w http.ResponseWriter, r *http.Request) {
-			wantURL, err := url.Parse("attest/OpenEnclave?api-version=2020-10-01")
-			if err != nil {
-				http.Error(w, "could not parse wantURL", http.StatusInternalServerError)
-			}
-			if !strings.HasSuffix(r.URL.Path, wantURL.Path) || r.URL.RawQuery != wantURL.RawQuery {
+			if r.RequestURI != "/attest/OpenEnclave?api-version=2020-10-01" {
 				http.Error(w, "not found", http.StatusNotFound)
 				return
 			}
@@ -74,7 +69,7 @@ func TestCreateAzureAttestationToken(t *testing.T) {
 				return
 			}
 
-			if !reflect.DeepEqual(report, test.report) {
+			if !bytes.Equal(report, test.report) {
 				http.Error(w, "invalid report", http.StatusBadRequest)
 				return
 			}

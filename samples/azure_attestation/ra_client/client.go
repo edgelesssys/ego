@@ -1,15 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 
 	"github.com/edgelesssys/ego/attestation"
 )
@@ -18,12 +19,16 @@ import (
 const attestationProviderURL = "https://shareduks.uks.attest.azure.net"
 
 func main() {
-	signer := flag.String("s", "", "signer ID")
+	signerArg := flag.String("s", "", "signer ID")
 	serverAddr := flag.String("a", "localhost:8080", "server address")
 	flag.Parse()
 
 	// Ensure signerID is passed.
-	if len(*signer) == 0 {
+	signer, err := hex.DecodeString(*signerArg)
+	if err != nil {
+		panic(err)
+	}
+	if len(signer) == 0 {
 		flag.Usage()
 		return
 	}
@@ -43,7 +48,7 @@ func main() {
 
 	// Verify the report. ProductID, SecurityVersion and Debug were defined in
 	// the enclave.json, and included in the servers binary.
-	if err := verifyReportValues(report, *signer); err != nil {
+	if err := verifyReportValues(report, signer); err != nil {
 		panic(err)
 	}
 
@@ -63,15 +68,13 @@ func main() {
 
 // verifyReportValues compares the report values with that were defined in the
 // enclave.json and that were included into the binary of the server during build.
-func verifyReportValues(report attestation.Report, signer string) error {
-	if !reflect.DeepEqual(report.SignerID, []byte(signer)) {
+func verifyReportValues(report attestation.Report, signer []byte) error {
+	if !bytes.Equal(report.SignerID, []byte(signer)) {
 		return errors.New("token does not contain the right signer id")
 	}
 	fmt.Println("✅ SignerID of the report equals the SignerID you passed to the client.")
 
-	productID := make([]byte, 16)
-	binary.LittleEndian.PutUint16(productID, uint16(1234))
-	if !reflect.DeepEqual(report.ProductID, productID) {
+	if binary.LittleEndian.Uint16(report.ProductID) != 1234 {
 		return errors.New("token contains invalid product id")
 	}
 	fmt.Println("✅ ProductID verified.")
