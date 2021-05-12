@@ -13,6 +13,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -30,7 +31,7 @@ func CreateAzureAttestationToken(report, data []byte, baseurl string) (string, e
 	rtd := rtdata{Data: base64.RawURLEncoding.EncodeToString(data), DataType: "Binary"}
 	attReq := attestOERequest{Report: base64.RawURLEncoding.EncodeToString(report), RuntimeData: rtd}
 
-	url, err := url.Parse(baseurl)
+	uri, err := url.Parse(baseurl)
 	if err != nil {
 		return "", err
 	}
@@ -38,13 +39,13 @@ func CreateAzureAttestationToken(report, data []byte, baseurl string) (string, e
 	if err != nil {
 		return "", err
 	}
-	url = url.ResolveReference(path)
+	uri = uri.ResolveReference(path)
 
 	jsonReq, err := json.Marshal(attReq)
 	if err != nil {
 		return "", err
 	}
-	resp, err := http.Post(url.String(), "application/json", bytes.NewReader(jsonReq))
+	resp, err := http.Post(uri.String(), "application/json", bytes.NewReader(jsonReq))
 	if err != nil {
 		return "", err
 	}
@@ -61,10 +62,20 @@ func CreateAzureAttestationToken(report, data []byte, baseurl string) (string, e
 
 // VerifyAzureAttestationToken takes a Microsoft Azure Attestation Token in JSON Web Token compact
 // serialization format and verifies the tokens public claims and signature. The Attestation providers
-// keys are loaded from url over an TLS connection. The validation is based on the trust in this TLS channel.
-// Note, that the token's issuer (iss) has to equal the url.
-func VerifyAzureAttestationToken(rawToken, url string) (Report, error) {
-	jwkSetBytes, err := httpGet(url + "/certs")
+// keys are loaded from baseURL over an TLS connection. The validation is based on the trust in this TLS channel.
+// Note, that the token's issuer (iss) has to equal the baseURL's string representation.
+// Attention: the calling function needs to ensure the scheme of baseURL is HTTPS,
+// e.g. by calling the ParseHTTPS function of this package.
+func VerifyAzureAttestationToken(rawToken string, baseURL *url.URL) (Report, error) {
+	// Parse baseURL and add path
+	path, err := url.Parse("/certs")
+	if err != nil {
+		return Report{}, err
+	}
+	uri := baseURL.ResolveReference(path)
+
+	// Get JSON Web Key set
+	jwkSetBytes, err := httpGet(uri.String())
 	if err != nil {
 		return Report{}, err
 	}
@@ -87,7 +98,7 @@ func VerifyAzureAttestationToken(rawToken, url string) (Report, error) {
 	}
 
 	// Verify public claims.
-	if err := publicClaims.Validate(jwt.Expected{Issuer: url, Time: time.Now()}); err != nil {
+	if err := publicClaims.Validate(jwt.Expected{Issuer: baseURL.String(), Time: time.Now()}); err != nil {
 		return Report{}, err
 	}
 
@@ -114,6 +125,18 @@ func VerifyAzureAttestationToken(rawToken, url string) (Report, error) {
 		SignerID:        signerID,
 		ProductID:       productID,
 	}, nil
+}
+
+// ParseHTTPS parses an URL and ensures its scheme is HTTPS
+func ParseHTTPS(URL string) (*url.URL, error) {
+	uri, err := url.Parse(URL)
+	if err != nil {
+		return nil, errors.New("could not parse URL")
+	}
+	if uri.Scheme != "https" {
+		return nil, errors.New("the provided baseURL does not use HTTPS")
+	}
+	return uri, nil
 }
 
 // atttestOERequest is an Microsoft Azure Attestation AttestOpenEnclaveRequest
@@ -176,9 +199,6 @@ func httpGet(url string) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("http response has status %v", resp.Status)
 	}
-	// if resp.TLS == nil {
-	// 	return nil, errors.New("http response was not encrypted")
-	// }
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err

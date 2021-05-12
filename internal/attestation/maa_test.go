@@ -32,7 +32,7 @@ import (
 func TestCreateAzureAttestationToken(t *testing.T) {
 	require := require.New(t)
 	//
-	// Tests.
+	// Test cases.
 	//
 	tests := map[string]struct {
 		report        []byte
@@ -92,6 +92,9 @@ func TestCreateAzureAttestationToken(t *testing.T) {
 				http.Error(w, "could not create response", http.StatusInternalServerError)
 			}
 		}
+		//
+		// Run test.
+		//
 		func() {
 			attestationProvider := httptest.NewServer(http.HandlerFunc(createToken))
 			defer attestationProvider.Close()
@@ -160,8 +163,7 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
 	}
-	attestationProvider := httptest.NewUnstartedServer(http.HandlerFunc(serveKeys))
-	attestationProvider.Start()
+	attestationProvider := httptest.NewServer(http.HandlerFunc(serveKeys))
 	defer attestationProvider.Close()
 	//
 	// Test cases.
@@ -253,7 +255,9 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 		//
 		// Verify token and check report.
 		//
-		report, err := VerifyAzureAttestationToken(rawToken, attestationProvider.URL)
+		uri, err := url.Parse(attestationProvider.URL)
+		require.NoError(err)
+		report, err := VerifyAzureAttestationToken(rawToken, uri)
 		if test.ExpectErr {
 			require.Error(err)
 			continue
@@ -278,4 +282,26 @@ func DisabledTestSharedProviderKeyParsing(t *testing.T) {
 	require.NoError(err)
 	_, err = parseKeySet(jwkSetBytes)
 	require.NoError(err)
+}
+
+func TestParseHTTPS(t *testing.T) {
+	require := require.New(t)
+
+	invalidURLs := []string{
+		"http://example.com",
+		"ftp://example.com",
+	}
+	for _, url := range invalidURLs {
+		_, err := ParseHTTPS(url)
+		require.Error(err)
+	}
+
+	validURLs := []string{
+		"https://example.com",
+		"https://shareduks.uks.attest.azure.net",
+	}
+	for _, url := range validURLs {
+		_, err := ParseHTTPS(url)
+		require.NoError(err)
+	}
 }
