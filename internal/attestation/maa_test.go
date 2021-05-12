@@ -9,15 +9,18 @@ package attestation
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -29,48 +32,79 @@ import (
 func TestCreateAzureAttestationToken(t *testing.T) {
 	require := require.New(t)
 	//
-	// Mock attestation provider.
+	// Tests.
 	//
-	createToken := func(w http.ResponseWriter, r *http.Request) {
-		decoder := json.NewDecoder(r.Body)
-		var req attestOERequest
-		if err := decoder.Decode(&req); err != nil {
-			http.Error(w, "could not decode json", http.StatusBadRequest)
-			return
-		}
-		report, err := base64.RawURLEncoding.DecodeString(req.Report)
-		if err != nil {
-			http.Error(w, "could not decode report", http.StatusBadRequest)
-			return
-		}
-		if string(report[:6]) != "111777" {
-			http.Error(w, "invalid report", http.StatusBadRequest)
-			return
-		}
-		if req.RuntimeData.Data == "" || req.RuntimeData.DataType == "" {
-			http.Error(w, "missing runtime data", http.StatusBadRequest)
-			return
-		}
-		token := attestationResponse{Token: "test"}
-		response, err := json.Marshal(token)
-		if err != nil {
-			http.Error(w, "could not create reponse", http.StatusInternalServerError)
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(response)
+	tests := map[string]struct {
+		report        []byte
+		data          []byte
+		expectedToken string
+		expectedError error
+	}{
+		"basic": {
+			[]byte("reportBytes"),
+			[]byte("dataBytes"),
+			"token",
+			nil,
+		},
 	}
-	attestationProvider := httptest.NewUnstartedServer(http.HandlerFunc(createToken))
-	attestationProvider.Start()
-	defer attestationProvider.Close()
-	//
-	// Test.
-	//
-	report := []byte("111777randombytes")
-	data := []byte("test")
-	baseurl := attestationProvider.URL
-	resp, err := CreateAzureAttestationToken(report, data, baseurl)
-	require.NoError(err)
-	require.Equal(resp, "test")
+	for testName, test := range tests {
+		t.Logf("Subtest: %v", testName)
+		//
+		// Mock attestation provider.
+		//
+		createToken := func(w http.ResponseWriter, r *http.Request) {
+			wantURL, err := url.Parse("attest/OpenEnclave?api-version=2020-10-01")
+			if err != nil {
+				http.Error(w, "could not parse wantURL", http.StatusInternalServerError)
+			}
+			if !strings.HasSuffix(r.URL.Path, wantURL.Path) || r.URL.RawQuery != wantURL.RawQuery {
+				http.Error(w, "not found", http.StatusNotFound)
+				return
+			}
+
+			decoder := json.NewDecoder(r.Body)
+			var req attestOERequest
+			if err := decoder.Decode(&req); err != nil {
+				http.Error(w, "could not decode json", http.StatusBadRequest)
+				return
+			}
+			report, err := base64.RawURLEncoding.DecodeString(req.Report)
+			if err != nil {
+				http.Error(w, "could not decode report", http.StatusBadRequest)
+				return
+			}
+
+			if !reflect.DeepEqual(report, test.report) {
+				http.Error(w, "invalid report", http.StatusBadRequest)
+				return
+			}
+			if req.RuntimeData.Data != base64.RawURLEncoding.EncodeToString(test.data) {
+				http.Error(w, "invalid runtime data", http.StatusBadRequest)
+				return
+			}
+			if req.RuntimeData.DataType != "Binary" {
+				http.Error(w, "runtime data of invalid type", http.StatusBadRequest)
+				return
+			}
+
+			token := attestationResponse{Token: test.expectedToken}
+			if err := json.NewEncoder(w).Encode(token); err != nil {
+				http.Error(w, "could not create response", http.StatusInternalServerError)
+			}
+		}
+		func() {
+			attestationProvider := httptest.NewServer(http.HandlerFunc(createToken))
+			defer attestationProvider.Close()
+
+			resp, err := CreateAzureAttestationToken(test.report, test.data, attestationProvider.URL)
+			if test.expectedError != nil {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				require.Equal(resp, test.expectedToken)
+			}
+		}()
+	}
 }
 
 func TestVerifyAzureAttestationToken(t *testing.T) {
@@ -132,14 +166,12 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 	//
 	// Test cases.
 	//
-	tests := []struct {
-		Name         string
+	tests := map[string]struct {
 		PublicClaims jwt.Claims
 		Key          *rsa.PrivateKey
 		ExpectErr    bool
 	}{
-		{
-			"basic",
+		"basic": {
 			jwt.Claims{
 				Expiry:    jwt.NewNumericDate(time.Now().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -149,8 +181,7 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 			},
 			key, false,
 		},
-		{
-			"wrong issuer",
+		"wrong issuer": {
 			jwt.Claims{
 				Expiry:    jwt.NewNumericDate(time.Now().Add(time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -160,8 +191,7 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 			},
 			key, true,
 		},
-		{
-			"expired",
+		"expired": {
 			jwt.Claims{
 				Expiry:    jwt.NewNumericDate(time.Now().Add(-1 * time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().Add(-2 * time.Hour)),
@@ -171,8 +201,7 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 			},
 			key, true,
 		},
-		{
-			"before nbf",
+		"before nbf": {
 			jwt.Claims{
 				Expiry:    jwt.NewNumericDate(time.Now().Add(2 * time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().Add(-2 * time.Hour)),
@@ -182,8 +211,7 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 			},
 			key, true,
 		},
-		{
-			"issued in future",
+		"issued in future": {
 			jwt.Claims{
 				Expiry:    jwt.NewNumericDate(time.Now().Add(4 * time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().Add(2 * time.Hour)),
@@ -193,8 +221,7 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 			},
 			key, true,
 		},
-		{
-			"wrong signature",
+		"wrong signature": {
 			jwt.Claims{
 				Expiry:    jwt.NewNumericDate(time.Now().Add(4 * time.Hour)),
 				IssuedAt:  jwt.NewNumericDate(time.Now().Add(2 * time.Hour)),
@@ -205,8 +232,8 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 			evilKey, true,
 		},
 	}
-	for _, test := range tests {
-		t.Logf("Subtest: %v", test.Name)
+	for testName, test := range tests {
+		t.Logf("Subtest: %v", testName)
 		//
 		// Create token.
 		//
@@ -214,8 +241,8 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 		privateClaims := privateClaims{
 			Data:            base64.RawURLEncoding.EncodeToString(data),
 			Debug:           true,
-			UniqueID:        string(uniqueID),
-			SignerID:        string(signerID),
+			UniqueID:        hex.EncodeToString(uniqueID),
+			SignerID:        hex.EncodeToString(signerID),
 			ProductID:       123,
 			SecurityVersion: 321,
 		}
@@ -244,11 +271,10 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 	}
 }
 
-func TestSharedProviderKeyParsing(t *testing.T) {
+func DisabledTestSharedProviderKeyParsing(t *testing.T) {
 	require := require.New(t)
 	url := "https://shareduks.uks.attest.azure.net"
-	tlsConfig := &tls.Config{}
-	jwkSetBytes, err := httpGet(tlsConfig, url+"/certs")
+	jwkSetBytes, err := httpGet(url + "/certs")
 	require.NoError(err)
 	_, err = parseKeySet(jwkSetBytes)
 	require.NoError(err)

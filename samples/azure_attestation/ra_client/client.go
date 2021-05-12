@@ -14,14 +14,12 @@ import (
 	"github.com/edgelesssys/ego/attestation"
 )
 
-// serverAddr is the address of the server
-const serverAddr = "localhost:8080"
-
 // attestationProviderURL is the URL of the attestation provider
 const attestationProviderURL = "https://shareduks.uks.attest.azure.net"
 
 func main() {
 	signer := flag.String("s", "", "signer ID")
+	serverAddr := flag.String("a", "localhost:8080", "server address")
 	flag.Parse()
 
 	// Ensure signerID is passed.
@@ -32,7 +30,7 @@ func main() {
 
 	// Get attestation token from server. Skip TLS certificate verification because
 	// the certificate is self-signed and we will verify it using the token instead.
-	serverUrl := "https://" + serverAddr
+	serverUrl := "https://" + *serverAddr
 	tlsConfig := &tls.Config{InsecureSkipVerify: true}
 	tokenBytes := httpGet(tlsConfig, serverUrl+"/token")
 	fmt.Printf("🆗 Loaded server attestation token from %s.\n", serverUrl+"/token")

@@ -28,6 +28,9 @@ func main() {
 
 	// Cerate an Azure Attestation Token.
 	token, err := enclave.CreateAzureAttestationToken(cert, attestationProviderURL)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println("🆗 Created an Microsoft Azure Attestation Token.")
 
 	// Create HTTPS server.

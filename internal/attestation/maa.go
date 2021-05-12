@@ -8,10 +8,10 @@ package attestation
 
 import (
 	"bytes"
-	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -64,8 +64,7 @@ func CreateAzureAttestationToken(report, data []byte, baseurl string) (string, e
 // keys are loaded from url over an TLS connection. The validation is based on the trust in this TLS channel.
 // Note, that the token's issuer (iss) has to equal the url.
 func VerifyAzureAttestationToken(rawToken, url string) (Report, error) {
-	tlsConfig := &tls.Config{}
-	jwkSetBytes, err := httpGet(tlsConfig, url+"/certs")
+	jwkSetBytes, err := httpGet(url + "/certs")
 	if err != nil {
 		return Report{}, err
 	}
@@ -97,14 +96,22 @@ func VerifyAzureAttestationToken(rawToken, url string) (Report, error) {
 	if err != nil {
 		return Report{}, err
 	}
+	uniqueID, err := hex.DecodeString(privateClaims.UniqueID)
+	if err != nil {
+		return Report{}, err
+	}
+	signerID, err := hex.DecodeString(privateClaims.SignerID)
+	if err != nil {
+		return Report{}, err
+	}
 	productID := make([]byte, 16)
 	binary.LittleEndian.PutUint16(productID, uint16(privateClaims.ProductID))
 	return Report{
 		Data:            data,
 		SecurityVersion: privateClaims.SecurityVersion,
 		Debug:           privateClaims.Debug,
-		UniqueID:        []byte(privateClaims.UniqueID),
-		SignerID:        []byte(privateClaims.SignerID),
+		UniqueID:        uniqueID,
+		SignerID:        signerID,
 		ProductID:       productID,
 	}, nil
 }
@@ -160,9 +167,8 @@ func parseKeySet(keySetBytes []byte) (jose.JSONWebKeySet, error) {
 	return keySet, nil
 }
 
-func httpGet(tlsConfig *tls.Config, url string) ([]byte, error) {
-	client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
-	resp, err := client.Get(url)
+func httpGet(url string) ([]byte, error) {
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -170,6 +176,9 @@ func httpGet(tlsConfig *tls.Config, url string) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("http response has status %v", resp.Status)
 	}
+	// if resp.TLS == nil {
+	// 	return nil, errors.New("http response was not encrypted")
+	// }
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
