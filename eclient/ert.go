@@ -4,7 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Package eclient provides functionality for Go programs that interact with enclave programs.
 package eclient
 
 // #cgo LDFLAGS: -loehostverify -lcrypto -ldl
@@ -19,15 +18,7 @@ import (
 	internal "github.com/edgelesssys/ego/internal/attestation"
 )
 
-// VerifyRemoteReport verifies the integrity of the remote report and its signature.
-//
-// This function verifies that the report signature is valid. It
-// verifies that the signing authority is rooted to a trusted authority
-// such as the enclave platform manufacturer.
-//
-// Returns the parsed report if the signature is valid.
-// Returns an error if the signature is invalid.
-func VerifyRemoteReport(reportBytes []byte) (internal.Report, error) {
+func verifyRemoteReport(reportBytes []byte) (internal.Report, error) {
 	if len(reportBytes) <= 0 {
 		return internal.Report{}, attestation.ErrEmptyReport
 	}
