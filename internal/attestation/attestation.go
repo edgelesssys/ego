@@ -19,9 +19,17 @@ import (
 	"errors"
 	"math/big"
 	"time"
-
-	"github.com/edgelesssys/ego/attestation"
 )
+
+// Report is a parsed enclave report.
+type Report struct {
+	Data            []byte // The report data that has been included in the report.
+	SecurityVersion uint   // Security version of the enclave. For SGX enclaves, this is the ISVSVN value.
+	Debug           bool   // If true, the report is for a debug enclave.
+	UniqueID        []byte // The unique ID for the enclave. For SGX enclaves, this is the MRENCLAVE value.
+	SignerID        []byte // The signer ID for the enclave. For SGX enclaves, this is the MRSIGNER value.
+	ProductID       []byte // The Product ID for the enclave. For SGX enclaves, this is the ISVPRODID value.
+}
 
 // https://github.com/openenclave/openenclave/blob/master/include/openenclave/internal/report.h
 var oidOeNewQuote = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 311, 105, 1}
@@ -87,7 +95,7 @@ func CreateAttestationServerTLSConfig(getRemoteReport func([]byte) ([]byte, erro
 }
 
 // CreateAttestationClientTLSConfig creates a tls.Config object that verifies a certificate with embedded report.
-func CreateAttestationClientTLSConfig(verifyRemoteReport func([]byte) (attestation.Report, error), verifyReport func(attestation.Report) error) *tls.Config {
+func CreateAttestationClientTLSConfig(verifyRemoteReport func([]byte) (Report, error), verifyReport func(Report) error) *tls.Config {
 	verify := func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
 		// parse certificate
 		if len(rawCerts) <= 0 {
