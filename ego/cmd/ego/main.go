@@ -115,7 +115,6 @@ func handleErr(err error) {
 }
 
 func help(cmd string) {
-	me := os.Args[0]
 	var s string
 
 	switch cmd {
@@ -164,7 +163,7 @@ Set OE_SIMULATION=1 to run in simulation mode.`
 		s = `env ...
 
 Run a command within the EGo environment. For example, run
-` + me + ` env make
+ego env make
 to build a Go project that uses a Makefile.`
 
 	case "signerid":
@@ -188,10 +187,10 @@ Commands:
   uniqueid    Print the UniqueID of a signed executable.
   env         Run a command in the EGo environment.
 
-Use "` + me + ` help <command>" for more information about a command.`
+Use "ego help <command>" for more information about a command.`
 	}
 
-	fmt.Println("Usage: " + me + " " + s)
+	fmt.Println("Usage: ego " + s)
 }
 
 type runner struct{}
