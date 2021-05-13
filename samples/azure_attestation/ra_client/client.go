@@ -35,10 +35,10 @@ func main() {
 
 	// Get attestation token from server. Skip TLS certificate verification because
 	// the certificate is self-signed and we will verify it using the token instead.
-	serverUrl := "https://" + *serverAddr
+	serverURL := "https://" + *serverAddr
 	tlsConfig := &tls.Config{InsecureSkipVerify: true}
-	tokenBytes := httpGet(tlsConfig, serverUrl+"/token")
-	fmt.Printf("🆗 Loaded server attestation token from %s.\n", serverUrl+"/token")
+	tokenBytes := httpGet(tlsConfig, serverURL+"/token")
+	fmt.Printf("🆗 Loaded server attestation token from %s.\n", serverURL+"/token")
 
 	report, err := attestation.VerifyAzureAttestationToken(string(tokenBytes), attestationProviderURL)
 	if err != nil {
@@ -62,7 +62,7 @@ func main() {
 	tlsConfig = &tls.Config{RootCAs: x509.NewCertPool(), ServerName: "localhost"}
 	tlsConfig.RootCAs.AddCert(cert)
 
-	httpGet(tlsConfig, serverUrl+"/secret?s=thisIsTheSecret")
+	httpGet(tlsConfig, serverURL+"/secret?s=thisIsTheSecret")
 	fmt.Println("🔒 Sent secret over attested TLS channel.")
 }
 

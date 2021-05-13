@@ -273,7 +273,8 @@ func TestSignJSONExecutablePayload(t *testing.T) {
 	// Re-sign the already signed executable
 	err = cli.embedConfigAsPayload(exe, jsonNewData)
 	assert.NoError(err)
-	payloadSize, payloadOffset, oeInfoOffset, err = getPayloadInformation(signedExeMemfs)
+	payloadSize, payloadOffset, _, err = getPayloadInformation(signedExeMemfs)
+	require.NoError(err)
 	assert.EqualValues(expectedLengthOfNewPayload, payloadSize)
 	assert.EqualValues(unsignedExeMemfsSize, payloadOffset)
 

@@ -7,5 +7,5 @@ require (
 	github.com/google/go-cmp v0.5.5
 	github.com/spf13/afero v1.5.1
 	github.com/stretchr/testify v1.7.0
-	google.golang.org/grpc v1.37.0
+	google.golang.org/grpc v1.37.1
 )
