@@ -21,8 +21,14 @@ ego run hello
 
 ## Install
 
-### From release
-If you're on Ubuntu 18.04 or above, you can install the binary release:
+### Install the Snap
+The easiest way to install EGo is via the Snap:
+```sh
+sudo snap install ego-dev --classic
+```
+
+### Install the DEB package
+If you're on Ubuntu 18.04 or above, you can install the DEB package:
 ```bash
 wget -qO- https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add
 sudo add-apt-repository 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main'

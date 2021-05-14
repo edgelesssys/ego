@@ -25,6 +25,10 @@ The client can be built either using `ego-go` or a recent Go compiler:
 ```sh
 CGO_CFLAGS=-I/opt/ego/include CGO_LDFLAGS=-L/opt/ego/lib go build ra_client/client.go
 ```
+Or if using the EGo Snap:
+```sh
+EGOPATH=/snap/ego-dev/current/opt/ego CGO_CFLAGS=-I$EGOPATH/include CGO_LDFLAGS=-L$EGOPATH/lib go build ra_client/client.go
+```
 
 The client expects the `signer ID` (`MRSIGNER`) as an argument. The `signer ID` can be derived from the signer's public key using `ego signerid`:
 ```sh

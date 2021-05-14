@@ -1,0 +1,48 @@
+name: ego-dev
+base: core18
+version: "0.2.2"
+summary: EGo lets you build, debug und run Go apps on Intel SGX!
+description: EGo is a framework for building confidential apps in Go. Confidential apps run in always-encrypted and verifiable enclaves on Intel SGX-enabled hardware.
+
+grade: stable
+confinement: classic
+
+architectures:
+  - build-on: amd64
+    run-on: amd64
+
+apps:
+  ego:
+    command: opt/ego/bin/ego
+  ego-go:
+    command: opt/ego/bin/ego-go
+  ego-gdb:
+    command: opt/ego/bin/ego-gdb
+
+parts:
+  ego:
+    source: https://github.com/edgelesssys/ego/releases/download/v0.2.2/ego_0.2.2_amd64.deb
+    source-checksum: "sha256/7cbf77a4e07583091a46905782a80d50d029aceabeb42154483c511af77c26c4"
+    source-type: deb
+    plugin: dump
+    build-attributes: [no-patchelf] # needed otherwise Snap breaks the go binary, causing it to segfault on launch
+    # fix symlinks in .deb release package, they point outside of the snap environment and snapcraft will automatically add them anyway
+    override-build: |
+      rm -f $SNAPCRAFT_PART_BUILD/usr/local/bin/ego-go
+      rm -f $SNAPCRAFT_PART_BUILD/usr/local/bin/ego-gdb
+      rm -f $SNAPCRAFT_PART_BUILD/usr/local/bin/ego
+      snapcraftctl build
+    stage-packages:
+      [
+        build-essential,
+        libsgx-enclave-common,
+        libsgx-dcap-ql,
+        libsgx-dcap-ql-dev,
+      ]
+
+package-repositories:
+  - type: apt
+    components: [main]
+    suites: [bionic]
+    key-id: 35BFD5E1AEFFA8C4996DDD0DAA65AD26261B320B
+    url: https://download.01.org/intel-sgx/sgx_repo/ubuntu
