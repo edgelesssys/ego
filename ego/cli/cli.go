@@ -86,7 +86,7 @@ func (b *cappedBuffer) Write(p []byte) (int, error) {
 
 func findCommonError(s string) error {
 	switch {
-	case strings.Contains(s, "enclave_initialize failed (err=0x1001)"):
+	case strings.Contains(s, "enclave_initialize failed (err=0x5)"):
 		return ErrEnclIniFail
 	case strings.Contains(s, "oe_sgx_is_valid_attributes failed: attributes = 0"):
 		return ErrValidAttr0

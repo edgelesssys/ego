@@ -14,10 +14,14 @@ architectures:
 apps:
   ego:
     command: opt/ego/bin/ego
+    environment:
+      LD_LIBRARY_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
   ego-go:
     command: opt/ego/bin/ego-go
   ego-gdb:
     command: opt/ego/bin/ego-gdb
+    environment:
+      LD_LIBRARY_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
 
 parts:
   ego:
@@ -34,7 +38,6 @@ parts:
       snapcraftctl build
     stage-packages:
       [
-        build-essential,
         libsgx-enclave-common,
         libsgx-dcap-ql,
         libsgx-dcap-ql-dev,
