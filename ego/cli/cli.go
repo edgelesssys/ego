@@ -87,7 +87,9 @@ func (b *cappedBuffer) Write(p []byte) (int, error) {
 func findCommonError(s string) error {
 	switch {
 	case strings.Contains(s, "enclave_initialize failed (err=0x5)"):
-		return ErrEnclIniFail
+		return ErrEnclIniFailInvalidMeasurement
+	case strings.Contains(s, "enclave_initialize failed (err=0x1001)"):
+		return ErrEnclIniFailUnexpected
 	case strings.Contains(s, "oe_sgx_is_valid_attributes failed: attributes = 0"):
 		return ErrValidAttr0
 	case strings.Contains(s, "ELF image is not a PIE or shared object"):
@@ -114,9 +116,13 @@ var ErrOECrypto = errors.New("OE_CRYPTO_ERROR")
 // ErrExtUnknown is a unknown error from an external tool.
 var ErrExtUnknown = errors.New("unknown external error")
 
-// ErrEnclIniFail is an Open Enclave error where enclave_initialize fails with error code 0x1001.
-// This likely occures if the signature of the binary is invalid and the binary needs to be resigned.
-var ErrEnclIniFail = fmt.Errorf("%w: enclave_initialize failed (err=0x1001)", ErrOEPlatform)
+// ErrEnclIniFailInvalidMeasurement is an Open Enclave error where enclave_initialize fails with error code 0x5.
+// This likely occurs if the signature of the binary is invalid and the binary needs to be resigned.
+var ErrEnclIniFailInvalidMeasurement = fmt.Errorf("%w: enclave_initialize failed: ENCLAVE_INVALID_MEASUREMENT", ErrOEPlatform)
+
+// ErrEnclIniFailUnexpected is an Open Enclave error where enclave_initialize fails with error code 0x1001.
+// On non-FLC systems this occurs if the libsgx-launch package is not installed.
+var ErrEnclIniFailUnexpected = fmt.Errorf("%w: enclave_initialize failed: ENCLAVE_UNEXPECTED", ErrOEPlatform)
 
 // ErrValidAttr0 is an Open Enclave error where oe_sgx_is_valid_attributes fails.
 // This likely occures if an unsigned binary is run.
