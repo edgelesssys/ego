@@ -87,6 +87,15 @@ func main() {
 		if len(args) > 0 {
 			os.Exit(c.Env(args[0], args[1:]))
 		}
+	case "install":
+		var component string
+		if len(args) == 1 {
+			component = args[0]
+		}
+		if err := c.Install(askInstall, component); err != nil {
+			log.Fatal(err)
+		}
+		return
 	case "help":
 		if len(args) == 1 {
 			help(args[0])
@@ -106,9 +115,14 @@ func handleErr(err error) {
 	case cli.ErrValidAttr0:
 		fmt.Println("ERROR: Binary could not be loaded")
 		fmt.Println("Maybe the binary was not previous signed with 'ego sign'?")
-	case cli.ErrEnclIniFail:
+	case cli.ErrEnclIniFailInvalidMeasurement:
 		fmt.Println("ERROR: Initialziation of the enclave failed.")
 		fmt.Println("Try to resign the binary with 'ego sign' and rerun afterwards.")
+	case cli.ErrEnclIniFailUnexpected:
+		fmt.Println("ERROR: Initialziation of the enclave failed.")
+		if _, err := os.Stat("/dev/isgx"); err == nil {
+			fmt.Println("Try to run: sudo ego install libsgx-launch")
+		}
 	case cli.ErrSGXOpenFail:
 		fmt.Println("ERROR: Failed to open Intel SGX device.")
 		fmt.Println("Maybe your hardware does not support SGX or a required module is missing.")
@@ -195,6 +209,10 @@ Use "ego help <command>" for more information about a command.`
 	}
 
 	fmt.Println("\nUsage: ego " + s)
+}
+
+func askInstall(listOfActions string) bool {
+	return false
 }
 
 type runner struct{}
