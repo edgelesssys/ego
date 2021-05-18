@@ -13,7 +13,7 @@ This sample shows how to do remote attestation of an EGo enclave in combination 
 
 1. The Azure Attestation Provider validates the Quote, which is part of the report, and ensures that the report contains the hash of the Enclave Held Data, which in this case is the self-signed certificate.
 
-1. If the validation succeeds, the Attestation Provider generates a signed JSON Web Token (JWT) and returns the token to the server in the Attestation Response. The token contains the Encalve Held Data (the certificate) and information for the token verification.
+1. If the validation succeeds, the Attestation Provider generates a signed JSON Web Token (JWT) and returns the token to the server in the Attestation Response. The token contains the Enclave Held Data (the certificate) and information for the token verification.
 
 1. The server runs HTTPS and provides the following endpoints to the client:
     * `/token` returns the JSON Web Token. The client requests the token skipping TLS certificate verification.
