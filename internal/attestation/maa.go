@@ -8,6 +8,7 @@ package attestation
 
 import (
 	"bytes"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
@@ -28,9 +29,11 @@ import (
 // to an Attestation Provider, who is reachable under baseurl. A JSON Web Token in compact
 // serialization is returned.
 func CreateAzureAttestationToken(report, data []byte, baseurl string) (string, error) {
+	// Create attestation request struct.
 	rtd := rtdata{Data: base64.RawURLEncoding.EncodeToString(data), DataType: "Binary"}
 	attReq := attestOERequest{Report: base64.RawURLEncoding.EncodeToString(report), RuntimeData: rtd}
 
+	// Parse url and add path.
 	uri, err := url.Parse(baseurl)
 	if err != nil {
 		return "", err
@@ -41,15 +44,24 @@ func CreateAzureAttestationToken(report, data []byte, baseurl string) (string, e
 	}
 	uri = uri.ResolveReference(path)
 
+	// Marshal request struct to JSON.
 	jsonReq, err := json.Marshal(attReq)
 	if err != nil {
 		return "", err
 	}
-	resp, err := http.Post(uri.String(), "application/json", bytes.NewReader(jsonReq))
+
+	// Create HTTP client skiping TLS certificate verification, since
+	// the enclave does not have a set of Root CAs. There is no need
+	// for a trusted connection.
+	tlsConfig := &tls.Config{InsecureSkipVerify: true}
+	client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
+	resp, err := client.Post(uri.String(), "application/json", bytes.NewReader(jsonReq))
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
+
+	// Check response and return the token.
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("attestation request failed, attestation provider returned status code %v", resp.StatusCode)
 	}
@@ -64,17 +76,18 @@ func CreateAzureAttestationToken(report, data []byte, baseurl string) (string, e
 // serialization format and verifies the tokens public claims and signature. The Attestation providers
 // keys are loaded from baseURL over an TLS connection. The validation is based on the trust in this TLS channel.
 // Note, that the token's issuer (iss) has to equal the baseURL's string representation.
+//
 // Attention: the calling function needs to ensure the scheme of baseURL is HTTPS,
 // e.g. by calling the ParseHTTPS function of this package.
 func VerifyAzureAttestationToken(rawToken string, baseURL *url.URL) (Report, error) {
-	// Parse baseURL and add path
+	// Parse baseURL and add path.
 	path, err := url.Parse("/certs")
 	if err != nil {
 		return Report{}, err
 	}
 	uri := baseURL.ResolveReference(path)
 
-	// Get JSON Web Key set
+	// Get JSON Web Key set.
 	jwkSetBytes, err := httpGet(uri.String())
 	if err != nil {
 		return Report{}, err
@@ -127,7 +140,7 @@ func VerifyAzureAttestationToken(rawToken string, baseURL *url.URL) (Report, err
 	}, nil
 }
 
-// ParseHTTPS parses an URL and ensures its scheme is HTTPS
+// ParseHTTPS parses an URL and ensures its scheme is HTTPS.
 func ParseHTTPS(URL string) (*url.URL, error) {
 	uri, err := url.Parse(URL)
 	if err != nil {
@@ -139,9 +152,9 @@ func ParseHTTPS(URL string) (*url.URL, error) {
 	return uri, nil
 }
 
-// atttestOERequest is an Microsoft Azure Attestation AttestOpenEnclaveRequest
+// atttestOERequest is an Microsoft Azure Attestation AttestOpenEnclaveRequest.
 // See https://docs.microsoft.com/en-us/rest/api/attestation/attestation/attestopenenclave
-// for REST API documentation of Azure Attestation Provider
+// for REST API documentation of Azure Attestation Provider.
 type attestOERequest struct {
 	Report      string `json:"report"`
 	RuntimeData rtdata `json:"runtimeData"`
@@ -156,7 +169,7 @@ type attestationResponse struct {
 	Token string `json:"token"`
 }
 
-// privateClaims are some of the private claims of an Azure Attestation token
+// privateClaims are some of the private claims of an Azure Attestation token.
 type privateClaims struct {
 	Data            string `json:"x-ms-sgx-ehd"`
 	SecurityVersion uint   `json:"x-ms-sgx-svn"`

@@ -28,10 +28,14 @@ var ErrEmptyReport = errors.New("empty report")
 
 // VerifyAzureAttestationToken takes a Microsoft Azure Attestation Token in JSON Web Token compact
 // serialization format and verifies the tokens public claims and signature. The Attestation providers
-// keys are loaded from providerURL/certs over TLS and need to be in JSON Web Key format. The validation is based
-// on the trust in this TLS channel. Note, that the token's issuer (iss) has to equal the providerURL.
+// keys are loaded from providerURL/certs over TLS and need to be in JSON Web Key format. The validation
+// is based on the trust in this TLS channel. Note, that the token's issuer (iss) has to equal the providerURL.
+//
+// Since an enclave hasn't got a set of root CA certificates, there is no default way to establish a
+// trusted TLS connection to the Attestation Provider for getting the certificate the token was signed with.
+// This function is therefore usable by non-enclaved clients only.
 func VerifyAzureAttestationToken(token string, providerURL string) (Report, error) {
-	// Ensure providerURL uses HTTPS
+	// Ensure providerURL uses HTTPS.
 	uri, err := attestation.ParseHTTPS(providerURL)
 	if err != nil {
 		return Report{}, err
