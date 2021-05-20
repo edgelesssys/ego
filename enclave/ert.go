@@ -27,7 +27,9 @@ const sysResultStr = 1006
 
 // GetRemoteReport gets a report signed by the enclave platform for use in remote attestation.
 //
-// The report shall contain the data given by the reportData parameter.
+// The report shall contain the data given by the reportData parameter. The report can only
+// hold a maximum of 64 byte reportData. Use a 64 byte Hash value of your data as reportData,
+// if your data exceeds this limit.
 func GetRemoteReport(reportData []byte) ([]byte, error) {
 	var report *C.uint8_t
 	var reportSize C.size_t
