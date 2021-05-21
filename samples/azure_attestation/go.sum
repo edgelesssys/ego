@@ -4,6 +4,8 @@ github.com/edgelesssys/ego v0.2.2 h1:5TKQkFVHuldKREzd6iDdXEEaA67/60iTGEu3eGprw5o
 github.com/edgelesssys/ego v0.2.2/go.mod h1:73IZBitJ4d77p22iLb3jHs8oivr0j+rQZbVnprn+1P0=
 github.com/edgelesssys/ego v0.2.3-0.20210520143854-8090db2ffedf h1:QFu4ANgD4PQgYfeqvkLf1xvuzdSHHX/nnys6OUubLVE=
 github.com/edgelesssys/ego v0.2.3-0.20210520143854-8090db2ffedf/go.mod h1:73IZBitJ4d77p22iLb3jHs8oivr0j+rQZbVnprn+1P0=
+github.com/edgelesssys/ego v0.2.3-0.20210521141516-eeb857f437f3 h1:iQrKU+sTQw1Lx+HUhc8BU3ss4my0hdjPVYCFUhwzuoo=
+github.com/edgelesssys/ego v0.2.3-0.20210521141516-eeb857f437f3/go.mod h1:73IZBitJ4d77p22iLb3jHs8oivr0j+rQZbVnprn+1P0=
 github.com/google/go-cmp v0.5.5 h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
