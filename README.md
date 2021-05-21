@@ -59,6 +59,13 @@ Now you're ready to build applications with EGo! To start, check out the followi
 * The [EGo documentation](https://ego.dev/docs/introduction/) covers building, signing, running, and debugging confidential apps.
 * The [EGo API](https://pkg.go.dev/github.com/edgelesssys/ego) provides access to *remote attestation* and *sealing* to your confidential app at runtime.
 
+## Contribute
+To report a problem or suggest a new feature, file a GitHub issue.
+
+To report a security issue, write to security@edgeless.systems
+
+Pull requests are welcome! You need to agree to our [Contributor License Agreement](https://cla-assistant.io/edgelesssys/ego).
+
 <!-- refs -->
 [github-actions]: https://github.com/edgelesssys/ego/actions
 [github-actions-badge]: https://github.com/edgelesssys/ego/workflows/Unit%20Tests/badge.svg
