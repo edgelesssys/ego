@@ -28,7 +28,7 @@ const sysResultStr = 1006
 // GetRemoteReport gets a report signed by the enclave platform for use in remote attestation.
 //
 // The report shall contain the data given by the reportData parameter. The report can only
-// hold a maximum of 64 byte reportData. Use a 64 byte Hash value of your data as reportData,
+// hold a maximum of 64 byte reportData. Use a 64 byte hash value of your data as reportData
 // if your data exceeds this limit.
 func GetRemoteReport(reportData []byte) ([]byte, error) {
 	var report *C.uint8_t
@@ -58,8 +58,7 @@ func GetRemoteReport(reportData []byte) ([]byte, error) {
 // verifies that the signing authority is rooted to a trusted authority
 // such as the enclave platform manufacturer.
 //
-// Returns the parsed report if the signature is valid.
-// Returns an error if the signature is invalid.
+// The caller must verify the returned report's content.
 func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 	if len(reportBytes) <= 0 {
 		return attestation.Report{}, attestation.ErrEmptyReport
@@ -93,14 +92,17 @@ func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 
 // GetUniqueSealKey gets a key derived from a measurement of the enclave.
 //
-// keyInfo can be used to retrieve the same key later, on a newer security version.
+// keyInfo can be used to retrieve the same key later, on a newer CPU security version.
+//
+// This key will change if the UniqueID of the enclave changes. If you want
+// the key to be the same across enclave versions, use GetProductSealKey.
 func GetUniqueSealKey() (key, keyInfo []byte, err error) {
 	return getSealKeyByPolicy(C.OE_SEAL_POLICY_UNIQUE)
 }
 
 // GetProductSealKey gets a key derived from the signer and product id of the enclave.
 //
-// keyInfo can be used to retrieve the same key later, on a newer security version.
+// keyInfo can be used to retrieve the same key later, on a newer CPU security version.
 func GetProductSealKey() (key, keyInfo []byte, err error) {
 	return getSealKeyByPolicy(C.OE_SEAL_POLICY_PRODUCT)
 }

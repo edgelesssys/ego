@@ -25,15 +25,15 @@ type Report struct {
 // ErrEmptyReport is returned by VerifyRemoteReport if reportBytes is empty.
 var ErrEmptyReport = errors.New("empty report")
 
-// VerifyAzureAttestationToken takes a Microsoft Azure Attestation Token in JSON Web Token compact
-// serialization format and verifies the tokens public claims and signature. The Attestation providers
-// keys are loaded from providerURL/certs over TLS and need to be in JSON Web Key format. The validation
-// is based on the trust in this TLS channel. Note, that the token's issuer (iss) has to equal the providerURL,
-// and providerURL must use the HTTPS scheme.
+// VerifyAzureAttestationToken takes a Microsoft Azure Attestation token in JSON Web Token compact
+// serialization format and verifies the token's public claims and signature. The attestation provider's
+// keys are loaded from providerURL over TLS. The validation is based on the trust in this TLS channel.
+// Note that the token's issuer (iss) has to be equal to the providerURL, and providerURL must use the HTTPS scheme.
 //
-// Since an enclave hasn't got a set of root CA certificates, there is no default way to establish a
-// trusted TLS connection to the Attestation Provider for getting the certificate the token was signed with.
-// This function is therefore usable by non-enclaved clients only.
+// The caller must verify the returned report's content.
+//
+// This function relies on the root CA certificates of the host to verify the TLS connection. Thus, it is currently
+// usable by non-enclaved clients only. A future version of EGo will allow to add root certificates to an enclave.
 func VerifyAzureAttestationToken(token string, providerURL string) (Report, error) {
 	// Ensure providerURL uses HTTPS.
 	uri, err := attestation.ParseHTTPS(providerURL)

@@ -7,7 +7,7 @@
 /*
 Package eclient provides functionality for Go programs that interact with enclave programs.
 
-This library can be used for programs that don't run in an enclave themself but interact with
+Use this package for programs that don't run in an enclave themselves but interact with
 enclaved programs. Those non-enclaved programs are often called third parties or relying parties.
 */
 package eclient
