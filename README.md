@@ -58,7 +58,7 @@ Now you're ready to build applications with EGo! To start, check out the followi
 ## Documentation
 * The [EGo documentation](https://ego.dev/docs/introduction/) covers building, signing, running, and debugging confidential apps.
 * The [EGo API](https://pkg.go.dev/github.com/edgelesssys/ego) provides access to *remote attestation* and *sealing* to your confidential app at runtime.
-* If you have further questions or need help, you're invited to join our [Discord community](https://discord.gg/5k94dXn2ur).
+* If you have further questions or need help, you're invited to join our [Discord community][discord].
 
 ## Contribute
 To report a problem or suggest a new feature, file a GitHub issue.
