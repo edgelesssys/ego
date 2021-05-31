@@ -37,7 +37,7 @@ func ExampleCreateAttestationClientTLSConfig() {
 	tlsConfig := CreateAttestationClientTLSConfig(verifyReport)
 	client := http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}
 
-	// example.com must use an TLS certificate with an embedded report
+	// example.com must use a TLS certificate with an embedded report
 	// EGo's enclave package provides functionality for such server
 	_, _ = client.Get("https://example.com")
 }

@@ -24,9 +24,8 @@ func CreateAttestationServerTLSConfig() (*tls.Config, error) {
 	return attestation.CreateAttestationServerTLSConfig(GetRemoteReport)
 }
 
-// CreateAzureAttestationToken creates a Microsoft Azure Attestation Token by creating an
-// remote report and sending the report to an Attestation Provider, who is reachable
-// under baseurl. The Attestation Provider will verify the remote Report.
+// CreateAzureAttestationToken creates a Microsoft Azure Attestation token by creating a
+// remote report and sending it to an Attestation Provider, who is reachable under url.
 // A JSON Web Token in compact serialization is returned.
 func CreateAzureAttestationToken(data []byte, url string) (string, error) {
 	hash := sha256.Sum256(data)

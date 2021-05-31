@@ -19,9 +19,7 @@ import (
 // verifies that the signing authority is rooted to a trusted authority
 // such as the enclave platform manufacturer.
 //
-// Returns the parsed report if the signature is valid.
-// Returns an error if the signature is invalid.
-// The returned report's content must still be verified.
+// The caller must verify the returned report's content.
 func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 	report, err := verifyRemoteReport(reportBytes)
 	return toAttestationReport(report), err

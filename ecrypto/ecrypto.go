@@ -78,6 +78,9 @@ func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
 }
 
 // SealWithUniqueKey encrypts a given plaintext with a key derived from a measurement of the enclave.
+//
+// Ciphertexts can't be decrypted if the UniqueID of the enclave changes. If you want
+// to be able to decrypt ciphertext across enclave versions, use SealWithProductKey.
 func SealWithUniqueKey(plaintext []byte) ([]byte, error) {
 	sealKey, keyInfo, err := sealer.GetUniqueSealKey()
 	if err != nil {
