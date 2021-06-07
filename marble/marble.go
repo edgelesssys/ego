@@ -56,7 +56,7 @@ func generateFromEnv() (tls.Certificate, *x509.CertPool, error) {
 	if err != nil {
 		return tls.Certificate{}, nil, err
 	}
-	rootCA, err := getByteEnv(MarbleEnvironmentRootCA)
+	marbleRootCA, err := getByteEnv(MarbleEnvironmentRootCA)
 	if err != nil {
 		return tls.Certificate{}, nil, err
 	}
@@ -66,8 +66,8 @@ func generateFromEnv() (tls.Certificate, *x509.CertPool, error) {
 	}
 
 	roots := x509.NewCertPool()
-	if !roots.AppendCertsFromPEM(rootCA) {
-		return tls.Certificate{}, nil, fmt.Errorf("cannot append rootCA to CertPool")
+	if !roots.AppendCertsFromPEM(marbleRootCA) {
+		return tls.Certificate{}, nil, fmt.Errorf("cannot append marbleRootCA to CertPool")
 	}
 
 	tlsCert, err := tls.X509KeyPair(certChain, leafPrivk)
