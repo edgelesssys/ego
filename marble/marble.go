@@ -17,8 +17,8 @@ import (
 // MarbleEnvironmentCertificateChain contains the name of the environment variable holding a marble-specifc PEM encoded certificate
 const MarbleEnvironmentCertificateChain = "MARBLE_PREDEFINED_MARBLE_CERTIFICATE_CHAIN"
 
-// MarbleEnvironmentIntermediateCA contains the name of the environment variable holding a PEM encoded root certificate
-const MarbleEnvironmentIntermediateCA = "MARBLE_PREDEFINED_INTERMEDIATE_CA"
+// MarbleEnvironmentRootCA contains the name of the environment variable holding a PEM encoded root certificate
+const MarbleEnvironmentRootCA = "MARBLE_PREDEFINED_ROOT_CA"
 
 // MarbleEnvironmentPrivateKey contains the name of the environment variable holding a PEM encoded private key belonging to the marble-specific certificate
 const MarbleEnvironmentPrivateKey = "MARBLE_PREDEFINED_PRIVATE_KEY"
@@ -56,7 +56,7 @@ func generateFromEnv() (tls.Certificate, *x509.CertPool, error) {
 	if err != nil {
 		return tls.Certificate{}, nil, err
 	}
-	intermediateCA, err := getByteEnv(MarbleEnvironmentIntermediateCA)
+	marbleRootCA, err := getByteEnv(MarbleEnvironmentRootCA)
 	if err != nil {
 		return tls.Certificate{}, nil, err
 	}
@@ -66,8 +66,8 @@ func generateFromEnv() (tls.Certificate, *x509.CertPool, error) {
 	}
 
 	roots := x509.NewCertPool()
-	if !roots.AppendCertsFromPEM(intermediateCA) {
-		return tls.Certificate{}, nil, fmt.Errorf("cannot append intermediateCA as rootCA to CertPool")
+	if !roots.AppendCertsFromPEM(marbleRootCA) {
+		return tls.Certificate{}, nil, fmt.Errorf("cannot append marbleRootCA to CertPool")
 	}
 
 	tlsCert, err := tls.X509KeyPair(certChain, leafPrivk)
