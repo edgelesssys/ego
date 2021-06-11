@@ -7,17 +7,19 @@ assignees: ''
 
 ---
 
-### Issue Description
-- Please provide a clear and concise description of what the issue is.
+### Issue description
+<!-- A clear and concise description of what the issue is -->
 
-### Expected behavior  
-- Tell us what should happen
 
-### Actual behavior 
-- Tell us what happens instead
+### To reproduce
+Steps to reproduce the behavior:
 
-### Steps to reproduce this behavior
-- Please provided detailed steps for reproducing the issue
+1.
+2.
+3.
+
+### Expected behavior
+<!-- A clear and concise description of what you expected to happen -->
 
 ### Additional info / screenshot
-- Any additional information or context
+<!-- Any additional information or context -->

@@ -1,11 +1,18 @@
-### Related Issue or purpose 
-- issue goes here
+### Proposed changes
+-
+-
 
-### Proposed Changes
-- change 1 
-- change 2 
+<!-- (uncomment if applicable)
+### Related issue
+- link to the issue
+-->
 
-### Additional Info 
-- Any additional information or context 
+<!-- (uncomment if applicable)
+### Additional info
+- Any additional information or context
+-->
 
-### Screenshots (optional)
+<!-- (uncomment if applicable)
+### Screenshots
+
+-->
