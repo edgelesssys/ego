@@ -34,7 +34,7 @@ export VAULT_ADDR=http://127.0.0.1:8200
 export VAULT_TOKEN=mytoken
 ```
 
-Use it from another terminal:
+Then use it:
 ```sh
 $ ./vault kv put secret/hello foo=world
 
