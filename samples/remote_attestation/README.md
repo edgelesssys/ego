@@ -20,8 +20,13 @@ ego-go build
 ego sign server
 ego run server
 ```
+To compile the client `libssl-dev` is required.
+On Ubuntu or Debian it can be installed with apt:
+```sh
+sudo apt-get install libssl-dev
+```
 
-The client can be built either using `ego-go` or a recent Go compiler:
+The client can be built either using `ego-go` or a recent Go compiler.
 ```sh
 CGO_CFLAGS=-I/opt/ego/include CGO_LDFLAGS=-L/opt/ego/lib go build ra_client/client.go
 ```
