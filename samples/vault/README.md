@@ -28,7 +28,7 @@ Then you can run Vault:
 ego run vault server -dev -dev-no-store-token -dev-root-token-id mytoken
 ```
 
-Export the environment variables:
+Open another terminal and export the environment variables:
 ```sh
 export VAULT_ADDR=http://127.0.0.1:8200
 export VAULT_TOKEN=mytoken
