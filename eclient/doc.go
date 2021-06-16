@@ -9,5 +9,8 @@ Package eclient provides functionality for Go programs that interact with enclav
 
 Use this package for programs that don't run in an enclave themselves but interact with
 enclaved programs. Those non-enclaved programs are often called third parties or relying parties.
+
+This package requires libcrypto. On Ubuntu install it with:
+	sudo apt install libssl-dev
 */
 package eclient
