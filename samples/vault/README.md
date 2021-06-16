@@ -3,7 +3,7 @@ This sample shows how to port an existing Go application to EGo.
 
 First clone the repo:
 ```sh
-git clone --depth=1 --branch=v1.6.3 https://github.com/hashicorp/vault
+git clone --depth=1 --branch=release/1.6.x https://github.com/hashicorp/vault
 cd vault
 ```
 
@@ -28,11 +28,14 @@ Then you can run Vault:
 ego run vault server -dev -dev-no-store-token -dev-root-token-id mytoken
 ```
 
+Export the environment variables:
+```sh
+export VAULT_ADDR=http://127.0.0.1:8200
+export VAULT_TOKEN=mytoken
+```
+
 Use it from another terminal:
 ```sh
-$ export VAULT_ADDR=http://127.0.0.1:8200
-$ export VAULT_TOKEN=mytoken
-
 $ ./vault kv put secret/hello foo=world
 
 Key              Value
