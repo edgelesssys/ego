@@ -9,7 +9,7 @@ cd vault
 
 Then you can build the Vault executable with `ego-go build`:
 ```sh
-ego-go build -o bin/vault
+ego-go build -v -o bin/vault
 ```
 
 Alternatively, you can also use `make` by running it within the `ego env`:
