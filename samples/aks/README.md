@@ -49,10 +49,11 @@ listening ...
   NAME             TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)          AGE
   ego-sample-svc   LoadBalancer   10.0.216.92   <external-ip>  8080:32177/TCP   20s
   ```
+* build the client from the [remote_attestation sample](../remote_attestation)
 * use the client:
   ```
-  $ cd ../remote_attestation
-  $ ego-go run ra_client/client.go -s `ego signerid ../aks/public.pem` -a <external-ip>:8080
+  $ export AZDCAP_DEBUG_LOG_LEVEL=error
+  $ ./client -s `ego signerid public.pem` -a <external-ip>:8080
 
   Sent secret over attested TLS channel.
   ```
