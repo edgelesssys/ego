@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ego-sample-svc
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: LoadBalancer
+  selector:
+    app: ego-sample-app
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ego-sample-pod
+  labels:
+    app: ego-sample-app
+spec:
+  containers:
+  - name: ego-sample-image
+    image: ghcr.io/edgelesssys/ego-sample
+    resources:
+      limits:
+        sgx.intel.com/epc: 10Mi
+        sgx.intel.com/provision: 1
