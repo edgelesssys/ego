@@ -21,8 +21,8 @@ ego run hello
 
 ## Install
 
-### Install the Snap
-The easiest way to install EGo is via the Snap:
+### Install the snap
+The easiest way to install EGo is via the snap:
 ```sh
 sudo snap install ego-dev --classic
 ```
