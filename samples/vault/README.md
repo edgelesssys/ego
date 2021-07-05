@@ -3,7 +3,7 @@ This sample shows how to port an existing Go application to EGo.
 
 First clone the repo:
 ```sh
-git clone --depth=1 --branch=v1.6.3 https://github.com/hashicorp/vault
+git clone --depth=1 --branch=v1.7.3 https://github.com/hashicorp/vault
 cd vault
 ```
 
@@ -14,7 +14,7 @@ ego-go build -v -o bin/vault
 
 Alternatively, you can also use `make` by running it within the `ego env`:
 ```sh
-ego env make GO_VERSION_MIN=1.14.6
+ego env make
 ```
 
 Either way, you need to sign the resulting executable:

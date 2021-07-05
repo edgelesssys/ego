@@ -34,7 +34,7 @@ static char** _merge_argv_env(int argc, char** argv, char** envp);
 extern "C" __thread char ert_ego_reserved_tls[1024];
 extern "C" const char* oe_sgx_get_td();
 
-static void _start_main(int payload_main(...))
+extern "C" void __libc_start_main(int payload_main(...))
 {
     exit(payload_main(_argc, _argv));
 }
@@ -111,16 +111,6 @@ int emain()
     _log_verbose("cleaning up the old goruntime: go_rc_unmap_memory");
     go_rc_unmap_memory();
     _log_verbose("cleaning up the old goruntime: done");
-    // relocate
-    try
-    {
-        ert::payload::apply_relocations(_start_main);
-    }
-    catch (const exception& e)
-    {
-        _log("apply_relocations failed: "s + e.what());
-        return EXIT_FAILURE;
-    }
 
     // get payload entry point
     const auto base = static_cast<const uint8_t*>(ert::payload::get_base());
@@ -190,15 +180,4 @@ static char** _merge_argv_env(int argc, char** argv, char** envp)
     memcpy(p, envp, (size_t)envc * sizeof *envp);
 
     return result;
-}
-
-// unsetenv+cgo is broken in Go < 1.15. This is a temporary fix until we update
-// ertgo.
-extern "C" void x_cgo_unsetenv(char** arg)
-{
-    unsetenv(arg[0]);
-}
-extern "C" void x_cgo_setenv(char** arg)
-{
-    setenv(arg[0], arg[1], 1);
 }
