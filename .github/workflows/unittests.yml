@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/edgelesssys/edgelessrt-dev:nightly
+      image: ghcr.io/edgelesssys/edgelessrt-dev:ci
     steps:
       - name: Check out code
         uses: actions/checkout@v2
