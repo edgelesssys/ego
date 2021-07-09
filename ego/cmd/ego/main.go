@@ -16,7 +16,12 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Don't touch! Automatically injected at build-time.
+var version = "0.0.0"
+var gitCommit = "0000000000000000000000000000000000000000"
+
 func main() {
+	fmt.Printf("EGo v%v (%v)\n", version, gitCommit)
 	if len(os.Args) < 2 {
 		help("")
 		return
@@ -45,7 +50,6 @@ func main() {
 			os.Exit(1)
 		}
 		// also print usage
-		fmt.Println()
 	case "run":
 		if len(args) > 0 {
 			exitCode, err := c.Run(args[0], args[1:])
@@ -190,7 +194,7 @@ Commands:
 Use "ego help <command>" for more information about a command.`
 	}
 
-	fmt.Println("Usage: ego " + s)
+	fmt.Println("\nUsage: ego " + s)
 }
 
 type runner struct{}
