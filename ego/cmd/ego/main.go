@@ -21,7 +21,7 @@ var version = "0.0.0"
 var gitCommit = "0000000000000000000000000000000000000000"
 
 func main() {
-	fmt.Printf("EGo v%v (%v)\n", version, gitCommit)
+	fmt.Fprintf(os.Stderr, "EGo v%v (%v)\n", version, gitCommit)
 	if len(os.Args) < 2 {
 		help("")
 		return
