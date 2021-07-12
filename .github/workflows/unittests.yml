@@ -49,6 +49,7 @@ jobs:
                                 "sign":"nightly",
                                 "imagename":"ego-dev",
                                 "tag":"nightly",
+                                "file": "dockerfiles/Dockerfile.nightly",
                                 "target":"ego-dev"}}' \
           https://api.github.com/repos/edgelesssys/deployment/dispatches
 
@@ -63,5 +64,6 @@ jobs:
                                 "sign":"nightly",
                                 "imagename":"ego-deploy",
                                 "tag":"nightly",
+                                "file": "dockerfiles/Dockerfile.nightly",
                                 "target":"ego-deploy"}}' \
           https://api.github.com/repos/edgelesssys/deployment/dispatches
