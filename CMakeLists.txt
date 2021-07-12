@@ -69,9 +69,12 @@ target_link_libraries(ego-enclave
 # ego cli
 #
 
-add_custom_target(ego ALL
-  ${CMAKE_SOURCE_DIR}/src/build_ego.sh ${CMAKE_BINARY_DIR} ${PROJECT_VERSION}
+add_custom_command(
+  OUTPUT ego
+  DEPENDS ego/cmd/ego/main.go ${CMAKE_SOURCE_DIR}/ego/cli/*.go ${CMAKE_SOURCE_DIR}/ego/config/*.go
+  COMMAND ${CMAKE_SOURCE_DIR}/src/build_ego.sh ${CMAKE_BINARY_DIR} ${PROJECT_VERSION}
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/cmd/ego)
+add_custom_target(egobuild ALL DEPENDS ego)
 
 #
 # install
