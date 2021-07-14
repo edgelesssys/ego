@@ -10,7 +10,7 @@ Either build the `helloworld` executable:
 ```console
 $ DOCKER_BUILDKIT=1 docker build --secret id=signingkey,src=private.pem -o. .
 $ ego uniqueid helloworld
-55c37e50951559004bffe9dffa4c21779e0783f76ed76fe2b7a43ff6ab8d3fdb
+cfe6779c87fcaef7005dd848391e89c26156c3c51ef36eeea6d6db18cfea29bd
 ```
 You should see the same UniqueID as above.
 
