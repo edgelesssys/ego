@@ -48,17 +48,17 @@ func TestPremain(t *testing.T) {
 
 	// Supply valid payload, no Marble
 	mounter := assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool), remountAsHostFS: false}
-	assert.NoError(PreMain("", &mounter, fs))
+	assert.NoError(PreMain("", &mounter, fs, nil))
 
 	// Supply valid payload, no Marble
 	payload, err := json.Marshal(conf)
 	require.NoError(err)
 	mounter = assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool), remountAsHostFS: false}
-	assert.NoError(PreMain(string(payload), &mounter, fs))
+	assert.NoError(PreMain(string(payload), &mounter, fs, nil))
 
 	// Supply invalid payload, should fail
 	payload = []byte("blablarubbish")
-	assert.Error(PreMain(string(payload), &mounter, fs))
+	assert.Error(PreMain(string(payload), &mounter, fs, nil))
 }
 
 func TestPerformMounts(t *testing.T) {
@@ -200,8 +200,18 @@ func TestAddEnvVars(t *testing.T) {
 		Env:             []config.EnvVar{{Name: "HELLO_WORLD", Value: "2"}, {Name: "PWD", Value: "/tmp/somedir", FromHost: true}, {Name: "NOT_EXISTING_ON_HOST", FromHost: true}, {Name: "NOT_EXISTING_ON_HOST_BUT_INITIALIZED", Value: "42", FromHost: true}},
 	}
 
+	// Create key-value map from OS environment, as expected by addEnvVars
+	originalEnvironMap := make(map[string]string, len(os.Environ()))
+	for _, envVar := range os.Environ() {
+		splitString := strings.Split(envVar, "=")
+		originalEnvironMap[splitString[0]] = splitString[1]
+	}
+
+	// Cleanup the original environment before entering
+	os.Clearenv()
+
 	// Apply env vars
-	assert.NoError(addEnvVars(*conf))
+	assert.NoError(addEnvVars(*conf, originalEnvironMap))
 
 	// Check if HELLO_WORLD was set correctly
 	assert.Equal("2", os.Getenv("HELLO_WORLD"))
