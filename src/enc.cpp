@@ -24,10 +24,14 @@ using namespace std;
 using namespace ert;
 static int _argc;
 static char** _argv;
+static int _envc;
+static char** _envp;
 
 extern "C" void ert_ego_premain(
     int* argc,
     char*** argv,
+    int envc,
+    char** envp,
     const char* payload_data);
 static char** _merge_argv_env(int argc, char** argv, char** envp);
 
@@ -46,7 +50,8 @@ static void _log(string_view s)
 
 static void _log_verbose(string_view s)
 {
-    static const bool verbose_enabled = [] {
+    static const bool verbose_enabled = []
+    {
         const char* const env_verbose = getenv(_verbose_env_key);
         return env_verbose && *env_verbose == '1';
     }();
@@ -87,7 +92,7 @@ int emain()
         payload_data_pair.second);
 
     _log_verbose("invoking premain");
-    ert_ego_premain(&_argc, &_argv, payload_data.c_str());
+    ert_ego_premain(&_argc, &_argv, _envc, _envp, payload_data.c_str());
     _log_verbose("premain done");
     ert_init_ttls(getenv("MARBLE_TTLS_CONFIG"));
 
@@ -134,15 +139,18 @@ ert_args_t ert_get_args()
     if (ert_get_args_ocall(&args) != OE_OK || args.envc < 0 || args.argc < 0)
         abort();
 
-    char** env = nullptr;
+    /* Don't make envp available as the environment yet, but rather store it as
+     a variable so the Go premain can access the host environment with the
+     supposed values (without actually setting them). This is a mitigation to
+     avoid the host messing with the Go premain with GODEBUG and similar.
+    */
     ert_copy_strings_from_host_to_enclave(
-        args.envp, &env, static_cast<size_t>(args.envc));
+        args.envp, &_envp, static_cast<size_t>(args.envc));
 
-    assert(env);
+    assert(_envp);
+    _envc = args.envc;
 
     ert_args_t result{};
-    result.envc = args.envc;
-    result.envp = env;
 
     //
     // Get args from host.

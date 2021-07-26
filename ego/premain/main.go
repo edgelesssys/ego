@@ -12,6 +12,7 @@ import (
 	"ego/premain/core"
 	"os"
 	"syscall"
+	"unsafe"
 
 	"github.com/spf13/afero"
 )
@@ -24,8 +25,9 @@ type SyscallMounter struct{}
 func main() {}
 
 //export ert_ego_premain
-func ert_ego_premain(argc *C.int, argv ***C.char, payload *C.char) {
-	if err := core.PreMain(C.GoString(payload), &SyscallMounter{}, afero.NewOsFs()); err != nil {
+func ert_ego_premain(argc *C.int, argv ***C.char, envc C.int, envp **C.char, payload *C.char) {
+	originalEnviron := convertEnvironmentToGoStringArray(envc, envp)
+	if err := core.PreMain(C.GoString(payload), &SyscallMounter{}, afero.NewOsFs(), originalEnviron); err != nil {
 		panic(err)
 	}
 
@@ -46,4 +48,15 @@ func (m *SyscallMounter) Mount(source string, target string, filesystem string, 
 // Unmount for SyscallMounter redirects to syscall.Unmount
 func (m *SyscallMounter) Unmount(target string, flags int) error {
 	return syscall.Unmount(target, flags)
+}
+
+// Adapted from: https://stackoverflow.com/a/36189294
+func convertEnvironmentToGoStringArray(envc C.int, envp **C.char) []string {
+	length := int(envc)
+	tmpSlice := (*[1 << 30]*C.char)(unsafe.Pointer(envp))[:length:length]
+	goStrings := make([]string, length)
+	for i, s := range tmpSlice {
+		goStrings[i] = C.GoString(s)
+	}
+	return goStrings
 }

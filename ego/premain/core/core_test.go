@@ -48,17 +48,17 @@ func TestPremain(t *testing.T) {
 
 	// Supply valid payload, no Marble
 	mounter := assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool), remountAsHostFS: false}
-	assert.NoError(PreMain("", &mounter, fs))
+	assert.NoError(PreMain("", &mounter, fs, nil))
 
 	// Supply valid payload, no Marble
 	payload, err := json.Marshal(conf)
 	require.NoError(err)
 	mounter = assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool), remountAsHostFS: false}
-	assert.NoError(PreMain(string(payload), &mounter, fs))
+	assert.NoError(PreMain(string(payload), &mounter, fs, nil))
 
 	// Supply invalid payload, should fail
 	payload = []byte("blablarubbish")
-	assert.Error(PreMain(string(payload), &mounter, fs))
+	assert.Error(PreMain(string(payload), &mounter, fs, nil))
 }
 
 func TestPerformMounts(t *testing.T) {
@@ -176,18 +176,16 @@ func (a *assertionMounter) Unmount(target string, flags int) error {
 
 func TestAddEnvVars(t *testing.T) {
 	assert := assert.New(t)
-	require := require.New(t)
 
 	// Restore current env vars on exit
 	defer restoreExistingEnvVars(os.Environ())
 
-	// Get existing PWD env var from host system
+	// Get & set some existing host environment
 	existingPwdEnvVar := os.Getenv("PWD")
-	require.NotEmpty(os.Getenv("PWD"))
-
-	// Set some existing env var which should vanish
-	os.Setenv("EGO_INTEGRATION_TEST_PLS_FAIL_IF_I_EXIST", "bad")
-	os.Setenv("EDG_WILL_I_SURVIVE?", "hopefully")
+	originalEnvironMap := make(map[string]string, 3)
+	originalEnvironMap["EGO_INTEGRATION_TEST_PLS_FAIL_IF_I_EXIST"] = "bad" // Should be filtered and vanish
+	originalEnvironMap["EDG_WILL_I_SURVIVE?"] = "hopefully"                // Should stay due to the EDG_ prefix
+	originalEnvironMap["PWD"] = existingPwdEnvVar                          // Value should be copied from host
 
 	//sane default values
 	conf := &config.Config{
@@ -200,8 +198,11 @@ func TestAddEnvVars(t *testing.T) {
 		Env:             []config.EnvVar{{Name: "HELLO_WORLD", Value: "2"}, {Name: "PWD", Value: "/tmp/somedir", FromHost: true}, {Name: "NOT_EXISTING_ON_HOST", FromHost: true}, {Name: "NOT_EXISTING_ON_HOST_BUT_INITIALIZED", Value: "42", FromHost: true}},
 	}
 
+	// Cleanup the original environment before entering
+	os.Clearenv()
+
 	// Apply env vars
-	assert.NoError(addEnvVars(*conf))
+	assert.NoError(addEnvVars(*conf, originalEnvironMap))
 
 	// Check if HELLO_WORLD was set correctly
 	assert.Equal("2", os.Getenv("HELLO_WORLD"))
