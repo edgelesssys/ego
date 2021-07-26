@@ -8,7 +8,7 @@ If you want to support our development:
 * Share our projects on social media
 * Join the [Confidential Computing Discord](https://discord.gg/rH8QTH56JN)
 
-Marblerun is licensed under the [Mozilla Public License 2.0](LICENSE). When contributing, you also need to agree to our [Contributor License Agreement](https://cla-assistant.io/edgelesssys/ego).
+EGo is licensed under the [Mozilla Public License 2.0](LICENSE). When contributing, you also need to agree to our [Contributor License Agreement](https://cla-assistant.io/edgelesssys/ego).
 
 ## Development guidelines
 
