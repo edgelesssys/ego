@@ -176,18 +176,16 @@ func (a *assertionMounter) Unmount(target string, flags int) error {
 
 func TestAddEnvVars(t *testing.T) {
 	assert := assert.New(t)
-	require := require.New(t)
 
 	// Restore current env vars on exit
 	defer restoreExistingEnvVars(os.Environ())
 
-	// Get existing PWD env var from host system
+	// Get & set some existing host environment
 	existingPwdEnvVar := os.Getenv("PWD")
-	require.NotEmpty(os.Getenv("PWD"))
-
-	// Set some existing env var which should vanish
-	os.Setenv("EGO_INTEGRATION_TEST_PLS_FAIL_IF_I_EXIST", "bad")
-	os.Setenv("EDG_WILL_I_SURVIVE?", "hopefully")
+	originalEnvironMap := make(map[string]string, 3)
+	originalEnvironMap["EGO_INTEGRATION_TEST_PLS_FAIL_IF_I_EXIST"] = "bad" // Should be filtered and vanish
+	originalEnvironMap["EDG_WILL_I_SURVIVE?"] = "hopefully"                // Should stay due to the EDG_ prefix
+	originalEnvironMap["PWD"] = existingPwdEnvVar                          // Value should be copied from host
 
 	//sane default values
 	conf := &config.Config{
@@ -198,13 +196,6 @@ func TestAddEnvVars(t *testing.T) {
 		ProductID:       1,
 		SecurityVersion: 1,
 		Env:             []config.EnvVar{{Name: "HELLO_WORLD", Value: "2"}, {Name: "PWD", Value: "/tmp/somedir", FromHost: true}, {Name: "NOT_EXISTING_ON_HOST", FromHost: true}, {Name: "NOT_EXISTING_ON_HOST_BUT_INITIALIZED", Value: "42", FromHost: true}},
-	}
-
-	// Create key-value map from OS environment, as expected by addEnvVars
-	originalEnvironMap := make(map[string]string, len(os.Environ()))
-	for _, envVar := range os.Environ() {
-		splitString := strings.Split(envVar, "=")
-		originalEnvironMap[splitString[0]] = splitString[1]
 	}
 
 	// Cleanup the original environment before entering

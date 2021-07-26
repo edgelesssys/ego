@@ -46,16 +46,16 @@ type Mounter interface {
 }
 
 // PreMain runs before the App's actual main routine and initializes the EGo enclave.
-func PreMain(payload string, mounter Mounter, fs afero.Fs, originalEnviron []string) error {
+func PreMain(payload string, mounter Mounter, fs afero.Fs, hostEnviron []string) error {
 	// Convert host environment string array to key-value map
-	originalEnvironMap := make(map[string]string, len(originalEnviron))
-	for _, envVar := range originalEnviron {
+	hostEnvironMap := make(map[string]string, len(hostEnviron))
+	for _, envVar := range hostEnviron {
 		splitString := strings.Split(envVar, "=")
-		originalEnvironMap[splitString[0]] = splitString[1]
+		hostEnvironMap[splitString[0]] = splitString[1]
 	}
 
 	// Check if we run as a Marble or a normal EGo application
-	isMarble := originalEnvironMap[marblerunEnvVarFlag] == "1"
+	isMarble := hostEnvironMap[marblerunEnvVarFlag] == "1"
 
 	// Perform predefined mounts
 	if err := performPredefinedMounts(mounter, isMarble); err != nil {
@@ -76,7 +76,7 @@ func PreMain(payload string, mounter Mounter, fs afero.Fs, originalEnviron []str
 	}
 
 	// Extract new environment variables
-	if err := addEnvVars(config, originalEnvironMap); err != nil {
+	if err := addEnvVars(config, hostEnvironMap); err != nil {
 		return err
 	}
 
@@ -178,12 +178,12 @@ func performUserMounts(config config.Config, mounter Mounter, fs afero.Fs) error
 	return nil
 }
 
-func addEnvVars(config config.Config, originalEnvironMap map[string]string) error {
+func addEnvVars(config config.Config, hostEnvironMap map[string]string) error {
 	// Copy all environment variables from host, and start from scratch
 	newEnvVars := make(map[string]string)
 
 	// Copy all special EDG_ environment variables
-	for name, value := range originalEnvironMap {
+	for name, value := range hostEnvironMap {
 		if strings.HasPrefix(name, "EDG_") {
 			newEnvVars[name] = value
 		}
@@ -197,7 +197,7 @@ func addEnvVars(config config.Config, originalEnvironMap map[string]string) erro
 		}
 
 		// Check if we can copy the env var from host
-		if envVarFromHost, ok := originalEnvironMap[configEnvVar.Name]; configEnvVar.FromHost && ok {
+		if envVarFromHost, ok := hostEnvironMap[configEnvVar.Name]; configEnvVar.FromHost && ok {
 			newEnvVars[configEnvVar.Name] = envVarFromHost
 		}
 	}

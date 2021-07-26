@@ -25,8 +25,8 @@ type SyscallMounter struct{}
 func main() {}
 
 //export ert_ego_premain
-func ert_ego_premain(argc *C.int, argv ***C.char, envc *C.int, envp ***C.char, payload *C.char) {
-	originalEnviron := convertEnvironmentToGoStringArray(*envc, *envp)
+func ert_ego_premain(argc *C.int, argv ***C.char, envc C.int, envp **C.char, payload *C.char) {
+	originalEnviron := convertEnvironmentToGoStringArray(envc, envp)
 	if err := core.PreMain(C.GoString(payload), &SyscallMounter{}, afero.NewOsFs(), originalEnviron); err != nil {
 		panic(err)
 	}

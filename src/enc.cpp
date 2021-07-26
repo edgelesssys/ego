@@ -24,14 +24,14 @@ using namespace std;
 using namespace ert;
 static int _argc;
 static char** _argv;
-static int envc;
-static char** envp = nullptr;
+static int _envc;
+static char** _envp;
 
 extern "C" void ert_ego_premain(
     int* argc,
     char*** argv,
-    int* envc,
-    char*** envp,
+    int envc,
+    char** envp,
     const char* payload_data);
 static char** _merge_argv_env(int argc, char** argv, char** envp);
 
@@ -92,7 +92,7 @@ int emain()
         payload_data_pair.second);
 
     _log_verbose("invoking premain");
-    ert_ego_premain(&_argc, &_argv, &envc, &envp, payload_data.c_str());
+    ert_ego_premain(&_argc, &_argv, _envc, _envp, payload_data.c_str());
     _log_verbose("premain done");
     ert_init_ttls(getenv("MARBLE_TTLS_CONFIG"));
 
@@ -145,10 +145,10 @@ ert_args_t ert_get_args()
      avoid the host messing with the Go premain with GODEBUG and similar.
     */
     ert_copy_strings_from_host_to_enclave(
-        args.envp, &envp, static_cast<size_t>(args.envc));
+        args.envp, &_envp, static_cast<size_t>(args.envc));
 
-    assert(envp);
-    envc = args.envc;
+    assert(_envp);
+    _envc = args.envc;
 
     ert_args_t result{};
 
