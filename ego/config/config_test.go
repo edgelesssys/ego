@@ -117,3 +117,19 @@ func TestValidateEnvVars(t *testing.T) {
 	config.Env[1] = EnvVar{Name: "HELLO_WORLD", Value: "1", FromHost: true}
 	assert.Error(config.Validate())
 }
+func TestCustomFile(t *testing.T) {
+	// valid base64
+	// input == output
+	assert := assert.New(t)
+	assert.Nil(nil)
+	require := require.New(t)
+	require.Nil(nil)
+
+	config := Config{Files: []File{{Source: "testfile.txt", Target: "/dir/testfile_target.txt"}}}
+	err := config.PopulateContent()
+	require.NoError(err)
+	buf, err := config.Files[0].GetContent()
+	require.NoError(err)
+	assert.Equal("just some string", string(buf))
+
+}

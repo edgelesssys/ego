@@ -7,7 +7,9 @@
 package config
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"strings"
 )
 
@@ -21,6 +23,14 @@ type Config struct {
 	SecurityVersion int               `json:"securityVersion"`
 	Mounts          []FileSystemMount `json:"mounts"`
 	Env             []EnvVar          `json:"env"`
+	Files           []File            `json:"files"`
+}
+
+// File defines File used in Config/enclave.json. Reads from source, adds content to the payload. Premain writes decoded content to target
+type File struct {
+	Base64Content string `json:"content`
+	Source        string `json:"source"`
+	Target        string `json:"target`
 }
 
 // FileSystemMount defines a single mount point for the enclave's filesystem
@@ -127,4 +137,25 @@ func (c *Config) Validate() error {
 	}
 
 	return nil
+}
+
+// PopulateContent encodes Source into base64Content
+func (c *Config) PopulateContent() error {
+	for i, file := range c.Files {
+		buff, err := ioutil.ReadFile(file.Source)
+		if err != nil {
+			return err
+		}
+		c.Files[i].Base64Content = base64.StdEncoding.EncodeToString(buff)
+	}
+	return nil
+}
+
+// GetContent return the decoded content
+func (f *File) GetContent() ([]byte, error) {
+	buffer, err := base64.StdEncoding.DecodeString(f.Base64Content)
+	if err != nil {
+		return nil, err
+	}
+	return buffer, nil
 }

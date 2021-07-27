@@ -26,5 +26,11 @@
             "name": "PWD",
             "value": "/data"
         }
+    ],
+    "files": [
+        {
+            "source": "./file_host.txt",
+            "target": "/path/to/file_enclave.txt"
+        }
     ]
 }

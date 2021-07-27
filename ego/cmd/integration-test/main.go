@@ -37,7 +37,7 @@ func testFileSystemMounts(assert *assert.Assertions, require *require.Assertions
 	require.NoError(err)
 	content, err := dirContent.Readdirnames(2)
 	assert.NoError(err)
-	assert.Len(content, 1)
+	assert.Len(content, 2)
 	assert.Equal("edg", content[0])
 
 	// Check if we can write and read to the root memfs
@@ -74,6 +74,11 @@ func testFileSystemMounts(assert *assert.Assertions, require *require.Assertions
 	newFileContent, err = ioutil.ReadFile("/edg/mnt/memfs/test-file.txt")
 	require.NoError(err)
 	assert.Equal("It works!", string(newFileContent))
+
+	// Check for 
+	buff,err :=ioutil.ReadFile("/path/to/file_enclave.txt")
+	require.NoError(err)
+	assert.Equal("i should be in memfs",string(buff))
 }
 
 func testEnvVars(assert *assert.Assertions, require *require.Assertions) {

@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"sort"
@@ -72,6 +73,20 @@ func PreMain(payload string, mounter Mounter, fs afero.Fs, hostEnviron []string)
 		// Perform user mounts based on embedded config
 		if err := performUserMounts(config, mounter, fs); err != nil {
 			return err
+		}
+		// Write files from payload
+		for _, file := range config.Files {
+			buf, err := file.GetContent()
+			if err != nil {
+				return err
+			}
+			parts := strings.SplitAfter(file.Target, "/")
+			dir := ""
+			for i := 0; i < len(parts)-1; i++ {
+				dir += parts[i]
+			}
+			os.MkdirAll(dir, 0777)
+			ioutil.WriteFile(file.Target, buf, 0777) //todo check permissions
 		}
 	}
 

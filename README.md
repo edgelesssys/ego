@@ -75,7 +75,7 @@ Now you're ready to build applications with EGo! To start, check out the followi
 * [reproducible_build](samples/reproducible_build) builds the helloworld sample reproducibly, resulting in the same UniqueID.
 * [cgo](samples/cgo) demonstrates the experimental cgo support.
 * [azure_attestation](samples/azure_attestation) shows how to use Microsoft Azure Attestation for remote attestation.
-
+* [custom_file](samples/custom_file) shows how to include custom files into a binary.
 ## Documentation
 * The [EGo documentation](https://docs.edgeless.systems/ego) covers building, signing, running, and debugging confidential apps.
 * The [EGo API](https://pkg.go.dev/github.com/edgelesssys/ego) provides access to *remote attestation* and *sealing* to your confidential app at runtime.

@@ -39,6 +39,7 @@ echo -n -e "It works!" > /tmp/ego-integration-test/test-file.txt
 # Build integration test
 cd $egoPath/ego/cmd/integration-test/
 cp enclave.json /tmp/ego-integration-test/enclave.json
+cp file_host.txt /tmp/ego-integration-test/file_host.txt
 run ego-go build -o /tmp/ego-integration-test/integration-test
 
 # Sign & run intergration test
