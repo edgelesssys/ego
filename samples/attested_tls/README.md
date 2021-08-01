@@ -1,7 +1,7 @@
 # Go attested TLS sample
 This sample shows how to establish a TLS connection to an EGo enclave that is transparently attested. It consists of a server running in the enclave and a client that sends a secret.
 
-**Note: This sample only works on SGX-FLC systems with a [quote provider](https://www.ego.dev/docs/reference/quoteprov/) installed.**
+**Note: This sample only works on SGX-FLC systems with a [quote provider](https://docs.edgeless.systems/ego/#/reference/quoteprov) installed.**
 
 The server creates a `tls.Config` object using [CreateAttestationServerTLSConfig()](https://pkg.go.dev/github.com/edgelesssys/ego/enclave#CreateAttestationServerTLSConfig) that can then be used to create a server.
 

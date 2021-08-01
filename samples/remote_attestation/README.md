@@ -1,7 +1,7 @@
 # Go remote attestation sample
 This sample shows how to do remote attestation of a EGo enclave. It consists of a server running in the enclave and a client that attests the server before sending a secret.
 
-**Note: This sample only works on SGX-FLC systems with a [quote provider](https://www.ego.dev/docs/reference/quoteprov/) installed.**
+**Note: This sample only works on SGX-FLC systems with a [quote provider](https://docs.edgeless.systems/ego/#/reference/quoteprov) installed.**
 
 The server generates a self-signed certificate and a report for remote attestation using [GetRemoteReport()](https://pkg.go.dev/github.com/edgelesssys/ego/enclave#GetRemoteReport) that includes the certificate's hash. It thereby binds the certificate to the enclave's identity.
 

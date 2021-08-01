@@ -1,5 +1,5 @@
 ## First steps
-Thank you for getting involved! Before you start, please familiarize yourself with the [documentation](https://www.ego.dev/docs/introduction/).
+Thank you for getting involved! Before you start, please familiarize yourself with the [documentation](https://docs.edgeless.systems/ego).
 
 Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) when interacting with this project.
 
