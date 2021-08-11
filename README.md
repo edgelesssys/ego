@@ -1,5 +1,5 @@
 # EGo
-<img src="src/logo.svg" alt="EGo logo" width="40%"/>
+<img src="src/ego-logo.svg" alt="EGo logo" width="40%"/>
 
 [![GitHub Actions Status][github-actions-badge]][github-actions]
 [![GitHub license][license-badge]](LICENSE)
