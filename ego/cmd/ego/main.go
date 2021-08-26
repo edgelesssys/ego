@@ -7,11 +7,13 @@
 package main
 
 import (
+	"bufio"
 	"ego/cli"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/spf13/afero"
 )
@@ -194,6 +196,12 @@ Print the SignerID either from a signed executable or by reading a keyfile.`
 
 Print the UniqueID of a signed executable.`
 
+	case "install":
+		s = `install [component]
+		
+Install drivers and other components. The components that you can install depend on your operating system and its version. 
+Use "ego install" to list the available components for your system.`
+
 	default:
 		s = `<command> [arguments]
 
@@ -204,6 +212,7 @@ Commands:
   signerid    Print the SignerID of a signed executable.
   uniqueid    Print the UniqueID of a signed executable.
   env         Run a command in the EGo environment.
+  install     Install drivers and other components.
 
 Use "ego help <command>" for more information about a command.`
 	}
@@ -211,8 +220,19 @@ Use "ego help <command>" for more information about a command.`
 	fmt.Println("\nUsage: ego " + s)
 }
 
+// Asks the user whether he wants to execute the commands in listOfActions and returns his choice
 func askInstall(listOfActions string) bool {
-	return false
+	fmt.Println("The following commands will be executed:")
+	fmt.Println(listOfActions)
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Continue installation? [y/n]: ")
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		log.Fatal(err)
+	}
+	response = strings.ToLower(strings.TrimSpace(response))
+	return response == "y" || response == "yes"
 }
 
 type runner struct{}
