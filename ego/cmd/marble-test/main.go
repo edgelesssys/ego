@@ -71,12 +71,12 @@ func main() {
 	require.NoError(cmd.Run())
 }
 
-type marbleServer struct{}
+type marbleServer struct{ rpc.UnimplementedMarbleServer }
 
 func (marbleServer) Activate(context.Context, *rpc.ActivationReq) (*rpc.ActivationResp, error) {
 	return &rpc.ActivationResp{Parameters: &rpc.Parameters{
 		Argv: []string{"arg0", "arg1", "arg2"},
-		Env:  map[string]string{"key1": "val1", "key2": "val2"},
+		Env:  map[string][]byte{"key1": []byte("val1"), "key2": []byte("val2")},
 	}}, nil
 }
 
