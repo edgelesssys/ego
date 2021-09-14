@@ -1,0 +1,75 @@
+{
+	"1.0": {
+		"desc": {
+			"sgx-driver": "The SGX driver. Required on systems with a Linux kernel version prior to 5.11.",
+			"libsgx-launch": "SGX Launch package required for non-FLC SGX systems.",
+			"az-dcap-client": "The Microsoft Azure DCAP client. Required for remote attestation with an Azure VM."
+		},
+		"commands": {
+			"ubuntu-18.04-flc": {
+				"sgx-driver": [
+					"! test -e /dev/sgx && ! test -e /dev/isgx",
+					"wget https://download.01.org/intel-sgx/sgx-linux/2.12/distro/ubuntu18.04-server/sgx_linux_x64_driver_1.36.2.bin",
+					"echo '7b415b8a4367b3deb044ee7d94fffb7922df17a3da2a238da3f8db9391ecb650  sgx_linux_x64_driver_1.36.2.bin' | sha256sum -c",
+					"chmod +x sgx_linux_x64_driver_1.36.2.bin",
+					"./sgx_linux_x64_driver_1.36.2.bin"
+				],
+				"az-dcap-client": [
+					"wget -q https://packages.microsoft.com/keys/microsoft.asc",
+					"echo '2cfd20a306b2fa5e25522d78f2ef50a1f429d35fd30bd983e2ebffc2b80944fa  microsoft.asc' | sha256sum -c",
+					"apt-key add microsoft.asc",
+					"add-apt-repository 'deb [arch=amd64] https://packages.microsoft.com/ubuntu/18.04/prod bionic main'",
+					"apt install -y az-dcap-client"
+				]
+			},
+			"ubuntu-18.04-nonflc": {
+				"sgx-driver": [
+					"! test -e /dev/sgx && ! test -e /dev/isgx",
+					"wget https://download.01.org/intel-sgx/sgx-linux/2.13.3/distro/ubuntu18.04-server/sgx_linux_x64_driver_2.11.0_2d2b795.bin",
+					"echo 'd8080eb99a7916ff957c3a187bb46c678e84c4948a671863ac573d4572dd374e  sgx_linux_x64_driver_2.11.0_2d2b795.bin' | sha256sum -c",
+					"chmod +x sgx_linux_x64_driver_2.11.0_2d2b795.bin",
+					"./sgx_linux_x64_driver_2.11.0_2d2b795.bin"
+				],
+				"libsgx-launch": [
+					"wget -q https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key",
+					"echo '809cb39c4089843f923143834550b185f2e6aa91373a05c8ec44026532dab37c  intel-sgx-deb.key' | sha256sum -c",
+					"apt-key add intel-sgx-deb.key",
+					"add-apt-repository 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main'",
+					"apt install -y libsgx-launch"
+				]
+			},
+			"ubuntu-20.04-flc": {
+				"sgx-driver": [
+					"! test -e /dev/sgx && ! test -e /dev/isgx",
+					"wget https://download.01.org/intel-sgx/sgx-linux/2.12/distro/ubuntu20.04-server/sgx_linux_x64_driver_1.36.2.bin",
+					"echo 'e3e027b16dfe980859035a9437b198d21ca9d71825d2144756ac3eac759c489f sgx_linux_x64_driver_1.36.2.bin' | sha256sum -c",
+					"chmod +x sgx_linux_x64_driver_1.36.2.bin",
+					"./sgx_linux_x64_driver_1.36.2.bin"
+				],
+				"az-dcap-client": [
+					"wget -q https://packages.microsoft.com/keys/microsoft.asc",
+					"echo '2cfd20a306b2fa5e25522d78f2ef50a1f429d35fd30bd983e2ebffc2b80944fa  microsoft.asc' | sha256sum -c",
+					"apt-key add microsoft.asc",
+					"add-apt-repository 'deb [arch=amd64] https://packages.microsoft.com/ubuntu/20.04/prod focal main'",
+					"apt install -y az-dcap-client"
+				]
+			},
+			"ubuntu-20.04-nonflc": {
+				"sgx-driver": [
+					"! test -e /dev/sgx && ! test -e /dev/isgx",
+					"wget https://download.01.org/intel-sgx/sgx-linux/2.13.3/distro/ubuntu20.04-server/sgx_linux_x64_driver_2.11.0_2d2b795.bin",
+					"echo '8727e5441e6cccc3a77b72c747cc2eeda59ed20ef8502fa73d4865e50fc4d6fd  sgx_linux_x64_driver_2.11.0_2d2b795.bin' | sha256sum -c",
+					"chmod +x sgx_linux_x64_driver_2.11.0_2d2b795.bin",
+					"./sgx_linux_x64_driver_2.11.0_2d2b795.bin"
+				],
+				"libsgx-launch": [
+					"wget -q https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key",
+					"echo '809cb39c4089843f923143834550b185f2e6aa91373a05c8ec44026532dab37c  intel-sgx-deb.key' | sha256sum -c",
+					"apt-key add intel-sgx-deb.key",
+					"add-apt-repository 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main'",
+					"apt install -y libsgx-launch"
+				]
+			}
+		}
+	}
+}
