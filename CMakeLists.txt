@@ -157,7 +157,7 @@ add_custom_command(
 add_custom_target(marbletest ALL DEPENDS test-marble marble-test)
 
 enable_testing()
-add_test(NAME api-unit-tests COMMAND go test ./... WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-add_test(NAME ego-unit-tests COMMAND go test ./... WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego)
+add_test(NAME api-unit-tests COMMAND go test -race --count=3 ./... WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME ego-unit-tests COMMAND go test -race --count=3 ./... WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego)
 add_test(integration ${CMAKE_SOURCE_DIR}/src/integration_test.sh)
 add_test(marble marble-test)
