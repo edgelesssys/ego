@@ -41,6 +41,8 @@ func main() {
 }
 
 func verifyReport(report attestation.Report) error {
+	// You can either verify the UniqueID or the tuple (SignerID, ProductID, SecurityVersion, Debug).
+
 	if report.SecurityVersion < 2 {
 		return errors.New("invalid security version")
 	}
@@ -50,6 +52,8 @@ func verifyReport(report attestation.Report) error {
 	if !bytes.Equal(report.SignerID, signer) {
 		return errors.New("invalid signer")
 	}
+
+	// For production, you must also verify that report.Debug == false
 
 	return nil
 }

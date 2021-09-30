@@ -64,6 +64,8 @@ func verifyReport(reportBytes, certBytes, signer []byte) error {
 		return errors.New("report data does not match the certificate's hash")
 	}
 
+	// You can either verify the UniqueID or the tuple (SignerID, ProductID, SecurityVersion, Debug).
+
 	if report.SecurityVersion < 2 {
 		return errors.New("invalid security version")
 	}
@@ -73,6 +75,8 @@ func verifyReport(reportBytes, certBytes, signer []byte) error {
 	if !bytes.Equal(report.SignerID, signer) {
 		return errors.New("invalid signer")
 	}
+
+	// For production, you must also verify that report.Debug == false
 
 	return nil
 }

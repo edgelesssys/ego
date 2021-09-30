@@ -8,7 +8,6 @@ package eclient
 
 import (
 	"bytes"
-	"encoding/binary"
 	"errors"
 	"net/http"
 
@@ -16,20 +15,13 @@ import (
 )
 
 func ExampleCreateAttestationClientTLSConfig() {
-	// the signerID is derived from the binary of the enclaved program
-	// and can be obtained using `ego signerid`
-	var signerID []byte
+	// the uniqueID is derived from the binary of the enclaved program
+	// and can be obtained using `ego uniqueid`
+	var uniqueID []byte
 
-	// verifyReport verifies the tuple (SignerID, ProductID, SecurityVersion)
 	verifyReport := func(report attestation.Report) error {
-		if report.SecurityVersion < 2 {
-			return errors.New("invalid security version")
-		}
-		if binary.LittleEndian.Uint16(report.ProductID) != 1234 {
-			return errors.New("invalid product")
-		}
-		if !bytes.Equal(report.SignerID, signerID) {
-			return errors.New("invalid signer")
+		if !bytes.Equal(report.UniqueID, uniqueID) {
+			return errors.New("invalid UniqueID")
 		}
 		return nil
 	}
