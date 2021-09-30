@@ -45,6 +45,10 @@ party must additionally verify the content of the remote report:
 	if !bytes.Equal(report.SignerID, signer) {
 		return errors.New("invalid signer")
 	}
+	if report.Debug {
+		return errors.New("debug enclave not allowed")
+	}
+
 	// certBytes and report were sent over insecure channel
 	hash := sha256.Sum256(certBytes)
 	if !bytes.Equal(report.Data[:len(hash)], hash[:]) {

@@ -69,6 +69,8 @@ func main() {
 // verifyReportValues compares the report values with that were defined in the
 // enclave.json and that were included into the binary of the server during build.
 func verifyReportValues(report attestation.Report, signer []byte) error {
+	// You can either verify the UniqueID or the tuple (SignerID, ProductID, SecurityVersion, Debug).
+
 	if !bytes.Equal(report.SignerID, []byte(signer)) {
 		return errors.New("token does not contain the right signer id")
 	}
@@ -83,6 +85,9 @@ func verifyReportValues(report attestation.Report, signer []byte) error {
 		return errors.New("token contains invalid security version number")
 	}
 	fmt.Println("✅ SecurityVersion verified.")
+
+	// For production, you must also verify that report.Debug == false
+
 	return nil
 }
 
