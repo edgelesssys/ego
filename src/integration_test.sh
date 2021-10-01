@@ -34,7 +34,8 @@ export PATH="$tPath/install/bin:$PATH"
 
 # Setup integration test
 mkdir -p /tmp/ego-integration-test
-echo -n -e "It works!" > /tmp/ego-integration-test/test-file.txt
+echo -n 'It works!' > /tmp/ego-integration-test/test-file.txt
+echo -n 'i should be in memfs' > /tmp/ego-integration-test/file-host.txt
 
 # Build integration test
 cd $egoPath/ego/cmd/integration-test/

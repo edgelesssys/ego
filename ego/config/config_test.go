@@ -9,6 +9,7 @@ package config
 import (
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -116,4 +117,43 @@ func TestValidateEnvVars(t *testing.T) {
 	config.Env[0] = EnvVar{Name: "HELLO_WORLD", Value: "1", FromHost: true}
 	config.Env[1] = EnvVar{Name: "HELLO_WORLD", Value: "1", FromHost: true}
 	assert.Error(config.Validate())
+}
+
+func TestEmbeddedFile(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	fs := afero.Afero{Fs: afero.NewMemMapFs()}
+	require.NoError(fs.WriteFile("empty_file", nil, 0))
+	content1 := []byte("just some string")
+	content2 := []byte{2, 0, 3}
+	require.NoError(fs.WriteFile("file1", content1, 0))
+	require.NoError(fs.WriteFile("file2", content2, 0))
+
+	// expect no error if no files are configured
+	var c Config
+	require.NoError(c.PopulateContent(fs))
+	c = Config{Files: []File{}}
+	require.NoError(c.PopulateContent(fs))
+
+	// expect error if files does not exist
+	c = Config{Files: []File{{Source: "doesnotexist"}}}
+	require.Error(c.PopulateContent(fs))
+
+	// empty file is ok
+	c = Config{Files: []File{{Source: "empty_file"}}}
+	require.NoError(c.PopulateContent(fs))
+	content, err := c.Files[0].GetContent()
+	require.NoError(err)
+	assert.Empty(content)
+
+	// multiple files
+	c = Config{Files: []File{{Source: "file1"}, {Source: "file2"}}}
+	require.NoError(c.PopulateContent(fs))
+	content, err = c.Files[0].GetContent()
+	require.NoError(err)
+	assert.Equal(content1, content)
+	content, err = c.Files[1].GetContent()
+	require.NoError(err)
+	assert.Equal(content2, content)
 }

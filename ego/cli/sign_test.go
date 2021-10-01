@@ -289,6 +289,69 @@ func TestSignJSONExecutablePayload(t *testing.T) {
 	assert.EqualValues(jsonNewData, reconstructedJSON)
 }
 
+func TestEmbedFile(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	fs := afero.Afero{Fs: afero.NewMemMapFs()}
+	runner := signRunner{fs: fs}
+	cli := NewCli(&runner, fs)
+
+	// Create executable
+	const exe = "exefile"
+	require.NoError(fs.WriteFile(exe, elfUnsigned, 0))
+
+	// Create file to embed
+	const sourcePath = "/src"
+	const targetPath = "/path/to/file"
+	content := []byte{2, 0, 3}
+	require.NoError(fs.WriteFile(sourcePath, content, 0))
+
+	// Sign executable, which should embed the file
+	const configJSON = `
+{
+	"exe": "` + exe + `",
+	"key": "private.pem",
+	"heapSize": 1,
+	"files": [
+		{
+			"source": "` + sourcePath + `",
+			"target": "` + targetPath + `"
+		}
+	]
+}
+`
+	runner.expectedConfig = `ProductID=0
+SecurityVersion=0
+Debug=0
+NumHeapPages=256
+NumStackPages=1024
+NumTCS=32
+`
+	require.NoError(fs.WriteFile("enclave.json", []byte(configJSON), 0))
+	require.NoError(cli.Sign(""))
+
+	// Get payload
+	file, err := fs.Open(exe)
+	require.NoError(err)
+	defer file.Close()
+	payloadSize, payloadOffset, _, err := getPayloadInformation(file)
+	require.NoError(err)
+	payload := make([]byte, payloadSize)
+	_, err = file.ReadAt(payload, payloadOffset)
+	require.NoError(err)
+
+	// Verify that config includes embedded file
+	var conf config.Config
+	require.NoError(json.Unmarshal(payload, &conf))
+	require.Len(conf.Files, 1)
+	assert.Equal(sourcePath, conf.Files[0].Source)
+	assert.Equal(targetPath, conf.Files[0].Target)
+	actualContent, err := conf.Files[0].GetContent()
+	require.NoError(err)
+	require.Equal(content, actualContent)
+}
+
 type signRunner struct {
 	fs             afero.Afero
 	expectedConfig string

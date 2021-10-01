@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 	"syscall"
@@ -71,6 +72,10 @@ func PreMain(payload string, mounter Mounter, fs afero.Fs, hostEnviron []string)
 
 		// Perform user mounts based on embedded config
 		if err := performUserMounts(config, mounter, fs); err != nil {
+			return err
+		}
+
+		if err := writeFiles(config.Files, fs); err != nil {
 			return err
 		}
 	}
@@ -171,6 +176,25 @@ func performUserMounts(config config.Config, mounter Mounter, fs afero.Fs) error
 
 		// Perform the mount
 		if err := mounter.Mount(mountPoint.Source, mountPoint.Target, filesystem, flags, ""); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func writeFiles(files []config.File, fs afero.Fs) error {
+	afs := afero.Afero{Fs: fs}
+
+	for _, file := range files {
+		buf, err := file.GetContent()
+		if err != nil {
+			return err
+		}
+		if err := afs.MkdirAll(filepath.Dir(file.Target), 0); err != nil {
+			return err
+		}
+		if err := afs.WriteFile(file.Target, buf, 0); err != nil {
 			return err
 		}
 	}

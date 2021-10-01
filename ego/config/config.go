@@ -7,8 +7,11 @@
 package config
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strings"
+
+	"github.com/spf13/afero"
 )
 
 // Config defines the structure of enclave.json, containing the settings for the enclave runtime
@@ -21,6 +24,14 @@ type Config struct {
 	SecurityVersion int               `json:"securityVersion"`
 	Mounts          []FileSystemMount `json:"mounts"`
 	Env             []EnvVar          `json:"env"`
+	Files           []File            `json:"files"`
+}
+
+// File defines File used in Config/enclave.json. Reads from source, adds content to the payload. Premain writes decoded content to target
+type File struct {
+	Base64Content string `json:"content,omitempty"`
+	Source        string `json:"source"`
+	Target        string `json:"target"`
 }
 
 // FileSystemMount defines a single mount point for the enclave's filesystem
@@ -127,4 +138,21 @@ func (c *Config) Validate() error {
 	}
 
 	return nil
+}
+
+// PopulateContent encodes Source into base64Content
+func (c *Config) PopulateContent(fs afero.Afero) error {
+	for i, file := range c.Files {
+		buff, err := fs.ReadFile(file.Source)
+		if err != nil {
+			return err
+		}
+		c.Files[i].Base64Content = base64.StdEncoding.EncodeToString(buff)
+	}
+	return nil
+}
+
+// GetContent return the decoded content
+func (f *File) GetContent() ([]byte, error) {
+	return base64.StdEncoding.DecodeString(f.Base64Content)
 }

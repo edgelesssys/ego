@@ -26,5 +26,11 @@
             "name": "PWD",
             "value": "/data"
         }
+    ],
+    "files": [
+        {
+            "source": "/tmp/ego-integration-test/file-host.txt",
+            "target": "/path/to/file_enclave.txt"
+        }
     ]
 }

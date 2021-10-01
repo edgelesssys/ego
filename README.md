@@ -72,6 +72,7 @@ Now you're ready to build applications with EGo! To start, check out the followi
 * [remote_attestation](samples/remote_attestation) shows how to use the basic remote attestation API of EGo.
 * [attested_tls](samples/attested_tls) is similar to the above, but uses a higher level API to establish an attested TLS connection.
 * [vault](samples/vault) demonstrates how to port a Go application exemplified by Hashicorp Vault.
+* [embedded_file](samples/embedded_file) shows how to embed files into an EGo enclave.
 * [reproducible_build](samples/reproducible_build) builds the helloworld sample reproducibly, resulting in the same UniqueID.
 * [cgo](samples/cgo) demonstrates the experimental cgo support.
 * [azure_attestation](samples/azure_attestation) shows how to use Microsoft Azure Attestation for remote attestation.

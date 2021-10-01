@@ -32,13 +32,13 @@ func main() {
 func testFileSystemMounts(assert *assert.Assertions, require *require.Assertions) {
 	// Check if root directory is empty
 	log.Println("Testing default memfs mount...")
-	log.Println("Check if exposed filesystem only contains 'edg' for memfs mounts...")
 	dirContent, err := os.Open("/")
 	require.NoError(err)
-	content, err := dirContent.Readdirnames(2)
+	content, err := dirContent.Readdirnames(0)
 	assert.NoError(err)
-	assert.Len(content, 1)
-	assert.Equal("edg", content[0])
+	assert.Len(content, 2)
+	assert.Contains(content, "edg")
+	assert.Contains(content, "path")
 
 	// Check if we can write and read to the root memfs
 	log.Println("Checking I/O of memfs...")
@@ -74,6 +74,11 @@ func testFileSystemMounts(assert *assert.Assertions, require *require.Assertions
 	newFileContent, err = ioutil.ReadFile("/edg/mnt/memfs/test-file.txt")
 	require.NoError(err)
 	assert.Equal("It works!", string(newFileContent))
+
+	// Check embedded file
+	buff, err := ioutil.ReadFile("/path/to/file_enclave.txt")
+	require.NoError(err)
+	assert.Equal("i should be in memfs", string(buff))
 }
 
 func testEnvVars(assert *assert.Assertions, require *require.Assertions) {
