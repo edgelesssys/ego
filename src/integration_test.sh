@@ -34,12 +34,12 @@ export PATH="$tPath/install/bin:$PATH"
 
 # Setup integration test
 mkdir -p /tmp/ego-integration-test
-echo -n -e "It works!" > /tmp/ego-integration-test/test-file.txt
+echo -n 'It works!' > /tmp/ego-integration-test/test-file.txt
+echo -n 'i should be in memfs' > /tmp/ego-integration-test/file-host.txt
 
 # Build integration test
 cd $egoPath/ego/cmd/integration-test/
 cp enclave.json /tmp/ego-integration-test/enclave.json
-cp file_host.txt /tmp/ego-integration-test/file_host.txt
 run ego-go build -o /tmp/ego-integration-test/integration-test
 
 # Sign & run intergration test

@@ -8,6 +8,7 @@ package core
 
 import (
 	"ego/config"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -236,4 +237,25 @@ func restoreExistingEnvVars(environ []string) {
 		splitString := strings.Split(envVar, "=")
 		os.Setenv(splitString[0], splitString[1])
 	}
+}
+
+func TestEmbeddedFile(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	const target = "/path/to/file"
+	content := []byte{2, 0, 3}
+
+	conf := config.Config{
+		Files: []config.File{{Target: target, Base64Content: base64.StdEncoding.EncodeToString(content)}},
+	}
+
+	payload, err := json.Marshal(conf)
+	require.NoError(err)
+	fs := afero.NewMemMapFs()
+	require.NoError(PreMain(string(payload), &assertionMounter{}, fs, nil))
+
+	actualContent, err := afero.Afero{Fs: fs}.ReadFile(target)
+	require.NoError(err)
+	assert.Equal(content, actualContent)
 }

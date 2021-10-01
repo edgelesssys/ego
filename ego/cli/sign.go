@@ -136,7 +136,7 @@ func (c *Cli) readConfigJSONtoStruct(path string) (*config.Config, error) {
 	if err := conf.Validate(); err != nil {
 		return nil, err
 	}
-	if err := conf.PopulateContent(); err != nil {
+	if err := conf.PopulateContent(c.fs); err != nil {
 		return nil, err
 	}
 	return &conf, nil
