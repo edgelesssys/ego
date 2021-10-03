@@ -8,12 +8,12 @@ package cli
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -23,8 +23,8 @@ import (
 
 const shellToUse = "bash"
 
-var ErrTargetNotSupported = errors.New("install target not supported")
-var ErrInstallUserQuit = errors.New("user did not want to continue installation")
+var ErrTargetNotSupported = errors.New("component not found")
+var ErrInstallUserQuit = errors.New("user denied installation")
 var ErrExitCodeValue = errors.New("exit code not 0")
 var ErrSysInfoFail = errors.New("could not determine necessary details about operating system")
 
@@ -125,11 +125,8 @@ func (c *Cli) install(ask func(string) bool, sgxLevel string, component string, 
 }
 
 func (c *Cli) runCmd(cmd *exec.Cmd) error {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	if err := c.runner.Run(cmd); err != nil {
 		return err
@@ -138,7 +135,6 @@ func (c *Cli) runCmd(cmd *exec.Cmd) error {
 		fmt.Printf("Command exited with Exit Status: %d\n", exitcode)
 		return ErrExitCodeValue
 	}
-	fmt.Println(stdout.String())
 	return nil
 }
 

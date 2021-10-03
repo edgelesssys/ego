@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/klauspost/cpuid/v2"
 	"github.com/spf13/afero"
 )
 
@@ -112,23 +113,27 @@ func handleErr(err error) {
 	switch err {
 	case nil:
 	case cli.ErrElfNoPie:
-		fmt.Println("ERROR: Binary could not be loaded.")
-		fmt.Println("Possibly the binary was not build with 'ego-go build'?")
+		fmt.Println("ERROR: failed to load the binary")
+		fmt.Println("The binary doesn't seem to be built with 'ego-go build'")
 	case cli.ErrValidAttr0:
-		fmt.Println("ERROR: Binary could not be loaded")
-		fmt.Println("Maybe the binary was not previous signed with 'ego sign'?")
+		fmt.Println("ERROR: failed to load the binary")
+		fmt.Println("Please sign the binary with 'ego sign'")
 	case cli.ErrEnclIniFailInvalidMeasurement:
-		fmt.Println("ERROR: Initialziation of the enclave failed.")
+		fmt.Println("ERROR: failed to initialize the enclave")
 		fmt.Println("Try to resign the binary with 'ego sign' and rerun afterwards.")
 	case cli.ErrEnclIniFailUnexpected:
-		fmt.Println("ERROR: Initialziation of the enclave failed.")
+		fmt.Println("ERROR: failed to initialize the enclave")
 		if _, err := os.Stat("/dev/isgx"); err == nil {
 			fmt.Println("Try to run: sudo ego install libsgx-launch")
 		}
 	case cli.ErrSGXOpenFail:
-		fmt.Println("ERROR: Failed to open Intel SGX device.")
-		fmt.Println("Maybe your hardware does not support SGX or a required module is missing.")
-		fmt.Println("You can use 'OE_SIMULATION=1 ego run ...' to run your enclaved app on non-SGX hardware.")
+		fmt.Println("ERROR: failed to open Intel SGX device")
+		if cpuid.CPU.Supports(cpuid.SGX) {
+			fmt.Println("Install the SGX driver with: sudo ego install sgx-driver")
+		} else {
+			fmt.Println("This machine doesn't support SGX.")
+		}
+		fmt.Println("You can use 'OE_SIMULATION=1 ego run ...' to run in simulation mode.")
 	default:
 		fmt.Println(err)
 	}
@@ -198,8 +203,8 @@ Print the UniqueID of a signed executable.`
 
 	case "install":
 		s = `install [component]
-		
-Install drivers and other components. The components that you can install depend on your operating system and its version. 
+
+Install drivers and other components. The components that you can install depend on your operating system and its version.
 Use "ego install" to list the available components for your system.`
 
 	default:
@@ -222,8 +227,7 @@ Use "ego help <command>" for more information about a command.`
 
 // Asks the user whether he wants to execute the commands in listOfActions and returns his choice
 func askInstall(listOfActions string) bool {
-	fmt.Println("The following commands will be executed:")
-	fmt.Println(listOfActions)
+	fmt.Println("The following commands will be executed:\n\n" + listOfActions + "\n")
 
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Continue installation? [y/n]: ")
