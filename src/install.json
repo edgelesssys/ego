@@ -3,7 +3,8 @@
 		"desc": {
 			"sgx-driver": "The SGX driver. Required on systems with a Linux kernel version prior to 5.11.",
 			"libsgx-launch": "SGX Launch package required for non-FLC SGX systems.",
-			"az-dcap-client": "The Microsoft Azure DCAP client. Required for remote attestation with an Azure VM."
+			"az-dcap-client": "The Microsoft Azure DCAP client. Required for remote attestation with an Azure VM.",
+			"libsgx-dcap-default-qpl": "SGX default DCAP Quote Provider Library. Required for remote attestation on non-Azure VMs."
 		},
 		"commands": {
 			"ubuntu-18.04-flc": {
@@ -22,14 +23,13 @@
 					"apt install -y az-dcap-client"
 				],
 				"libsgx-dcap-default-qpl": [
-					"echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list",
 					"wget -q https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key",
 					"echo '809cb39c4089843f923143834550b185f2e6aa91373a05c8ec44026532dab37c intel-sgx-deb.key' | sha256sum -c",
 					"apt-key add intel-sgx-deb.key",
-					"apt-get update",
-					"if [[ $(test -e /usr/share/doc/az-dcap-client; echo $?) -eq '0' ]]; then apt remove -y az-dcap-client; fi",
+					"add-apt-repository 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main'",
+					"if [[ -e /usr/share/doc/az-dcap-client ]]; then apt remove -y az-dcap-client; fi",
 					"apt install -y libsgx-dcap-default-qpl",
-					"ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1.8.100.2 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so"
+					"ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so"
 				]
 			},
 			"ubuntu-18.04-nonflc": {
@@ -64,14 +64,13 @@
 					"apt install -y az-dcap-client"
 				],
 				"libsgx-dcap-default-qpl": [
-					"echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list",
 					"wget -q https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key",
 					"echo '809cb39c4089843f923143834550b185f2e6aa91373a05c8ec44026532dab37c intel-sgx-deb.key' | sha256sum -c",
 					"apt-key add intel-sgx-deb.key",
-					"apt-get update",
-					"if [[ $(test -e /usr/share/doc/az-dcap-client; echo $?) -eq '0' ]]; then apt remove -y az-dcap-client; fi",
+					"add-apt-repository 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main'",
+					"if [[ -e /usr/share/doc/az-dcap-client ]]; then apt remove -y az-dcap-client; fi",
 					"apt install -y libsgx-dcap-default-qpl",
-					"ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1.8.100.2 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so"
+					"ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so"
 				]
 			},
 			"ubuntu-20.04-nonflc": {
