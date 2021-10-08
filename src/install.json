@@ -27,9 +27,9 @@
 					"echo '809cb39c4089843f923143834550b185f2e6aa91373a05c8ec44026532dab37c intel-sgx-deb.key' | sha256sum -c",
 					"apt-key add intel-sgx-deb.key",
 					"apt-get update",
-					"if [[ $(test -e /usr/share/doc/az-dcap-client; echo $?) -eq '0' ]]; then apt remove az-dcap-client; fi",
-					"apt install libsgx-dcap-default-qpl",
-					"sudo ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1.8.100.2 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so"
+					"if [[ $(test -e /usr/share/doc/az-dcap-client; echo $?) -eq '0' ]]; then apt remove -y az-dcap-client; fi",
+					"apt install -y libsgx-dcap-default-qpl",
+					"ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1.8.100.2 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so"
 				]
 			},
 			"ubuntu-18.04-nonflc": {
@@ -69,9 +69,9 @@
 					"echo '809cb39c4089843f923143834550b185f2e6aa91373a05c8ec44026532dab37c intel-sgx-deb.key' | sha256sum -c",
 					"apt-key add intel-sgx-deb.key",
 					"apt-get update",
-					"if [[ $(test -e /usr/share/doc/az-dcap-client; echo $?) -eq '0' ]]; then apt remove az-dcap-client; fi",
-					"apt install libsgx-dcap-default-qpl",
-					"sudo ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1.8.100.2 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so"
+					"if [[ $(test -e /usr/share/doc/az-dcap-client; echo $?) -eq '0' ]]; then apt remove -y az-dcap-client; fi",
+					"apt install -y libsgx-dcap-default-qpl",
+					"ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1.8.100.2 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so"
 				]
 			},
 			"ubuntu-20.04-nonflc": {
