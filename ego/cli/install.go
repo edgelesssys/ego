@@ -56,7 +56,7 @@ func (c *Cli) Install(ask func(string) bool, component string) error {
 		sgxLevel = "nonflc"
 	}
 
-	return c.install(ask, sgxLevel, component, "https://raw.githubusercontent.com/edgelesssys/ego/master/src/install.json")
+	return c.install(ask, sgxLevel, component, "https://raw.githubusercontent.com/edgelesssys/ego/feat/install/src/install.json")
 }
 
 func (c *Cli) install(ask func(string) bool, sgxLevel string, component string, jsonURL string) error {
