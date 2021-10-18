@@ -91,15 +91,11 @@ Now you're ready to build applications with EGo! To start, check out the followi
 
 ## Contribute
 
-Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for information on issue reporting, code guidelines, and our PR process.
-
-[`BUILD.md`](BUILD.md) includes general information on how to work in this repo.
-
-Pull requests are welcome! You need to agree to our [Contributor License Agreement](https://cla-assistant.io/edgelesssys/ego).
-
-This project and everyone participating in it are governed by the [Code of Conduct](/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
-
-To report a security issue, write to security@edgeless.systems.
+* Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for information on issue reporting, code guidelines, and our PR process.
+* [`BUILD.md`](BUILD.md) includes general information on how to work in this repo.
+* Pull requests are welcome! You need to agree to our [Contributor License Agreement](https://cla-assistant.io/edgelesssys/ego).
+* This project and everyone participating in it are governed by the [Code of Conduct](/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+* To report a security issue, write to security@edgeless.systems.
 
 
 <!-- refs -->
