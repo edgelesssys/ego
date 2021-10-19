@@ -82,14 +82,19 @@ Now you're ready to build applications with EGo! To start, check out the followi
 * The [EGo API](https://pkg.go.dev/github.com/edgelesssys/ego) provides access to *remote attestation* and *sealing* to your confidential app at runtime.
 * If you have further questions or need help, you're invited to join our [Discord community][discord].
 
+## Community & help
+
+* For user help, questions or queries about EGo please use our public [Discord channel](https://discord.com/invite/rH8QTH56JN) or file an [issue](https://github.com/edgelesssys/ego/issues).
+* If you see an error message or run into an issue, please make sure to create a [bug report](https://github.com/edgelesssys/ego/issues).
+* Get the latest news and announcements on [Twitter](https://twitter.com/EdgelessSystems), [LinkedIn](https://www.linkedin.com/company/edgeless-systems/) or sign up for our monthly [newsletter](http://eepurl.com/hmjo3H).
+* Visit our [blog](https://blog.edgeless.systems/) for technical deep-dives and tutorials.
+
 ## Contribute
-To report a problem or suggest a new feature, file a GitHub issue.
 
-To report a security issue, write to security@edgeless.systems
-
-Pull requests are welcome! You need to agree to our [Contributor License Agreement](https://cla-assistant.io/edgelesssys/ego).
-
-This project and everyone participating in it are governed by the [Code of Conduct](/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+* Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for information on issue reporting, code guidelines, and our PR process.
+* Pull requests are welcome! You need to agree to our [Contributor License Agreement](https://cla-assistant.io/edgelesssys/ego).
+* This project and everyone participating in it are governed by the [Code of Conduct](/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+* To report a security issue, write to security@edgeless.systems.
 
 
 <!-- refs -->
