@@ -84,7 +84,7 @@ Now you're ready to build applications with EGo! To start, check out the followi
 
 ## Community & help
 
-* For user help, questions or queries about EdgelessDB please use our public [Discord channel](https://discord.com/invite/rH8QTH56JN) or file an [issue](https://github.com/edgelesssys/ego/issues).
+* For user help, questions or queries about EGo please use our public [Discord channel](https://discord.com/invite/rH8QTH56JN) or file an [issue](https://github.com/edgelesssys/ego/issues).
 * If you see an error message or run into an issue, please make sure to create a [bug report](https://github.com/edgelesssys/ego/issues).
 * Get the latest news and announcements on [Twitter](https://twitter.com/EdgelessSystems), [LinkedIn](https://www.linkedin.com/company/edgeless-systems/) or sign up for our monthly [newsletter](http://eepurl.com/hmjo3H).
 * Visit our [blog](https://blog.edgeless.systems/) for technical deep-dives and tutorials.
