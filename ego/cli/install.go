@@ -56,7 +56,13 @@ func (c *Cli) Install(ask func(string) bool, component string) error {
 		sgxLevel = "nonflc"
 	}
 
-	return c.install(ask, sgxLevel, component, "https://raw.githubusercontent.com/edgelesssys/ego/master/src/install.json")
+	url := os.Getenv("EGO_INSTALL_URL")
+	if url == "" {
+		url = "https://raw.githubusercontent.com/edgelesssys/ego/master/src/install.json"
+	} else {
+		fmt.Println("Warning: EGO_INSTALL_URL has been set to override installation data url:", url)
+	}
+	return c.install(ask, sgxLevel, component, url)
 }
 
 func (c *Cli) install(ask func(string) bool, sgxLevel string, component string, jsonURL string) error {
