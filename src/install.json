@@ -29,7 +29,8 @@
 					"add-apt-repository 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main'",
 					"if [[ -e /usr/share/doc/az-dcap-client ]]; then apt remove -y az-dcap-client; fi",
 					"apt install -y libsgx-dcap-default-qpl",
-					"ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so"
+					"ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so",
+					"sed -i 's/.*USE_SECURE_CERT=.*/USE_SECURE_CERT=FALSE/' /etc/sgx_default_qcnl.conf"
 				]
 			},
 			"ubuntu-18.04-nonflc": {
@@ -70,7 +71,8 @@
 					"add-apt-repository 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main'",
 					"if [[ -e /usr/share/doc/az-dcap-client ]]; then apt remove -y az-dcap-client; fi",
 					"apt install -y libsgx-dcap-default-qpl",
-					"ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so"
+					"ln -s /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1 /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so",
+					"sed -i 's/.*USE_SECURE_CERT=.*/USE_SECURE_CERT=FALSE/' /etc/sgx_default_qcnl.conf"
 				]
 			},
 			"ubuntu-20.04-nonflc": {
