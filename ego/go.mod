@@ -8,5 +8,5 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.9
 	github.com/spf13/afero v1.6.0
 	github.com/stretchr/testify v1.7.0
-	google.golang.org/grpc v1.40.0
+	google.golang.org/grpc v1.41.0
 )

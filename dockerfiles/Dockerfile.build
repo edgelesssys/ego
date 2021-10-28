@@ -1,4 +1,4 @@
-FROM ubuntu:focal-20210827 AS build
+FROM ubuntu:focal-20211006 AS build
 
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   build-essential=12.8ubuntu1.1 \
@@ -13,7 +13,7 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   && locale-gen en_US.UTF-8
 ENV LANG=en_US.UTF-8
 
-ARG erttag=v0.2.7 egotag=v0.3.2
+ARG erttag=v0.2.8 egotag=v0.3.3
 RUN wget -qO- https://golang.org/dl/go1.16.7.linux-amd64.tar.gz | tar -C /usr/local -xz \
   && git clone -b $erttag --depth=1 https://github.com/edgelesssys/edgelessrt \
   && git clone -b $egotag --depth=1 https://github.com/edgelesssys/ego \
