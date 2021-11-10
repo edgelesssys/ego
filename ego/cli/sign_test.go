@@ -64,141 +64,150 @@ var elfUnsigned = func() []byte {
 	return data
 }()
 
-func TestSignEmptyFilename(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
+func TestSign(t *testing.T) {
+	const exefile = "exefile"
 
-	fs := afero.Afero{Fs: afero.NewMemMapFs()}
-	runner := signRunner{fs: fs}
-	cli := NewCli(&runner, fs)
-
-	// Create executable
-	require.NoError(fs.WriteFile("exefile", elfUnsigned, 0))
-
-	// enclave.json does not exist
-	require.Error(cli.Sign(""))
-
-	// enclave.json is empty
-	require.NoError(fs.WriteFile("enclave.json", nil, 0))
-	require.Error(cli.Sign(""))
-
-	// enclave.json is invalid
-	require.NoError(fs.WriteFile("enclave.json", []byte("foo"), 0))
-	require.Error(cli.Sign(""))
-
-	// empty json
-	require.NoError(fs.WriteFile("enclave.json", []byte("{}"), 0))
-	require.Error(cli.Sign(""))
-
-	// missing exe
-	require.NoError(fs.WriteFile("enclave.json", []byte(`{"key":"keyfile", "heapSize":2}`), 0))
-	require.Error(cli.Sign(""))
-
-	// missing key
-	require.NoError(fs.WriteFile("enclave.json", []byte(`{"exe":"exefile", "heapSize":2}`), 0))
-	require.Error(cli.Sign(""))
-
-	// missing heapSize
-	require.NoError(fs.WriteFile("enclave.json", []byte(`{"exe":"exefile", "key":"keyfile"}`), 0))
-	require.Error(cli.Sign(""))
-
-	// key does not exist
-	runner.expectedConfig = `ProductID=0
+	testCases := map[string]struct {
+		filename       string
+		keyfilename    string
+		existingFiles  map[string]string
+		expectErr      bool
+		expectedConfig string
+		expectedKey    string
+	}{
+		"enclave.json does not exist": {
+			expectErr: true,
+		},
+		"enclave.json is empty": {
+			existingFiles: map[string]string{"enclave.json": ""},
+			expectErr:     true,
+		},
+		"enclave.json is invalid": {
+			existingFiles: map[string]string{"enclave.json": "foo"},
+			expectErr:     true,
+		},
+		"empty json": {
+			existingFiles: map[string]string{"enclave.json": "{}"},
+			expectErr:     true,
+		},
+		"missing exe": {
+			existingFiles: map[string]string{"enclave.json": `{"key":"keyfile", "heapSize":2}`},
+			expectErr:     true,
+		},
+		"missing key": {
+			existingFiles: map[string]string{"enclave.json": `{"exe":"exefile", "heapSize":2}`},
+			expectErr:     true,
+		},
+		"missing heapSize": {
+			existingFiles: map[string]string{"enclave.json": `{"exe":"exefile", "key":"keyfile"}`},
+			expectErr:     true,
+		},
+		"key does not exist": {
+			keyfilename:   "keyfile",
+			existingFiles: map[string]string{"enclave.json": `{"exe":"exefile", "key":"keyfile", "heapSize":2}`},
+			expectedConfig: `ProductID=0
 SecurityVersion=0
 Debug=0
 NumHeapPages=512
 NumStackPages=1024
 NumTCS=32
-`
-	require.NoError(fs.WriteFile("enclave.json", []byte(`{"exe":"exefile", "key":"keyfile", "heapSize":2}`), 0))
-	require.NoError(cli.Sign(""))
-	key, err := fs.ReadFile("keyfile")
-	require.NoError(err)
-	assert.EqualValues("newkey", key)
-	exists, err := fs.Exists("public.pem")
-	require.NoError(err)
-	assert.True(exists)
-
-	// key exists
-	runner.expectedConfig = `ProductID=4
+`,
+		},
+		"key exists": {
+			keyfilename: "keyfile",
+			existingFiles: map[string]string{
+				"keyfile":      "existingkey",
+				"enclave.json": `{"exe":"exefile", "key":"keyfile", "heapSize":3, "debug":true, "productID":4, "securityVersion":5}`,
+			},
+			expectedConfig: `ProductID=4
 SecurityVersion=5
 Debug=1
 NumHeapPages=768
 NumStackPages=1024
 NumTCS=32
-`
-	require.NoError(fs.WriteFile("keyfile", []byte("existingkey"), 0))
-	require.NoError(fs.WriteFile("enclave.json", []byte(`{"exe":"exefile", "key":"keyfile", "heapSize":3, "debug":true, "productID":4, "securityVersion":5}`), 0))
-	require.NoError(cli.Sign(""))
-	key, err = fs.ReadFile("keyfile")
-	require.NoError(err)
-	assert.EqualValues("existingkey", key)
-}
-
-func TestSignConfig(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
-
-	fs := afero.Afero{Fs: afero.NewMemMapFs()}
-	runner := signRunner{fs: fs}
-	cli := NewCli(&runner, fs)
-
-	// Create executable
-	require.NoError(fs.WriteFile("exefile", elfUnsigned, 0))
-
-	// key does not exist + custom config name
-	runner.expectedConfig = `ProductID=0
+`,
+			expectedKey: "existingkey",
+		},
+		"key does not exist + custom config name": {
+			filename:      "customConfigName.json",
+			keyfilename:   "keyfile",
+			existingFiles: map[string]string{"customConfigName.json": `{"exe":"exefile", "key":"keyfile", "heapSize":2}`},
+			expectedConfig: `ProductID=0
 SecurityVersion=0
 Debug=0
 NumHeapPages=512
 NumStackPages=1024
 NumTCS=32
-`
-	require.NoError(fs.WriteFile("customConfigName.json", []byte(`{"exe":"exefile", "key":"keyfile", "heapSize":2, "debug":false, "productID":0, "securityVersion":0}`), 0))
-	require.NoError(cli.Sign("customConfigName.json"))
-	key, err := fs.ReadFile("keyfile")
-	require.NoError(err)
-	assert.EqualValues("newkey", key)
-	exists, err := fs.Exists("public.pem")
-	require.NoError(err)
-	assert.True(exists)
-
-}
-
-func TestSignExecutable(t *testing.T) {
-	require := require.New(t)
-
-	fs := afero.Afero{Fs: afero.NewMemMapFs()}
-	runner := signRunner{fs: fs}
-	cli := NewCli(&runner, fs)
-
-	// Create executable
-	require.NoError(fs.WriteFile("exefile", elfUnsigned, 0))
-
-	// enclave.json does not exist
-	runner.expectedConfig = `ProductID=1
+`,
+		},
+		"sign executable": {
+			filename:    exefile,
+			keyfilename: "private.pem",
+			expectedConfig: `ProductID=1
 SecurityVersion=1
 Debug=1
 NumHeapPages=131072
 NumStackPages=1024
 NumTCS=32
-`
-	require.NoError(cli.Sign("exefile"))
-
-	//exe in enclave.json does not match provided exefile
-	require.NoError(fs.WriteFile("enclave.json", []byte(`{"exe":"exefile", "key":"keyfile", "heapSize":3, "debug":true, "productID":4, "securityVersion":5}`), 0))
-	require.Error(cli.Sign("notExefile"))
-
-	//exe in enclave.json matches provided exefile
-	runner.expectedConfig = `ProductID=4
-SecurityVersion=5
-Debug=1
-NumHeapPages=768
+`,
+		},
+		"exe in enclave.json does not match provided exefile": {
+			filename:      "notExefile",
+			existingFiles: map[string]string{"enclave.json": `{"exe":"exefile", "key":"keyfile", "heapSize":2}`},
+			expectErr:     true,
+		},
+		"exe in enclave.json matches provided exefile": {
+			filename:      exefile,
+			keyfilename:   "keyfile",
+			existingFiles: map[string]string{"enclave.json": `{"exe":"exefile", "key":"keyfile", "heapSize":2}`},
+			expectedConfig: `ProductID=0
+SecurityVersion=0
+Debug=0
+NumHeapPages=512
 NumStackPages=1024
 NumTCS=32
-`
-	require.NoError(fs.WriteFile("enclave.json", []byte(`{"exe":"exefile", "key":"keyfile", "heapSize":3, "debug":true, "productID":4, "securityVersion":5}`), 0))
-	require.NoError(cli.Sign("exefile"))
+`,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			fs := afero.Afero{Fs: afero.NewMemMapFs()}
+			runner := signRunner{fs: fs, expectedConfig: tc.expectedConfig}
+			cli := NewCli(&runner, fs)
+
+			// Create files
+			require.NoError(fs.WriteFile(exefile, elfUnsigned, 0))
+			for name, data := range tc.existingFiles {
+				require.NoError(fs.WriteFile(name, []byte(data), 0))
+			}
+
+			// Perform the signing
+			err := cli.Sign(tc.filename)
+			if tc.expectErr {
+				assert.Error(err)
+				return
+			}
+			require.NoError(err)
+
+			// Check private and public key
+			key, err := fs.ReadFile(tc.keyfilename)
+			require.NoError(err)
+			exists, err := fs.Exists("public.pem")
+			if tc.expectedKey == "" {
+				assert.EqualValues("newkey", key)
+				require.NoError(err)
+				assert.True(exists)
+			} else {
+				assert.EqualValues(tc.expectedKey, key)
+				require.NoError(err)
+				assert.False(exists)
+			}
+		})
+	}
 }
 
 func TestSignJSONExecutablePayload(t *testing.T) {
