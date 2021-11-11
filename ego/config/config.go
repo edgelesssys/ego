@@ -20,6 +20,7 @@ type Config struct {
 	Key             string            `json:"key"`
 	Debug           bool              `json:"debug"`
 	HeapSize        int               `json:"heapSize"`
+	ExecutableHeap  bool              `json:"executableHeap"`
 	ProductID       int               `json:"productID"`
 	SecurityVersion int               `json:"securityVersion"`
 	Mounts          []FileSystemMount `json:"mounts"`

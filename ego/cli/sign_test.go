@@ -168,6 +168,18 @@ NumStackPages=1024
 NumTCS=32
 `,
 		},
+		"executable heap": {
+			keyfilename:   "keyfile",
+			existingFiles: map[string]string{"enclave.json": `{"exe":"exefile", "key":"keyfile", "heapSize":2, "executableHeap":true}`},
+			expectedConfig: `ProductID=0
+SecurityVersion=0
+Debug=0
+NumHeapPages=512
+NumStackPages=1024
+NumTCS=32
+ExecutableHeap=1
+`,
+		},
 	}
 
 	for name, tc := range testCases {
