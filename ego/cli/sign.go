@@ -46,13 +46,18 @@ func (c *Cli) signWithJSON(conf *config.Config) error {
 	cStackPages := "NumStackPages=1024\n"
 	cNumTCS := "NumTCS=32\n"
 
+	var cExecutableHeap string
+	if conf.ExecutableHeap {
+		cExecutableHeap = "ExecutableHeap=1\n"
+	}
+
 	file, err := c.fs.TempFile("", "")
 	if err != nil {
 		return err
 	}
 	defer c.fs.Remove(file.Name())
 
-	_, err = file.Write([]byte(cProduct + cSecurityVersion + cDebug + cNumHeapPages + cStackPages + cNumTCS))
+	_, err = file.Write([]byte(cProduct + cSecurityVersion + cDebug + cNumHeapPages + cStackPages + cNumTCS + cExecutableHeap))
 	if err != nil {
 		return err
 	}
