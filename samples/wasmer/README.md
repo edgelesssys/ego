@@ -1,7 +1,5 @@
 # Wasmer sample
 
-**Note: This sample requires features that are available in the latest master, but not yet in the release version.**
-
 This sample shows how to run WebAssembly inside EGo using [Wasmer](https://wasmer.io).
 
 By default, *wasmer-go* comes with a shared library. EGo only supports static linking. To this end, download the wasmer static library and tell the Go compiler to use it:
