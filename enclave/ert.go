@@ -15,6 +15,7 @@ import (
 	"unsafe"
 
 	"github.com/edgelesssys/ego/attestation"
+	"github.com/edgelesssys/ego/attestation/tcbstatus"
 )
 
 const sysGetRemoteReport = 1000
@@ -87,6 +88,7 @@ func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 		UniqueID:        C.GoBytes(unsafe.Pointer(&report.identity.unique_id[0]), C.OE_UNIQUE_ID_SIZE),
 		SignerID:        C.GoBytes(unsafe.Pointer(&report.identity.signer_id[0]), C.OE_SIGNER_ID_SIZE),
 		ProductID:       C.GoBytes(unsafe.Pointer(&report.identity.product_id[0]), C.OE_PRODUCT_ID_SIZE),
+		TCBStatus:       tcbstatus.Unknown, // TODO use new OE API
 	}, nil
 }
 

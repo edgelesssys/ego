@@ -41,5 +41,7 @@ func toAttestationReport(report internal.Report) attestation.Report {
 		Debug:           report.Debug,
 		UniqueID:        report.UniqueID,
 		SignerID:        report.SignerID,
-		ProductID:       report.ProductID}
+		ProductID:       report.ProductID,
+		TCBStatus:       report.TCBStatus,
+	}
 }

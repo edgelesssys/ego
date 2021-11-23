@@ -9,21 +9,28 @@ package attestation
 import (
 	"errors"
 
+	"github.com/edgelesssys/ego/attestation/tcbstatus"
 	"github.com/edgelesssys/ego/internal/attestation"
 )
 
 // Report is a parsed enclave report.
 type Report struct {
-	Data            []byte // The report data that has been included in the report.
-	SecurityVersion uint   // Security version of the enclave. For SGX enclaves, this is the ISVSVN value.
-	Debug           bool   // If true, the report is for a debug enclave.
-	UniqueID        []byte // The unique ID for the enclave. For SGX enclaves, this is the MRENCLAVE value.
-	SignerID        []byte // The signer ID for the enclave. For SGX enclaves, this is the MRSIGNER value.
-	ProductID       []byte // The Product ID for the enclave. For SGX enclaves, this is the ISVPRODID value.
+	Data            []byte           // The report data that has been included in the report.
+	SecurityVersion uint             // Security version of the enclave. For SGX enclaves, this is the ISVSVN value.
+	Debug           bool             // If true, the report is for a debug enclave.
+	UniqueID        []byte           // The unique ID for the enclave. For SGX enclaves, this is the MRENCLAVE value.
+	SignerID        []byte           // The signer ID for the enclave. For SGX enclaves, this is the MRSIGNER value.
+	ProductID       []byte           // The Product ID for the enclave. For SGX enclaves, this is the ISVPRODID value.
+	TCBStatus       tcbstatus.Status // The status of the enclave's TCB level.
 }
 
-// ErrEmptyReport is returned by VerifyRemoteReport if reportBytes is empty.
-var ErrEmptyReport = errors.New("empty report")
+var (
+	// ErrEmptyReport is returned by VerifyRemoteReport if reportBytes is empty.
+	ErrEmptyReport = errors.New("empty report")
+
+	// ErrTCBLevelInvalid is returned if VerifyRemoteReport succeeded, but the TCB is not considered up-to-date. Check the report's TCBStatus.
+	ErrTCBLevelInvalid = errors.New("OE_TCB_LEVEL_INVALID")
+)
 
 // VerifyAzureAttestationToken takes a Microsoft Azure Attestation token in JSON Web Token compact
 // serialization format and verifies the token's public claims and signature. The attestation provider's
