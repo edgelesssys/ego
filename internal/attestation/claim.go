@@ -11,6 +11,8 @@ import "C"
 import (
 	"errors"
 	"unsafe"
+
+	"github.com/edgelesssys/ego/attestation/tcbstatus"
 )
 
 func ParseClaims(claims uintptr, claimsLength uintptr) (Report, error) {
@@ -19,7 +21,7 @@ func ParseClaims(claims uintptr, claimsLength uintptr) (Report, error) {
 }
 
 func parseClaims(claims []C.oe_claim_t) (Report, error) {
-	var report Report
+	report := Report{TCBStatus: tcbstatus.Unknown}
 	hasAttributes := false
 
 	for _, claim := range claims {
@@ -39,6 +41,8 @@ func parseClaims(claims []C.oe_claim_t) (Report, error) {
 			report.SignerID = claimBytes(claim)
 		case C.OE_CLAIM_PRODUCT_ID:
 			report.ProductID = claimBytes(claim)
+		case C.OE_CLAIM_TCB_STATUS:
+			report.TCBStatus = tcbstatus.Status(claimUint(claim))
 		case C.OE_CLAIM_SGX_REPORT_DATA:
 			report.Data = claimBytes(claim)
 		}
