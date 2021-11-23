@@ -7,7 +7,7 @@
 package eclient
 
 // #cgo LDFLAGS: -loehostverify -lcrypto -ldl
-// #include <openenclave/host_verify.h>
+// #include <openenclave/attestation/verifier.h>
 import "C"
 
 import (
@@ -23,25 +23,29 @@ func verifyRemoteReport(reportBytes []byte) (internal.Report, error) {
 		return internal.Report{}, attestation.ErrEmptyReport
 	}
 
-	var report C.oe_report_t
+	res := C.oe_verifier_initialize()
+	if res != C.OE_OK {
+		return internal.Report{}, oeError(res)
+	}
 
-	res := C.oe_verify_remote_report(
+	var claims *C.oe_claim_t
+	var claimsLength C.size_t
+
+	res = C.oe_verify_evidence(
+		nil,
 		(*C.uint8_t)(&reportBytes[0]), C.size_t(len(reportBytes)),
 		nil, 0,
-		&report)
+		nil, 0,
+		&claims, &claimsLength,
+	)
 
 	if res != C.OE_OK {
 		return internal.Report{}, oeError(res)
 	}
 
-	return internal.Report{
-		Data:            C.GoBytes(unsafe.Pointer(report.report_data), C.int(report.report_data_size)),
-		SecurityVersion: uint(report.identity.security_version),
-		Debug:           (report.identity.attributes & C.OE_REPORT_ATTRIBUTES_DEBUG) != 0,
-		UniqueID:        C.GoBytes(unsafe.Pointer(&report.identity.unique_id[0]), C.OE_UNIQUE_ID_SIZE),
-		SignerID:        C.GoBytes(unsafe.Pointer(&report.identity.signer_id[0]), C.OE_SIGNER_ID_SIZE),
-		ProductID:       C.GoBytes(unsafe.Pointer(&report.identity.product_id[0]), C.OE_PRODUCT_ID_SIZE),
-	}, nil
+	defer C.oe_free_claims(claims, claimsLength)
+
+	return internal.ParseClaims(uintptr(unsafe.Pointer(claims)), uintptr(claimsLength))
 }
 
 func oeError(res C.oe_result_t) error {
