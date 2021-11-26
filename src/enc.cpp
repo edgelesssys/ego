@@ -15,6 +15,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
+#include <thread>
 #include "go_runtime_cleanup.h"
 
 static const auto _memfs_name = "edg_memfs";
@@ -37,6 +38,7 @@ static char** _merge_argv_env(int argc, char** argv, char** envp);
 
 extern "C" __thread char ert_ego_reserved_tls[1024];
 extern "C" const char* oe_sgx_get_td();
+extern "C" uint64_t oe_get_num_tcs();
 
 extern "C" void __libc_start_main(int payload_main(...))
 {
@@ -58,6 +60,41 @@ static void _log_verbose(string_view s)
 
     if (verbose_enabled)
         _log(s);
+}
+
+static void _set_concurrency_limits()
+{
+    // We must prevent the Go runtime from creating too many system threads.
+    // Creating more threads than available TCS will cause OE_OUT_OF_THREADS.
+    //
+    // Go already knows GOMAXPROCS: "The GOMAXPROCS variable limits the number
+    // of operating system threads that can execute user-level Go code
+    // simultaneously. There is no limit to the number of threads that can be
+    // blocked in system calls on behalf of Go code; those do not count against
+    // the GOMAXPROCS limit."
+    // (https://pkg.go.dev/runtime#hdr-Environment_Variables)
+    //
+    // As this isn't a hard limit for system threads, we added EGOMAXTHREADS to
+    // achieve this.
+    // GOMAXPROCS > EGOMAXTHREADS makes no sense; it will work, but produces
+    // scheduling overhead. In practice, GOMAXPROCS should be a bit below
+    // EGOMAXTHREADS because there can be threads (e.g., in syscalls) that are
+    // not available for a Go proc.
+
+    auto count = oe_get_num_tcs();
+    if (count < 6)
+        return; // can only happen if enclave was manually signed instead of
+                // using `ego sign`
+
+    count -= 2; // safety margin
+    setenv("EGOMAXTHREADS", to_string(count).c_str(), false);
+
+    // By default, GOMAXPROCS is the number of cores assigned to the process.
+    // Thus, we only need to set it if number of cores come close to or are
+    // above EGOMAXTHREADS.
+    count -= 2;
+    if (thread::hardware_concurrency() > count)
+        setenv("GOMAXPROCS", to_string(count).c_str(), false);
 }
 
 int emain()
@@ -95,6 +132,8 @@ int emain()
     ert_ego_premain(&_argc, &_argv, _envc, _envp, payload_data.c_str());
     _log_verbose("premain done");
     ert_init_ttls(getenv("MARBLE_TTLS_CONFIG"));
+
+    _set_concurrency_limits();
 
     // get args and env
     _argv = _merge_argv_env(_argc, _argv, environ);
