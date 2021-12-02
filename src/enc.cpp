@@ -36,7 +36,7 @@ extern "C" void ert_ego_premain(
     const char* payload_data);
 static char** _merge_argv_env(int argc, char** argv, char** envp);
 
-extern "C" __thread char ert_ego_reserved_tls[1024];
+extern "C" __thread char ert_reserved_tls[11264];
 extern "C" const char* oe_sgx_get_td();
 extern "C" uint64_t oe_get_num_tcs();
 
@@ -101,12 +101,12 @@ int emain()
 {
     _log_verbose("entered emain");
 
-    // Accessing this variable makes sure that the reserved_tls lib will be
-    // linked. See comment about the lib in CMakeLists for more info.
-    *ert_ego_reserved_tls = 0;
     // Assert that the variable is located at the end of the TLS block.
-    assert(
-        oe_sgx_get_td() - ert_ego_reserved_tls == sizeof ert_ego_reserved_tls);
+    if (oe_sgx_get_td() - ert_reserved_tls != sizeof ert_reserved_tls)
+    {
+        _log("ert_reserved_tls failure");
+        return EXIT_FAILURE;
+    }
 
     // load oe modules
     if (oe_load_module_host_epoll() != OE_OK ||
