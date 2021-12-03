@@ -11,10 +11,12 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/binary"
-	"fmt"
+	"errors"
 
 	"github.com/edgelesssys/ego/enclave"
 )
+
+const keyInfoLengthLength = 4
 
 var sealer interface {
 	GetUniqueSealKey() (key, keyInfo []byte, err error)
@@ -49,9 +51,7 @@ func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
 	}
 
 	// Encrypt data
-	ciphertext := aesgcm.Seal(nil, nonce, plaintext, nil)
-
-	return append(nonce, ciphertext...), nil
+	return aesgcm.Seal(nonce, nonce, plaintext, nil), nil
 }
 
 // Decrypt decrypts a ciphertext produced by Encrypt.
@@ -62,19 +62,15 @@ func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	// Split ciphertext into nonce & actual data
-	if len(ciphertext) < aesgcm.NonceSize() {
-		return nil, fmt.Errorf("nonce is too short")
+	// Split ciphertext into nonce and actual data
+	nonceSize := aesgcm.NonceSize()
+	if len(ciphertext) <= nonceSize {
+		return nil, errors.New("ciphertext is too short")
 	}
-	nonce, encryptedData := ciphertext[:aesgcm.NonceSize()], ciphertext[aesgcm.NonceSize():]
+	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
 	// Decrypt data
-	plaintext, err := aesgcm.Open(nil, nonce, encryptedData, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return plaintext, nil
+	return aesgcm.Open(nil, nonce, ciphertext, nil)
 }
 
 // SealWithUniqueKey encrypts a given plaintext with a key derived from a measurement of the enclave.
@@ -102,19 +98,18 @@ func SealWithProductKey(plaintext []byte) ([]byte, error) {
 
 // Unseal decrypts a ciphertext produced by SealWithUniqueKey or SealWithProductKey.
 func Unseal(ciphertext []byte) ([]byte, error) {
-	if len(ciphertext) < 4 {
-		return nil, fmt.Errorf("ciphertext is too short")
+	// pop key info length from ciphertext front
+	if len(ciphertext) <= keyInfoLengthLength {
+		return nil, errors.New("ciphertext is too short")
 	}
+	keyInfoLength := binary.LittleEndian.Uint32(ciphertext)
+	ciphertext = ciphertext[keyInfoLengthLength:]
 
-	keyInfoLength := binary.LittleEndian.Uint32(ciphertext[:4])
-
-	// We might deal with invalid user data as input, so let's convert an potential upcoming out-of-bounds panic to an error the underlying caller can choose how to deal with this situation.
-	if keyInfoLength == 0 || 4+int(keyInfoLength) > len(ciphertext) {
-		return nil, fmt.Errorf("embedded length information does not fit the given ciphertext")
+	// split ciphertext into key info and actual data
+	if !(0 < keyInfoLength && int(keyInfoLength) < len(ciphertext)) {
+		return nil, errors.New("ciphertext contains invalid key info length")
 	}
-
-	keyInfo := ciphertext[4 : 4+keyInfoLength]
-	ciphertext = ciphertext[4+keyInfoLength:]
+	keyInfo, ciphertext := ciphertext[:keyInfoLength], ciphertext[keyInfoLength:]
 
 	sealKey, err := sealer.GetSealKey(keyInfo)
 	if err != nil {
@@ -141,7 +136,7 @@ func seal(plaintext []byte, sealKey []byte, keyInfo []byte) ([]byte, error) {
 
 	// Encode keyInfo and its length and append it in front of the ciphertext
 	// Use a fixed size length so we can properly extract the length from the ciphertext when unsealing
-	keyInfoLength := make([]byte, 4)
+	keyInfoLength := make([]byte, keyInfoLengthLength)
 	binary.LittleEndian.PutUint32(keyInfoLength, uint32(len(keyInfo)))
 	keyInfoEncoded := append(keyInfoLength, keyInfo...)
 
