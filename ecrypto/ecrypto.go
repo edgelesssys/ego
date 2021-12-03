@@ -37,7 +37,9 @@ func (enclaveSealer) GetSealKey(keyInfo []byte) ([]byte, error) {
 }
 
 // Encrypt encrypts a given plaintext with a supplied key using AES-GCM.
-func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
+//
+// Optionally pass additionalData to be authenticated.
+func Encrypt(plaintext []byte, key []byte, additionalData []byte) ([]byte, error) {
 	// Get cipher object with key
 	aesgcm, err := getCipher(key)
 	if err != nil {
@@ -51,11 +53,13 @@ func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
 	}
 
 	// Encrypt data
-	return aesgcm.Seal(nonce, nonce, plaintext, nil), nil
+	return aesgcm.Seal(nonce, nonce, plaintext, additionalData), nil
 }
 
 // Decrypt decrypts a ciphertext produced by Encrypt.
-func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
+//
+// The additionalData must match the value passed to Encrypt.
+func Decrypt(ciphertext []byte, key []byte, additionalData []byte) ([]byte, error) {
 	// Get cipher object with key
 	aesgcm, err := getCipher(key)
 	if err != nil {
@@ -70,34 +74,40 @@ func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
 	// Decrypt data
-	return aesgcm.Open(nil, nonce, ciphertext, nil)
+	return aesgcm.Open(nil, nonce, ciphertext, additionalData)
 }
 
 // SealWithUniqueKey encrypts a given plaintext with a key derived from a measurement of the enclave.
 //
+// Optionally pass additionalData to be authenticated.
+//
 // Ciphertexts can't be decrypted if the UniqueID of the enclave changes. If you want
 // to be able to decrypt ciphertext across enclave versions, use SealWithProductKey.
-func SealWithUniqueKey(plaintext []byte) ([]byte, error) {
+func SealWithUniqueKey(plaintext []byte, additionalData []byte) ([]byte, error) {
 	sealKey, keyInfo, err := sealer.GetUniqueSealKey()
 	if err != nil {
 		return nil, err
 	}
 
-	return seal(plaintext, sealKey, keyInfo)
+	return seal(plaintext, sealKey, keyInfo, additionalData)
 }
 
 // SealWithProductKey encrypts a given plaintext with a key derived from the signer and product id of the enclave.
-func SealWithProductKey(plaintext []byte) ([]byte, error) {
+//
+// Optionally pass additionalData to be authenticated.
+func SealWithProductKey(plaintext []byte, additionalData []byte) ([]byte, error) {
 	sealKey, keyInfo, err := sealer.GetProductSealKey()
 	if err != nil {
 		return nil, err
 	}
 
-	return seal(plaintext, sealKey, keyInfo)
+	return seal(plaintext, sealKey, keyInfo, additionalData)
 }
 
 // Unseal decrypts a ciphertext produced by SealWithUniqueKey or SealWithProductKey.
-func Unseal(ciphertext []byte) ([]byte, error) {
+//
+// The additionalData must match the value passed to Encrypt.
+func Unseal(ciphertext []byte, additionalData []byte) ([]byte, error) {
 	// pop key info length from ciphertext front
 	if len(ciphertext) <= keyInfoLengthLength {
 		return nil, errors.New("ciphertext is too short")
@@ -116,7 +126,7 @@ func Unseal(ciphertext []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return Decrypt(ciphertext, sealKey)
+	return Decrypt(ciphertext, sealKey, additionalData)
 }
 
 func getCipher(key []byte) (cipher.AEAD, error) {
@@ -127,9 +137,9 @@ func getCipher(key []byte) (cipher.AEAD, error) {
 	return cipher.NewGCM(block)
 }
 
-func seal(plaintext []byte, sealKey []byte, keyInfo []byte) ([]byte, error) {
+func seal(plaintext []byte, sealKey []byte, keyInfo []byte, additionalData []byte) ([]byte, error) {
 	// Encrypt plaintext with the given seal key
-	ciphertext, err := Encrypt(plaintext, sealKey)
+	ciphertext, err := Encrypt(plaintext, sealKey, additionalData)
 	if err != nil {
 		return nil, err
 	}

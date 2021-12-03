@@ -42,9 +42,10 @@ func init() {
 func TestEncryptDecrypt(t *testing.T) {
 	testKey := []byte("0123456789012345")
 	testCases := map[string]struct {
-		plaintext string
-		key       []byte
-		expectErr bool
+		plaintext      string
+		key            []byte
+		additionalData []byte
+		expectErr      bool
 	}{
 		"basic": {
 			plaintext: "foo",
@@ -85,6 +86,11 @@ func TestEncryptDecrypt(t *testing.T) {
 			plaintext: "foo",
 			key:       make([]byte, 24),
 		},
+		"additional data": {
+			plaintext:      "foo",
+			key:            testKey,
+			additionalData: []byte{2, 3, 4},
+		},
 	}
 
 	for name, tc := range testCases {
@@ -93,7 +99,7 @@ func TestEncryptDecrypt(t *testing.T) {
 			require := require.New(t)
 
 			plaintext := []byte(tc.plaintext)
-			ciphertext, err := Encrypt(plaintext, tc.key)
+			ciphertext, err := Encrypt(plaintext, tc.key, tc.additionalData)
 
 			if tc.expectErr {
 				assert.Error(err)
@@ -106,7 +112,7 @@ func TestEncryptDecrypt(t *testing.T) {
 				assert.False(bytes.Contains(ciphertext, plaintext))
 			}
 
-			decryptedPlaintext, err := Decrypt(ciphertext, tc.key)
+			decryptedPlaintext, err := Decrypt(ciphertext, tc.key, tc.additionalData)
 			require.NoError(err)
 			if tc.plaintext == "" {
 				assert.Empty(decryptedPlaintext)
@@ -125,11 +131,11 @@ func TestEncryptIsRandom(t *testing.T) {
 	key1 := []byte("0123456789012345")
 	key2 := []byte("0123456789012346")
 
-	ciphertext1, err := Encrypt(plaintext, key1)
+	ciphertext1, err := Encrypt(plaintext, key1, nil)
 	require.NoError(err)
-	ciphertext2, err := Encrypt(plaintext, key2)
+	ciphertext2, err := Encrypt(plaintext, key2, nil)
 	require.NoError(err)
-	ciphertext1a, err := Encrypt(plaintext, key1)
+	ciphertext1a, err := Encrypt(plaintext, key1, nil)
 	require.NoError(err)
 
 	assert.NotEqual(ciphertext2, ciphertext1)
@@ -143,21 +149,38 @@ func TestDecryptError(t *testing.T) {
 	key1 := []byte("0123456789012345")
 	key2 := []byte("0123456789012346")
 
-	ciphertext, err := Encrypt([]byte("foo"), key1)
+	ciphertext, err := Encrypt([]byte("foo"), key1, nil)
 	require.NoError(err)
 
-	_, err = Decrypt(ciphertext, key2)
+	_, err = Decrypt(ciphertext, key2, nil)
 	assert.Error(err)
 
 	ciphertext[22] ^= 1
-	_, err = Decrypt(ciphertext, key1)
+	_, err = Decrypt(ciphertext, key1, nil)
+	assert.Error(err)
+}
+
+func TestDecryptAdditionalDataError(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	key := []byte("0123456789012345")
+
+	ciphertext, err := Encrypt([]byte("foo"), key, []byte{2, 3, 4})
+	require.NoError(err)
+
+	_, err = Decrypt(ciphertext, key, nil)
+	assert.Error(err)
+
+	_, err = Decrypt(ciphertext, key, []byte{2, 3, 5})
 	assert.Error(err)
 }
 
 func TestSealUnseal(t *testing.T) {
 	testCases := map[string]struct {
-		seal      func([]byte) ([]byte, error)
-		plaintext string
+		seal           func(plaintext, additionalData []byte) ([]byte, error)
+		plaintext      string
+		additionalData []byte
 	}{
 		"unique: basic": {
 			seal:      SealWithUniqueKey,
@@ -170,6 +193,11 @@ func TestSealUnseal(t *testing.T) {
 			seal:      SealWithUniqueKey,
 			plaintext: strings.Repeat("Edgeless Systems", 100),
 		},
+		"unique: additional data": {
+			seal:           SealWithUniqueKey,
+			plaintext:      "foo",
+			additionalData: []byte{2, 3, 4},
+		},
 		"product: basic": {
 			seal:      SealWithProductKey,
 			plaintext: "foo",
@@ -181,6 +209,11 @@ func TestSealUnseal(t *testing.T) {
 			seal:      SealWithProductKey,
 			plaintext: strings.Repeat("Edgeless Systems", 100),
 		},
+		"product: additional data": {
+			seal:           SealWithProductKey,
+			plaintext:      "foo",
+			additionalData: []byte{2, 3, 4},
+		},
 	}
 
 	for name, tc := range testCases {
@@ -189,7 +222,7 @@ func TestSealUnseal(t *testing.T) {
 			require := require.New(t)
 
 			plaintext := []byte(tc.plaintext)
-			ciphertext, err := tc.seal(plaintext)
+			ciphertext, err := tc.seal(plaintext, tc.additionalData)
 			require.NoError(err)
 
 			assert.Greater(len(ciphertext), len(plaintext))
@@ -197,7 +230,7 @@ func TestSealUnseal(t *testing.T) {
 				assert.False(bytes.Contains(ciphertext, plaintext))
 			}
 
-			decryptedPlaintext, err := Unseal(ciphertext)
+			decryptedPlaintext, err := Unseal(ciphertext, tc.additionalData)
 			require.NoError(err)
 			if tc.plaintext == "" {
 				assert.Empty(decryptedPlaintext)
@@ -226,10 +259,24 @@ func TestUnsealError(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
-			_, err := Unseal(tc.ciphertext)
+			_, err := Unseal(tc.ciphertext, nil)
 			assert.Error(err)
 		})
 	}
+}
+
+func TestUnsealAdditionalDataError(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	ciphertext, err := SealWithUniqueKey([]byte("foo"), []byte{2, 3, 4})
+	require.NoError(err)
+
+	_, err = Unseal(ciphertext, nil)
+	assert.Error(err)
+
+	_, err = Unseal(ciphertext, []byte{2, 3, 5})
+	assert.Error(err)
 }
 
 func TestInternalSeal(t *testing.T) {
@@ -242,7 +289,7 @@ func TestInternalSeal(t *testing.T) {
 	testString := "Edgeless"
 
 	// Seal with the given parameters
-	sealedText, err := seal([]byte(testString), sealKey, keyInfo)
+	sealedText, err := seal([]byte(testString), sealKey, keyInfo, nil)
 	require.NoError(err)
 
 	// Check structure of the sealed data
@@ -256,7 +303,7 @@ func TestInternalSeal(t *testing.T) {
 
 	// Check if ciphertext can be decrypted correctly
 	ciphertext := sealedText[4+len(keyInfo):]
-	plaintext, err := Decrypt(ciphertext, sealKey)
+	plaintext, err := Decrypt(ciphertext, sealKey, nil)
 	require.NoError(err)
 	assert.EqualValues(testString, plaintext)
 }
