@@ -15,7 +15,7 @@ import (
 	"unsafe"
 
 	"github.com/edgelesssys/ego/attestation"
-	"github.com/edgelesssys/ego/attestation/tcbstatus"
+	internal "github.com/edgelesssys/ego/internal/attestation"
 )
 
 const sysGetRemoteReport = 1000
@@ -25,6 +25,8 @@ const sysGetSealKey = 1003
 const sysFreeSealKey = 1004
 const sysGetSealKeyByPolicy = 1005
 const sysResultStr = 1006
+const sysVerifyEvidence = 1007
+const sysFreeClaims = 1008
 
 // GetRemoteReport gets a report signed by the enclave platform for use in remote attestation.
 //
@@ -65,31 +67,40 @@ func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 		return attestation.Report{}, attestation.ErrEmptyReport
 	}
 
-	var report C.oe_report_t
+	var claims, claimsLength uintptr
 
-	res, _, errno := syscall.Syscall(
-		sysVerifyReport,
+	res, _, errno := syscall.Syscall6(
+		sysVerifyEvidence,
 		uintptr(unsafe.Pointer(&reportBytes[0])),
 		uintptr(len(reportBytes)),
-		uintptr(unsafe.Pointer(&report)),
+		uintptr(unsafe.Pointer(&claims)),
+		uintptr(unsafe.Pointer(&claimsLength)),
+		0, 0,
 	)
+
+	var verifyErr error
 	if err := oeError(errno, res); err != nil {
+		if err.Error() != "OE_TCB_LEVEL_INVALID" {
+			return attestation.Report{}, err
+		}
+		verifyErr = attestation.ErrTCBLevelInvalid
+	}
+
+	defer syscall.Syscall(sysFreeClaims, claims, claimsLength, 0)
+
+	report, err := internal.ParseClaims(claims, claimsLength)
+	if err != nil {
 		return attestation.Report{}, err
 	}
-
-	if (report.identity.attributes & C.OE_REPORT_ATTRIBUTES_REMOTE) == 0 {
-		return attestation.Report{}, errors.New("OE_UNSUPPORTED")
-	}
-
 	return attestation.Report{
-		Data:            C.GoBytes(unsafe.Pointer(report.report_data), C.int(report.report_data_size)),
-		SecurityVersion: uint(report.identity.security_version),
-		Debug:           (report.identity.attributes & C.OE_REPORT_ATTRIBUTES_DEBUG) != 0,
-		UniqueID:        C.GoBytes(unsafe.Pointer(&report.identity.unique_id[0]), C.OE_UNIQUE_ID_SIZE),
-		SignerID:        C.GoBytes(unsafe.Pointer(&report.identity.signer_id[0]), C.OE_SIGNER_ID_SIZE),
-		ProductID:       C.GoBytes(unsafe.Pointer(&report.identity.product_id[0]), C.OE_PRODUCT_ID_SIZE),
-		TCBStatus:       tcbstatus.Unknown, // TODO use new OE API
-	}, nil
+		Data:            report.Data,
+		SecurityVersion: report.SecurityVersion,
+		Debug:           report.Debug,
+		UniqueID:        report.UniqueID,
+		SignerID:        report.SignerID,
+		ProductID:       report.ProductID,
+		TCBStatus:       report.TCBStatus,
+	}, verifyErr
 }
 
 // GetUniqueSealKey gets a key derived from a measurement of the enclave.
