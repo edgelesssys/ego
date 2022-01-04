@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <string_view>
 #include <thread>
+#include "exception_handler.h"
 #include "go_runtime_cleanup.h"
 
 static const auto _memfs_name = "edg_memfs";
@@ -155,6 +156,13 @@ int emain()
     _log_verbose("cleaning up the old goruntime: go_rc_unmap_memory");
     go_rc_unmap_memory();
     _log_verbose("cleaning up the old goruntime: done");
+
+    if (oe_add_vectored_exception_handler(false, ego_exception_handler) !=
+        OE_OK)
+    {
+        _log("oe_add_vectored_exception_handler failed");
+        return EXIT_FAILURE;
+    }
 
     // get payload entry point
     const auto base = static_cast<const uint8_t*>(ert::payload::get_base());
