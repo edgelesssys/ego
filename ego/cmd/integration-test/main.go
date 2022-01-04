@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/klauspost/cpuid/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,6 +28,7 @@ func main() {
 	log.Println("Welcome to the enclave.")
 	testFileSystemMounts(assert, require)
 	testEnvVars(assert, require)
+	testCpuid(assert, require)
 }
 
 func testFileSystemMounts(assert *assert.Assertions, require *require.Assertions) {
@@ -94,4 +96,8 @@ func testEnvVars(assert *assert.Assertions, require *require.Assertions) {
 
 	// Check if other env vars were not taken over by using a common one to check against (here: LANG)
 	assert.Empty(os.Getenv("LANG"))
+}
+
+func testCpuid(assert *assert.Assertions, require *require.Assertions) {
+	assert.True(cpuid.CPU.Has(cpuid.CMOV))
 }

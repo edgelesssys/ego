@@ -31,6 +31,7 @@ endif()
 
 add_library(ego-enclave-lib
   src/enc.cpp
+  src/exception_handler.cpp
   src/go_runtime_cleanup.cpp)
 target_link_libraries(ego-enclave-lib PRIVATE openenclave::oe_includes)
 
