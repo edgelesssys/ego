@@ -12,5 +12,13 @@ enclaved programs. Those non-enclaved programs are often called third parties or
 
 This package requires libcrypto. On Ubuntu install it with:
 	sudo apt install libssl-dev
+
+This package requires the following environment variables to be set during build:
+	CGO_CFLAGS=-I/opt/ego/include
+	CGO_LDFLAGS=-L/opt/ego/lib
+
+Or if using the EGo snap:
+	CGO_CFLAGS=-I/snap/ego-dev/current/opt/ego/include
+	CGO_LDFLAGS=-L/snap/ego-dev/current/opt/ego/lib
 */
 package eclient
