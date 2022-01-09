@@ -100,6 +100,7 @@ install(
   DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES ${OpenEnclave_DIR}/../host/liboehostverify.a DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES ${OpenEnclave_DIR}/../../../include/openenclave/host_verify.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/openenclave)
+install(FILES ${OpenEnclave_DIR}/../../../include/openenclave/attestation/verifier.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/openenclave/attestation)
 install(
   FILES
   ${OpenEnclave_DIR}/../../../include/openenclave/bits/defs.h
