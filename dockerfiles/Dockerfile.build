@@ -6,7 +6,7 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   cmake=3.16.3-1ubuntu1 \
   doxygen \
   git \
-  libssl-dev=1.1.1f-1ubuntu2.9 \
+  libssl-dev=1.1.1f-1ubuntu2.10 \
   locales \
   ninja-build=1.10.0-1build1 \
   wget \
