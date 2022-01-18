@@ -83,7 +83,7 @@ static void _set_concurrency_limits()
     // not available for a Go proc.
 
     auto count = oe_get_num_tcs();
-    if (count < 6)
+    if (count < 10)
         return; // can only happen if enclave was manually signed instead of
                 // using `ego sign`
 
@@ -93,7 +93,12 @@ static void _set_concurrency_limits()
     // By default, GOMAXPROCS is the number of cores assigned to the process.
     // Thus, we only need to set it if number of cores come close to or are
     // above EGOMAXTHREADS.
-    count -= 2;
+    //
+    // TODO We need a higher margin (was 2) between GOMAXPROCS and
+    // EGOMAXTHREADS, or else deadlocks can occur
+    // (https://github.com/edgelesssys/ego/issues/112). We should find the root
+    // cause and/or consider increasing NumTCS.
+    count -= 6;
     if (thread::hardware_concurrency() > count)
         setenv("GOMAXPROCS", to_string(count).c_str(), false);
 }
