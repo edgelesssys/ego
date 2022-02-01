@@ -29,8 +29,8 @@ For pull requests, we employ the following workflow:
 7. Open a PR in our repository and summarize the changes in the description
 
 
-## Reporting issues and bugs
-This project uses the GitHub issue tracker. Please check the existing issues before submitting to avoid duplicates. If you have a quick question, you may also ask us on Discord.
+## Reporting issues and bugs, asking questions
+This project uses the GitHub issue tracker. Please check the existing issues before submitting to avoid duplicates.
 
 To report a security issue, contact security@edgeless.systems.
 
@@ -44,4 +44,4 @@ Your bug report should cover the following points:
     * Tested workarounds or fixes
 
 ## Major changes and feature requests
-You should discuss larger changes and feature requests with the maintainers. Please open an issue describing your plans. For more immediate communication with us and other community members [join our Discord](https://discord.com/invite/rH8QTH56JN).
+You should discuss larger changes and feature requests with the maintainers. Please open an issue describing your plans.
