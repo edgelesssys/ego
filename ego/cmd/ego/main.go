@@ -20,8 +20,10 @@ import (
 )
 
 // Don't touch! Automatically injected at build-time.
-var version = "0.0.0"
-var gitCommit = "0000000000000000000000000000000000000000"
+var (
+	version   = "0.0.0"
+	gitCommit = "0000000000000000000000000000000000000000"
+)
 
 func main() {
 	fmt.Fprintf(os.Stderr, "EGo v%v (%v)\n", version, gitCommit)
@@ -129,11 +131,21 @@ func handleErr(err error) {
 	case cli.ErrSGXOpenFail:
 		fmt.Println("ERROR: failed to open Intel SGX device")
 		if cpuid.CPU.Supports(cpuid.SGX) {
-			fmt.Println("Install the SGX driver with: sudo ego install sgx-driver")
+			// the error is also thrown if /dev/sgx_enclave exists, but /dev/sgx does not
+			if _, err := os.Stat("/dev/sgx_enclave"); err == nil {
+				// libsgx-enclave-common will create the symlinks
+				fmt.Println("Install the SGX base package with: sudo ego install libsgx-enclave-common")
+			} else {
+				fmt.Println("Install the SGX driver with: sudo ego install sgx-driver")
+			}
 		} else {
 			fmt.Println("This machine doesn't support SGX.")
 		}
 		fmt.Println("You can use 'OE_SIMULATION=1 ego run ...' to run in simulation mode.")
+	case cli.ErrLoadDataFailUnexpected:
+		fmt.Println("ERROR: failed to initialize the enclave")
+		fmt.Println("Install the SGX base package with: sudo ego install libsgx-enclave-common")
+		fmt.Println("Or temporarily fix the error with: sudo mount -o remount,exec /dev")
 	default:
 		fmt.Println(err)
 	}
