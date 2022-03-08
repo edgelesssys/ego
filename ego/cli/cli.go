@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -96,6 +97,8 @@ func findCommonError(s string) error {
 		return ErrElfNoPie
 	case strings.Contains(s, "Failed to open Intel SGX device"):
 		return ErrSGXOpenFail
+	case regexp.MustCompile(`enclave_load_data failed \(addr=0x\w+, prot=0x1, err=0x1001\)`).MatchString(s):
+		return ErrLoadDataFailUnexpected
 	default:
 		return nil
 	}
@@ -135,3 +138,6 @@ var ErrElfNoPie = fmt.Errorf("%w: ELF image is not a PIE or shared object", ErrO
 // ErrSGXOpenFail is an Open Enclave error where OE failes to open the Intel SGX device.
 // This likely occures if a system does not support SGX or the required module is missing.
 var ErrSGXOpenFail = fmt.Errorf("%w: Failed to open Intel SGX device", ErrOEPlatform)
+
+// ErrLoadDataFailUnexpected is an Open Enclave error where enclave_load_data fails with error code 0x1001.
+var ErrLoadDataFailUnexpected = fmt.Errorf("%w: enclave_load_data failed: ENCLAVE_UNEXPECTED", ErrOEPlatform)
