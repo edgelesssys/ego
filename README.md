@@ -7,7 +7,7 @@
 [![PkgGoDev][go-pkg-badge]][go-pkg]
 [![Discord Chat][discord-badge]][discord]
 
-[EGo](https://ego.dev) is a framework for building *confidential apps* in Go. Confidential apps run in always-encrypted and verifiable enclaves on Intel SGX-enabled hardware. EGo simplifies enclave development by providing two user-friendly tools:
+[EGo](https://www.edgeless.systems/products/ego/) is a framework for building *confidential apps* in Go. Confidential apps run in always-encrypted and verifiable enclaves on Intel SGX-enabled hardware. EGo simplifies enclave development by providing two user-friendly tools:
 
 * `ego-go`, an adapted Go compiler that builds enclave-compatible executables from a given Go project - while providing the same CLI as the original Go compiler.
 * `ego`, a CLI tool that handles all enclave-related tasks such as signing and enclave creation.
