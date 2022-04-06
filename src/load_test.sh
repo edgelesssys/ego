@@ -20,6 +20,9 @@ wget -qO- https://github.com/bojand/ghz/releases/download/v0.105.0/ghz-linux-x86
 wget -qO- https://github.com/grpc/grpc-go/archive/refs/tags/v1.44.0.tar.gz | tar xz
 cd grpc-go-1.44.0/examples/helloworld
 
+# delete line that logs each rpc call because it bloats stdout
+sed -i '/Printf("Received/d' greeter_server/main.go
+
 ego-go build -o server ./greeter_server
 
 echo '{
