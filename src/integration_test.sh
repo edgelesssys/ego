@@ -40,6 +40,7 @@ echo -n 'i should be in memfs' > /tmp/ego-integration-test/file-host.txt
 # Build integration test
 cd $egoPath/ego/cmd/integration-test/
 cp enclave.json /tmp/ego-integration-test/enclave.json
+export CGO_ENABLED=0  # test that ego-go ignores this
 run ego-go build -o /tmp/ego-integration-test/integration-test
 
 # Sign & run intergration test
