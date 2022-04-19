@@ -1,4 +1,4 @@
-FROM ubuntu:focal-20220113 AS build
+FROM ubuntu:focal-20220404 AS build
 
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   build-essential=12.8ubuntu1.1 \
@@ -6,15 +6,15 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   cmake=3.16.3-1ubuntu1 \
   doxygen \
   git \
-  libssl-dev=1.1.1f-1ubuntu2.10 \
+  libssl-dev=1.1.1f-1ubuntu2.12 \
   locales \
   ninja-build=1.10.0-1build1 \
   wget \
   && locale-gen en_US.UTF-8
 ENV LANG=en_US.UTF-8
 
-ARG erttag=v0.3.1 egotag=v0.4.2
-RUN wget -qO- https://golang.org/dl/go1.16.7.linux-amd64.tar.gz | tar -C /usr/local -xz \
+ARG erttag=v0.3.2 egotag=v0.5.0
+RUN wget -qO- https://golang.org/dl/go1.18.1.linux-amd64.tar.gz | tar -C /usr/local -xz \
   && git clone -b $erttag --depth=1 https://github.com/edgelesssys/edgelessrt \
   && git clone -b $egotag --depth=1 https://github.com/edgelesssys/ego \
   && mkdir ertbuild egobuild
