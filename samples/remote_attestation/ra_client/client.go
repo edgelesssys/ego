@@ -13,6 +13,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/edgelesssys/ego/attestation"
+	"github.com/edgelesssys/ego/attestation/tcbstatus"
 	"github.com/edgelesssys/ego/eclient"
 )
 
@@ -55,7 +57,10 @@ func main() {
 
 func verifyReport(reportBytes, certBytes, signer []byte) error {
 	report, err := eclient.VerifyRemoteReport(reportBytes)
-	if err != nil {
+	if err == attestation.ErrTCBLevelInvalid {
+		fmt.Printf("Warning: TCB level is invalid: %v\n%v\n", report.TCBStatus, tcbstatus.Explain(report.TCBStatus))
+		fmt.Println("We'll ignore this issue in this sample. For an app that should run in production, you must decide which of the different TCBStatus values are acceptable for you to continue.")
+	} else if err != nil {
 		return err
 	}
 
