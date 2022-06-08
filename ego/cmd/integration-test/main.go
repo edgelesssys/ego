@@ -9,7 +9,6 @@ package main
 import (
 	"ego/test"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -45,14 +44,14 @@ func testFileSystemMounts(assert *assert.Assertions, require *require.Assertions
 	// Check if we can write and read to the root memfs
 	log.Println("Checking I/O of memfs...")
 	const localTest = "This is a test!"
-	require.NoError(ioutil.WriteFile("test-root.txt", []byte(localTest), 0755))
-	fileContent, err := ioutil.ReadFile("test-root.txt")
+	require.NoError(os.WriteFile("test-root.txt", []byte(localTest), 0o755))
+	fileContent, err := os.ReadFile("test-root.txt")
 	require.NoError(err)
 	assert.Equal(localTest, string(fileContent))
 
 	// Check hostfs mounts specified in manifest
 	log.Println("Testing hostfs mounts...")
-	fileContent, err = ioutil.ReadFile("/data/test-file.txt")
+	fileContent, err = os.ReadFile("/data/test-file.txt")
 	require.NoError(err)
 	assert.Equal("It works!", string(fileContent))
 
@@ -66,21 +65,22 @@ func testFileSystemMounts(assert *assert.Assertions, require *require.Assertions
 	assert.ErrorIs(io.EOF, err)
 
 	// Check if we can write and read to the mounted memfs
-	err = ioutil.WriteFile("/memfs/test-file.txt", fileContent, 0)
+	err = os.WriteFile("/memfs/test-file.txt", fileContent, 0o400)
 	require.NoError(err)
-	newFileContent, err := ioutil.ReadFile("/memfs/test-file.txt")
+	newFileContent, err := os.ReadFile("/memfs/test-file.txt")
 	require.NoError(err)
 	assert.Equal("It works!", string(newFileContent))
 
 	// Check if we can read to the mounted memfs from root explicitly
-	newFileContent, err = ioutil.ReadFile("/edg/mnt/memfs/test-file.txt")
+	newFileContent, err = os.ReadFile("/edg/mnt/memfs/test-file.txt")
 	require.NoError(err)
 	assert.Equal("It works!", string(newFileContent))
 
 	// Check embedded file
-	buff, err := ioutil.ReadFile("/path/to/file_enclave.txt")
+	buff, err := os.ReadFile("/path/to/file_enclave.txt")
 	require.NoError(err)
 	assert.Equal("i should be in memfs", string(buff))
+	require.NoError(os.WriteFile("/path/to/file_enclave.txt", []byte{2}, 0))
 }
 
 func testEnvVars(assert *assert.Assertions, require *require.Assertions) {

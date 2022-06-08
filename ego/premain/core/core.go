@@ -154,7 +154,7 @@ func performUserMounts(config config.Config, mounter Mounter, fs afero.Fs) error
 
 			memfsMountSourceFull := path.Join(memfsMountSourceDirectory, mountPoint.Target)
 
-			if err := fs.MkdirAll(memfsMountSourceFull, 0777); err != nil {
+			if err := fs.MkdirAll(memfsMountSourceFull, 0o777); err != nil {
 				return err
 			}
 
@@ -194,7 +194,7 @@ func writeFiles(files []config.File, fs afero.Fs) error {
 		if err := afs.MkdirAll(filepath.Dir(file.Target), 0); err != nil {
 			return err
 		}
-		if err := afs.WriteFile(file.Target, buf, 0); err != nil {
+		if err := afs.WriteFile(file.Target, buf, 0o600); err != nil {
 			return err
 		}
 	}
