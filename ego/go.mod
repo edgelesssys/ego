@@ -4,11 +4,11 @@ go 1.17
 
 require (
 	github.com/edgelesssys/marblerun v0.5.1
-	github.com/google/go-cmp v0.5.7
-	github.com/klauspost/cpuid/v2 v2.0.12
+	github.com/google/go-cmp v0.5.8
+	github.com/klauspost/cpuid/v2 v2.0.13
 	github.com/spf13/afero v1.8.2
-	github.com/stretchr/testify v1.7.1
-	google.golang.org/grpc v1.45.0
+	github.com/stretchr/testify v1.7.2
+	google.golang.org/grpc v1.47.0
 )
 
 require (
@@ -28,11 +28,11 @@ require (
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/genproto v0.0.0-20210226172003-ab064af71705 // indirect
-	google.golang.org/protobuf v1.26.0 // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/api v0.21.3 // indirect
 	k8s.io/apimachinery v0.21.3 // indirect
 	k8s.io/klog/v2 v2.8.0 // indirect
