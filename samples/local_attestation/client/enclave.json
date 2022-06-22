@@ -1,0 +1,8 @@
+{
+    "exe": "client",
+    "key": "../private.pem",
+    "debug": true,
+    "heapSize": 512,
+    "productID": 3,
+    "securityVersion": 1
+}
