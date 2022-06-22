@@ -142,6 +142,12 @@ func (c *Cli) readConfigJSONtoStruct(path string) (*config.Config, error) {
 	if err := conf.Validate(); err != nil {
 		return nil, err
 	}
+
+	// interpret paths relative to the directory containing the config file
+	dir := filepath.Dir(path)
+	conf.Exe = filepath.Join(dir, conf.Exe)
+	conf.Key = filepath.Join(dir, conf.Key)
+
 	if err := conf.PopulateContent(c.fs); err != nil {
 		return nil, err
 	}
