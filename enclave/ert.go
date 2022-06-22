@@ -15,18 +15,26 @@ import (
 	"unsafe"
 
 	"github.com/edgelesssys/ego/attestation"
+	"github.com/edgelesssys/ego/attestation/tcbstatus"
 	internal "github.com/edgelesssys/ego/internal/attestation"
 )
 
-const sysGetRemoteReport = 1000
-const sysFreeReport = 1001
-const sysVerifyReport = 1002
-const sysGetSealKey = 1003
-const sysFreeSealKey = 1004
-const sysGetSealKeyByPolicy = 1005
-const sysResultStr = 1006
-const sysVerifyEvidence = 1007
-const sysFreeClaims = 1008
+const (
+	sysGetRemoteReport    = 1000
+	sysFreeReport         = 1001
+	sysVerifyReport       = 1002
+	sysGetSealKey         = 1003
+	sysFreeSealKey        = 1004
+	sysGetSealKeyByPolicy = 1005
+	sysResultStr          = 1006
+	sysVerifyEvidence     = 1007
+	sysFreeClaims         = 1008
+	sysGetLocalReport     = 1009
+)
+
+const maxReportData = 64
+
+var errReportDataTooLarge = errors.New("reportData too large")
 
 // GetRemoteReport gets a report signed by the enclave platform for use in remote attestation.
 //
@@ -34,6 +42,10 @@ const sysFreeClaims = 1008
 // hold a maximum of 64 byte reportData. Use a 64 byte hash value of your data as reportData
 // if your data exceeds this limit.
 func GetRemoteReport(reportData []byte) ([]byte, error) {
+	if len(reportData) > maxReportData {
+		return nil, errReportDataTooLarge
+	}
+
 	var report *C.uint8_t
 	var reportSize C.size_t
 
@@ -101,6 +113,79 @@ func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 		ProductID:       report.ProductID,
 		TCBStatus:       report.TCBStatus,
 	}, verifyErr
+}
+
+// GetLocalReport gets a report signed by the enclave platform for use in local attestation.
+//
+// The report shall contain the data given by the reportData parameter. The report can only
+// hold a maximum of 64 byte reportData. Use a 64 byte hash value of your data as reportData
+// if your data exceeds this limit.
+//
+// The report can only be verified by the enclave identified by targetReport. So you must
+// first get a report from the target enclave. This report is allowed to be empty, i.e.,
+// obtained by `GetLocalReport(nil, nil)`.
+func GetLocalReport(reportData []byte, targetReport []byte) ([]byte, error) {
+	if len(reportData) > maxReportData {
+		return nil, errReportDataTooLarge
+	}
+
+	var report *C.uint8_t
+	var reportSize C.size_t
+
+	res, _, errno := syscall.Syscall6(
+		sysGetLocalReport,
+		getBytesPointer(reportData),
+		uintptr(len(reportData)),
+		getBytesPointer(targetReport),
+		uintptr(len(targetReport)),
+		uintptr(unsafe.Pointer(&report)),
+		uintptr(unsafe.Pointer(&reportSize)),
+	)
+	if err := oeError(errno, res); err != nil {
+		return nil, err
+	}
+
+	result := C.GoBytes(unsafe.Pointer(report), C.int(reportSize))
+	syscall.Syscall(sysFreeReport, uintptr(unsafe.Pointer(report)), 0, 0)
+	return result, nil
+}
+
+// VerifyLocalReport verifies the integrity of the local report and its signature.
+//
+// This function verifies that the report signature is valid. It
+// verifies that it is correctly signed by the enclave platform.
+//
+// The caller must verify the returned report's content.
+func VerifyLocalReport(reportBytes []byte) (attestation.Report, error) {
+	if len(reportBytes) <= 0 {
+		return attestation.Report{}, attestation.ErrEmptyReport
+	}
+
+	var report C.oe_report_t
+
+	res, _, errno := syscall.Syscall(
+		sysVerifyReport,
+		uintptr(unsafe.Pointer(&reportBytes[0])),
+		uintptr(len(reportBytes)),
+		uintptr(unsafe.Pointer(&report)),
+	)
+	if err := oeError(errno, res); err != nil {
+		return attestation.Report{}, err
+	}
+
+	if (report.identity.attributes & C.OE_REPORT_ATTRIBUTES_REMOTE) != 0 {
+		return attestation.Report{}, errors.New("expected a local report, but got a remote report")
+	}
+
+	return attestation.Report{
+		Data:            C.GoBytes(unsafe.Pointer(report.report_data), C.int(report.report_data_size)),
+		SecurityVersion: uint(report.identity.security_version),
+		Debug:           (report.identity.attributes & C.OE_REPORT_ATTRIBUTES_DEBUG) != 0,
+		UniqueID:        C.GoBytes(unsafe.Pointer(&report.identity.unique_id[0]), C.OE_UNIQUE_ID_SIZE),
+		SignerID:        C.GoBytes(unsafe.Pointer(&report.identity.signer_id[0]), C.OE_SIGNER_ID_SIZE),
+		ProductID:       C.GoBytes(unsafe.Pointer(&report.identity.product_id[0]), C.OE_PRODUCT_ID_SIZE),
+		TCBStatus:       tcbstatus.Unknown,
+	}, nil
 }
 
 // GetUniqueSealKey gets a key derived from a measurement of the enclave.
@@ -193,4 +278,11 @@ func oeError(errno syscall.Errno, res uintptr) error {
 		return errno
 	}
 	return errors.New(C.GoString((*C.char)(unsafe.Pointer(resStr))))
+}
+
+func getBytesPointer(data []byte) uintptr {
+	if len(data) == 0 {
+		return 0
+	}
+	return uintptr(unsafe.Pointer(&data[0]))
 }
