@@ -140,6 +140,18 @@ NumStackPages=1024
 NumTCS=32
 `,
 		},
+		"files not in working dir": {
+			filename:      "foo/enclave.json",
+			keyfilename:   "bar/keyfile",
+			existingFiles: map[string]string{"foo/enclave.json": `{"exe":"../exefile", "key":"../bar/keyfile", "heapSize":2}`},
+			expectedConfig: `ProductID=0
+SecurityVersion=0
+Debug=0
+NumHeapPages=512
+NumStackPages=1024
+NumTCS=32
+`,
+		},
 		"sign executable": {
 			filename:    exefile,
 			keyfilename: "private.pem",
@@ -208,7 +220,7 @@ ExecutableHeap=1
 			// Check private and public key
 			key, err := fs.ReadFile(tc.keyfilename)
 			require.NoError(err)
-			exists, err := fs.Exists("public.pem")
+			exists, err := fs.Exists(filepath.Join(filepath.Dir(tc.keyfilename), "public.pem"))
 			if tc.expectedKey == "" {
 				assert.EqualValues("newkey", key)
 				require.NoError(err)
@@ -384,7 +396,7 @@ func (s signRunner) Run(cmd *exec.Cmd) error {
 		return s.fs.WriteFile(cmd.Args[3], []byte("newkey"), 0)
 	}
 	if cmp.Equal(cmd.Args[:3], []string{"openssl", "rsa", "-in"}) &&
-		cmp.Equal(cmd.Args[4:], []string{"-pubout", "-out", "public.pem"}) {
+		cmp.Equal(cmd.Args[4:6], []string{"-pubout", "-out"}) {
 		exists, err := s.fs.Exists(cmd.Args[3])
 		if err != nil {
 			return err
@@ -392,7 +404,7 @@ func (s signRunner) Run(cmd *exec.Cmd) error {
 		if !exists {
 			return errors.New("openssl rsa: " + cmd.Args[3] + " does not exist")
 		}
-		return s.fs.WriteFile("public.pem", nil, 0)
+		return s.fs.WriteFile(cmd.Args[6], nil, 0)
 	}
 	return errors.New("unexpected cmd: " + cmd.Path)
 }
