@@ -20,15 +20,17 @@ import (
 	"strconv"
 )
 
-const defaultConfigFilename = "enclave.json"
-const defaultPrivKeyFilename = "private.pem"
-const defaultPubKeyFilename = "public.pem"
+const (
+	defaultConfigFilename  = "enclave.json"
+	defaultPrivKeyFilename = "private.pem"
+	defaultPubKeyFilename  = "public.pem"
+)
 
 // ErrNoOEInfo defines an error when no .oeinfo section could be found. This likely occures whend the binary to sign was not built with ego-go.
 var ErrNoOEInfo = errors.New("could not find .oeinfo section")
 
 func (c *Cli) signWithJSON(conf *config.Config) error {
-	//write temp .conf file
+	// write temp .conf file
 	cProduct := "ProductID=" + strconv.Itoa(conf.ProductID) + "\n"
 	cSecurityVersion := "SecurityVersion=" + strconv.Itoa(conf.SecurityVersion) + "\n"
 
@@ -77,7 +79,7 @@ func (c *Cli) signWithJSON(conf *config.Config) error {
 		return err
 	}
 
-	//create public and private key if private key does not exits
+	// create public and private key if private key does not exits
 	c.createDefaultKeypair(conf.Key)
 
 	enclavePath := filepath.Join(c.egoPath, "share", "ego-enclave")
@@ -102,7 +104,7 @@ func (c *Cli) signExecutable(path string) error {
 		return fmt.Errorf("provided path to executable does not match the one in enclave.json")
 	}
 
-	//sane default values
+	// sane default values
 	conf = &config.Config{
 		Exe:             path,
 		Key:             defaultPrivKeyFilename,
@@ -116,7 +118,7 @@ func (c *Cli) signExecutable(path string) error {
 	if err != nil {
 		return err
 	}
-	if err := c.fs.WriteFile(defaultConfigFilename, jsonData, 0644); err != nil {
+	if err := c.fs.WriteFile(defaultConfigFilename, jsonData, 0o644); err != nil {
 		return err
 	}
 
@@ -129,7 +131,6 @@ func (c *Cli) signExecutable(path string) error {
 // JSON could not be unmarshalled
 func (c *Cli) readConfigJSONtoStruct(path string) (*config.Config, error) {
 	data, err := c.fs.ReadFile(path)
-
 	if err != nil {
 		return nil, err
 	}
