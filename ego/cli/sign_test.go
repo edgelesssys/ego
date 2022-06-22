@@ -41,7 +41,7 @@ var elfUnsigned = func() []byte {
 
 	// write minimal source file
 	const src = `package main;import _"time";func main(){}`
-	if err := ioutil.WriteFile(filepath.Join(dir, srcFile), []byte(src), 0400); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(dir, srcFile), []byte(src), 0o400); err != nil {
 		panic(err)
 	}
 
