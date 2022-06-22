@@ -11,17 +11,35 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 
-	"github.com/edgelesssys/ego/internal/attestation"
+	"github.com/edgelesssys/ego/attestation"
+	internal "github.com/edgelesssys/ego/internal/attestation"
 )
+
+// GetSelfReport returns a report of this enclave.
+// The report can't be used for attestation, but to get values like the SignerID of this enclave.
+func GetSelfReport() (attestation.Report, error) {
+	// get empty local report to use it as target info
+	report, err := GetLocalReport(nil, nil)
+	if err != nil {
+		return attestation.Report{}, err
+	}
+	// get report for target
+	report, err = GetLocalReport(nil, report)
+	if err != nil {
+		return attestation.Report{}, err
+	}
+	// targeted report can be verified
+	return VerifyLocalReport(report)
+}
 
 // CreateAttestationCertificate creates an X.509 certificate with an embedded report from the underlying enclave.
 func CreateAttestationCertificate(template, parent *x509.Certificate, pub, priv interface{}) ([]byte, error) {
-	return attestation.CreateAttestationCertificate(GetRemoteReport, template, parent, pub, priv)
+	return internal.CreateAttestationCertificate(GetRemoteReport, template, parent, pub, priv)
 }
 
 // CreateAttestationServerTLSConfig creates a tls.Config object with a self-signed certificate and an embedded report.
 func CreateAttestationServerTLSConfig() (*tls.Config, error) {
-	return attestation.CreateAttestationServerTLSConfig(GetRemoteReport)
+	return internal.CreateAttestationServerTLSConfig(GetRemoteReport)
 }
 
 // CreateAzureAttestationToken creates a Microsoft Azure Attestation token by creating a
@@ -33,5 +51,5 @@ func CreateAzureAttestationToken(data []byte, url string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return attestation.CreateAzureAttestationToken(report, data, url)
+	return internal.CreateAzureAttestationToken(report, data, url)
 }
