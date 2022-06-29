@@ -14,6 +14,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"ego/internal/launch"
 )
 
 type eradump struct {
@@ -36,8 +38,8 @@ func (c *Cli) signeridByKey(path string) (string, error) {
 			return "", errors.New(string(err.Stderr))
 		}
 		fmt.Fprintln(os.Stderr, out)
-		if strings.Contains(out, ErrOECrypto.Error()) {
-			return "", ErrOECrypto
+		if strings.Contains(out, launch.ErrOECrypto.Error()) {
+			return "", launch.ErrOECrypto
 		}
 	}
 
@@ -46,7 +48,6 @@ func (c *Cli) signeridByKey(path string) (string, error) {
 
 func (c *Cli) readEradumpJSONtoStruct(path string) (*eradump, error) {
 	data, err := c.runner.Output(exec.Command(c.getOesignPath(), "eradump", "-e", path))
-
 	if err != nil {
 		if err, ok := err.(*exec.ExitError); ok {
 			return nil, errors.New(string(err.Stderr))

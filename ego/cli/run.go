@@ -7,28 +7,25 @@
 package cli
 
 import (
-	"os"
-	"os/exec"
 	"path/filepath"
+
+	"ego/internal/launch"
 )
 
 // Run runs a signed executable in standalone mode.
 func (c *Cli) Run(filename string, args []string) (int, error) {
-	enclaves := filepath.Join(c.egoPath, "share", "ego-enclave") + ":" + filename
-	args = append([]string{enclaves}, args...)
-	os.Setenv("EDG_EGO_PREMAIN", "0")
-	cmd := exec.Command(c.getEgoHostPath(), args...)
-	return c.run(cmd)
+	return launch.RunEnclave(filename, args, c.getEgoHostPath(), c.getEgoEnclavePath(), c.runner)
 }
 
 // Marblerun runs a signed executable as a Marblerun Marble.
 func (c *Cli) Marblerun(filename string) (int, error) {
-	enclaves := filepath.Join(c.egoPath, "share", "ego-enclave") + ":" + filename
-	os.Setenv("EDG_EGO_PREMAIN", "1")
-	cmd := exec.Command(c.getEgoHostPath(), enclaves)
-	return c.run(cmd)
+	return launch.RunEnclaveMarblerun(filename, c.getEgoHostPath(), c.getEgoEnclavePath(), c.runner)
 }
 
 func (c *Cli) getEgoHostPath() string {
 	return filepath.Join(c.egoPath, "bin", "ego-host")
+}
+
+func (c *Cli) getEgoEnclavePath() string {
+	return filepath.Join(c.egoPath, "share", "ego-enclave")
 }
