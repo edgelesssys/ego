@@ -8,12 +8,13 @@ package main
 
 import (
 	"bufio"
-	"ego/cli"
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
+
+	"ego/cli"
+	"ego/internal/launch"
 
 	"github.com/klauspost/cpuid/v2"
 	"github.com/spf13/afero"
@@ -34,7 +35,7 @@ func main() {
 
 	cmd := os.Args[1]
 	args := os.Args[2:]
-	c := cli.NewCli(runner{}, afero.NewOsFs())
+	c := cli.NewCli(launch.OsRunner{}, afero.NewOsFs())
 
 	switch cmd {
 	case "sign":
@@ -70,7 +71,7 @@ func main() {
 	case "signerid":
 		if len(args) == 1 {
 			id, err := c.Signerid(args[0])
-			if err == cli.ErrOECrypto {
+			if err == launch.ErrOECrypto {
 				log.Fatalf("ERROR: signerid failed with %v.\nMake sure to pass a valid public key.\n", err)
 			}
 			if err != nil {
@@ -114,21 +115,21 @@ func main() {
 func handleErr(err error) {
 	switch err {
 	case nil:
-	case cli.ErrElfNoPie:
+	case launch.ErrElfNoPie:
 		fmt.Println("ERROR: failed to load the binary")
 		fmt.Println("The binary doesn't seem to be built with 'ego-go build'")
-	case cli.ErrValidAttr0:
+	case launch.ErrValidAttr0:
 		fmt.Println("ERROR: failed to load the binary")
 		fmt.Println("Please sign the binary with 'ego sign'")
-	case cli.ErrEnclIniFailInvalidMeasurement:
+	case launch.ErrEnclIniFailInvalidMeasurement:
 		fmt.Println("ERROR: failed to initialize the enclave")
 		fmt.Println("Try to resign the binary with 'ego sign' and rerun afterwards.")
-	case cli.ErrEnclIniFailUnexpected:
+	case launch.ErrEnclIniFailUnexpected:
 		fmt.Println("ERROR: failed to initialize the enclave")
 		if _, err := os.Stat("/dev/isgx"); err == nil {
 			fmt.Println("Try to run: sudo ego install libsgx-launch")
 		}
-	case cli.ErrSGXOpenFail:
+	case launch.ErrSGXOpenFail:
 		fmt.Println("ERROR: failed to open Intel SGX device")
 		if cpuid.CPU.Supports(cpuid.SGX) {
 			// the error is also thrown if /dev/sgx_enclave exists, but /dev/sgx does not
@@ -142,7 +143,7 @@ func handleErr(err error) {
 			fmt.Println("This machine doesn't support SGX.")
 		}
 		fmt.Println("You can use 'OE_SIMULATION=1 ego run ...' to run in simulation mode.")
-	case cli.ErrLoadDataFailUnexpected:
+	case launch.ErrLoadDataFailUnexpected:
 		fmt.Println("ERROR: failed to initialize the enclave")
 		fmt.Println("Install the SGX base package with: sudo ego install libsgx-enclave-common")
 		fmt.Println("Or temporarily fix the error with: sudo mount -o remount,exec /dev")
@@ -249,22 +250,4 @@ func askInstall(listOfActions string) bool {
 	}
 	response = strings.ToLower(strings.TrimSpace(response))
 	return response == "y" || response == "yes"
-}
-
-type runner struct{}
-
-func (runner) Run(cmd *exec.Cmd) error {
-	return cmd.Run()
-}
-
-func (runner) Output(cmd *exec.Cmd) ([]byte, error) {
-	return cmd.Output()
-}
-
-func (runner) CombinedOutput(cmd *exec.Cmd) ([]byte, error) {
-	return cmd.CombinedOutput()
-}
-
-func (runner) ExitCode(cmd *exec.Cmd) int {
-	return cmd.ProcessState.ExitCode()
 }
