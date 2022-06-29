@@ -81,6 +81,16 @@ add_custom_command(
 add_custom_target(egobuild ALL DEPENDS ego)
 
 #
+# ego-bundle - the loader executable for bundled ego enclaves
+#
+add_custom_command(
+  OUTPUT ego-bundle
+  DEPENDS ${CMAKE_SOURCE_DIR}/ego/cmd/bundle/*.go ${CMAKE_SOURCE_DIR}/ego/internal/**/*.go
+  COMMAND ${CMAKE_SOURCE_DIR}/src/build_ego.sh ${CMAKE_BINARY_DIR}/ego-bundle ${PROJECT_VERSION} ${TRIMPATH}
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/cmd/bundle)
+add_custom_target(egobundle ALL DEPENDS ego-bundle)
+
+#
 # install
 #
 
@@ -91,6 +101,7 @@ install(
   src/ego-go
   ${CMAKE_BINARY_DIR}/ego
   DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES ${CMAKE_BINARY_DIR}/ego-bundle DESTINATION ${CMAKE_INSTALL_DATADIR})
 install(
   PROGRAMS ${OpenEnclave_DIR}/../../../bin/erthost
   RENAME ego-host
