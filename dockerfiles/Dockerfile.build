@@ -1,17 +1,20 @@
-FROM ubuntu:focal-20220531 AS build
+ARG base_default=ghcr.io/edgelesssys/ego/build-base:v0.5.1
+ARG base=$base_default
+FROM $base AS build
+ARG base_default
+ARG base
 
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
-  build-essential=12.8ubuntu1.1 \
-  clang-10=1:10.0.0-4ubuntu1 \
-  cmake=3.16.3-1ubuntu1 \
+RUN test "$base" = "$base_default" || apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+  build-essential \
+  ca-certificates \
+  clang-10 \
+  cmake \
   doxygen \
   git \
-  libssl-dev=1.1.1f-1ubuntu2.13 \
-  locales \
-  ninja-build=1.10.0-1build1 \
-  wget \
-  && locale-gen en_US.UTF-8
-ENV LANG=en_US.UTF-8
+  libssl-dev \
+  ninja-build \
+  wget
 
 ARG erttag=v0.3.3
 ARG egotag=v0.5.1

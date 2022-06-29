@@ -1,0 +1,11 @@
+FROM ubuntu:focal-20220531
+RUN apt-get update && apt-get install -dy --no-install-recommends \
+  build-essential \
+  ca-certificates \
+  clang-10 \
+  cmake \
+  doxygen \
+  git \
+  libssl-dev \
+  ninja-build \
+  wget

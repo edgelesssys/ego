@@ -58,10 +58,10 @@ You can reproducibly build the latest release:
 cd dockerfiles
 DOCKER_BUILDKIT=1 docker build -o. - < Dockerfile.build
 ```
-Or the latest master:
+Or build the latest master:
 ```sh
 cd dockerfiles
-DOCKER_BUILDKIT=1 docker build --build-arg egotag=master --build-arg erttag=master -o. - < Dockerfile.build
+DOCKER_BUILDKIT=1 docker build --build-arg base=ubuntu:20.04 --build-arg egotag=master --build-arg erttag=master -o. - < Dockerfile.build
 ```
 This outputs the DEB package.
 
