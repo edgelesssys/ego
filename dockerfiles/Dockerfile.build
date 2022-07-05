@@ -1,11 +1,7 @@
-ARG base_default=ghcr.io/edgelesssys/ego/build-base:v0.5.1
-ARG base=$base_default
-FROM $base AS build
-ARG base_default
-ARG base
+FROM ghcr.io/edgelesssys/ego/build-base:v0.5.1 AS build
 
-RUN test "$base" = "$base_default" || apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+# don't run `apt-get update` because required packages are cached in build-base for reproducibility
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   build-essential \
   ca-certificates \
   clang-10 \
