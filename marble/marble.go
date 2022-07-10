@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Package marble provides commonly used functionalities for Marblerun Marbles.
+// Package marble provides commonly used functionalities for MarbleRun Marbles.
 package marble
 
 import (
@@ -23,7 +23,7 @@ const MarbleEnvironmentRootCA = "MARBLE_PREDEFINED_ROOT_CA"
 // MarbleEnvironmentPrivateKey contains the name of the environment variable holding a PEM encoded private key belonging to the marble-specific certificate
 const MarbleEnvironmentPrivateKey = "MARBLE_PREDEFINED_PRIVATE_KEY"
 
-// GetTLSConfig provides a preconfigured TLS config for marbles, using the Marblerun Coordinator as trust anchor
+// GetTLSConfig provides a preconfigured TLS config for marbles, using the MarbleRun Coordinator as trust anchor
 func GetTLSConfig(verifyClientCerts bool) (*tls.Config, error) {
 	tlsCert, roots, err := generateFromEnv()
 	if err != nil {

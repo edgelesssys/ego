@@ -17,7 +17,7 @@ func (c *Cli) Run(filename string, args []string) (int, error) {
 	return launch.RunEnclave(filename, args, c.getEgoHostPath(), c.getEgoEnclavePath(), c.runner)
 }
 
-// Marblerun runs a signed executable as a Marblerun Marble.
+// Marblerun runs a signed executable as a MarbleRun Marble.
 func (c *Cli) Marblerun(filename string) (int, error) {
 	return launch.RunEnclaveMarblerun(filename, c.getEgoHostPath(), c.getEgoEnclavePath(), c.runner)
 }

@@ -52,7 +52,7 @@ func RunEnclaveMarblerun(filename string, egoHostFilename string, egoEnclaveFile
 	enclaves := egoEnclaveFilename + ":" + filename
 	cmd := exec.Command(egoHostFilename, enclaves)
 
-	// Enable the Marblerun premain.
+	// Enable the MarbleRun premain.
 	if err := os.Setenv("EDG_EGO_PREMAIN", "1"); err != nil {
 		return 1, err
 	}
