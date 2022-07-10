@@ -13,7 +13,7 @@ import (
 )
 
 func newEnvCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "env ...",
 		Short: "Run a command in the EGo environment",
 		Long:  "Run a command within the EGo environment.",
@@ -26,4 +26,7 @@ func newEnvCmd() *cobra.Command {
 			os.Exit(newCli().Env(args[0], args[1:]))
 		},
 	}
+
+	hideHelpFlag(cmd)
+	return cmd
 }
