@@ -19,7 +19,7 @@ func newSigneridCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                   "signerid <executable | key.pem>",
 		Short:                 "Print the SignerID of a signed executable",
-		Long:                  "Print the SignerID either from a signed executable or by reading a keyfile.",
+		Long:                  "Print the SignerID either from a signed executable or by reading a key file.",
 		Args:                  cobra.ExactArgs(1),
 		DisableFlagsInUseLine: true,
 
