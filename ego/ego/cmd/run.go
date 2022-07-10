@@ -18,7 +18,7 @@ func newRunCmd() *cobra.Command {
 		Short: "Run a signed executable in standalone mode",
 		Long: `Run a signed executable in an enclave. You can pass arbitrary arguments to the enclave.
 
-Environment variables are only readable from within the enclave if they start with "EDG_".
+Environment variables are only readable from within the enclave if they start with ` + "`EDG_`" + `.
 
 Set OE_SIMULATION=1 to run in simulation mode.`,
 		Args:                  cobra.MinimumNArgs(1),
