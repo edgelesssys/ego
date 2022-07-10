@@ -7,7 +7,6 @@
 package core
 
 import (
-	"ego/config"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -17,6 +16,8 @@ import (
 	"sort"
 	"strings"
 	"syscall"
+
+	"ego/config"
 
 	"github.com/edgelesssys/marblerun/marble/premain"
 	"github.com/spf13/afero"
@@ -85,7 +86,7 @@ func PreMain(payload string, mounter Mounter, fs afero.Fs, hostEnviron []string)
 		return err
 	}
 
-	// If program is running as a Marble, continue with Marblerun Premain.
+	// If program is running as a Marble, continue with MarbleRun Premain.
 	if isMarble {
 		return premain.PreMainEgo()
 	}
