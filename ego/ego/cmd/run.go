@@ -13,7 +13,7 @@ import (
 )
 
 func newRunCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "run <executable> [args...]",
 		Short: "Run a signed executable in standalone mode",
 		Long: `Run a signed executable in an enclave. You can pass arbitrary arguments to the enclave.
@@ -31,4 +31,7 @@ Set OE_SIMULATION=1 to run in simulation mode.`,
 			os.Exit(exitCode)
 		},
 	}
+
+	hideHelpFlag(cmd)
+	return cmd
 }

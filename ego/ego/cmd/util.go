@@ -15,10 +15,23 @@ import (
 
 	"github.com/klauspost/cpuid/v2"
 	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
 )
 
 func newCli() *cli.Cli {
 	return cli.NewCli(launch.OsRunner{}, afero.NewOsFs())
+}
+
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func hideHelpFlag(cmd *cobra.Command) {
+	// must init help flag before it can be hidden
+	cmd.InitDefaultHelpFlag()
+	must(cmd.Flags().MarkHidden("help"))
 }
 
 func handleErr(err error) {
