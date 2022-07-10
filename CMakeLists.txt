@@ -75,9 +75,9 @@ target_link_libraries(ego-enclave
 
 add_custom_command(
   OUTPUT ego
-  DEPENDS ego/cmd/ego/main.go ${CMAKE_SOURCE_DIR}/ego/cli/*.go ${CMAKE_SOURCE_DIR}/ego/config/*.go ${CMAKE_SOURCE_DIR}/ego/internal/**/*.go
+  DEPENDS ${CMAKE_SOURCE_DIR}/ego/*/*.go ${CMAKE_SOURCE_DIR}/ego/*/*/*.go
   COMMAND ${CMAKE_SOURCE_DIR}/src/build_ego.sh ${CMAKE_BINARY_DIR} ${PROJECT_VERSION} ${TRIMPATH}
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/cmd/ego)
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/ego)
 add_custom_target(egobuild ALL DEPENDS ego)
 
 #
@@ -85,7 +85,7 @@ add_custom_target(egobuild ALL DEPENDS ego)
 #
 add_custom_command(
   OUTPUT ego-bundle
-  DEPENDS ${CMAKE_SOURCE_DIR}/ego/cmd/bundle/*.go ${CMAKE_SOURCE_DIR}/ego/internal/**/*.go
+  DEPENDS ${CMAKE_SOURCE_DIR}/ego/*/*.go ${CMAKE_SOURCE_DIR}/ego/*/*/*.go
   COMMAND ${CMAKE_SOURCE_DIR}/src/build_ego.sh ${CMAKE_BINARY_DIR}/ego-bundle ${PROJECT_VERSION} ${TRIMPATH}
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/cmd/bundle)
 add_custom_target(egobundle ALL DEPENDS ego-bundle)
