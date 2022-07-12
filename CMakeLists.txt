@@ -77,6 +77,7 @@ add_custom_command(
   OUTPUT ego
   DEPENDS ${CMAKE_SOURCE_DIR}/ego/*/*.go ${CMAKE_SOURCE_DIR}/ego/*/*/*.go
   COMMAND ${CMAKE_SOURCE_DIR}/src/build_ego.sh ${CMAKE_BINARY_DIR} ${PROJECT_VERSION} ${TRIMPATH}
+  COMMAND ${CMAKE_BINARY_DIR}/ego completion bash > ${CMAKE_BINARY_DIR}/ego_completion
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/ego)
 add_custom_target(egobuild ALL DEPENDS ego)
 
@@ -131,6 +132,7 @@ if(CMAKE_INSTALL_PREFIX STREQUAL /opt/ego)
     src/symlinks/ego-gdb
     src/symlinks/ego-go
     DESTINATION /usr/local/bin)
+  install(FILES ${CMAKE_BINARY_DIR}/ego_completion DESTINATION /${CMAKE_INSTALL_SYSCONFDIR}/bash_completion.d)
 endif()
 
 set(CPACK_PACKAGE_CONTACT "contact@edgeless.systems​")
