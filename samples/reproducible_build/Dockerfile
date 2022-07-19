@@ -1,29 +1,41 @@
-FROM ubuntu:focal-20210609 AS build
+ARG egover=1.0.0
+FROM ghcr.io/edgelesssys/ego/build-base:v${egover} AS build
+ARG egover
 
-RUN apt update && apt install -y \
-  build-essential=12.8ubuntu1.1 \
+# Install required packages
+# These are cached in the build-base image. Don't run `apt-get update` or
+# you may get other package versions and the build won't be reproducible.
+RUN apt-get install -y --no-install-recommends \
+  build-essential \
+  ca-certificates \
   git \
-  gnupg \
   wget
 
-# download, verify, and install ego
-RUN wget -qO- https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add \
-  && echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu focal main' >> /etc/apt/sources.list \
-  && wget https://github.com/edgelesssys/ego/releases/download/v0.3.1/ego_0.3.1_amd64.deb \
-  && echo '5829beb079719095d822bcdcdcfd38a8a07714bdb4281d21bdeaac94beaf4307  ego_0.3.1_amd64.deb' | sha256sum -c \
-  && apt update && apt install -y ./ego_0.3.1_amd64.deb
+# Download and install further requirements (if any)
+#
+# Make sure that these stay the same, e.g., don't use "latest", but fixed versions.
+#
+# Avoid installing packages via apt here. This may change the version of already
+# installed dependencies and may influence the final binary. If not using apt isn't
+# feasible, consider building a Docker image that gathers all required apt packages
+# and serves as a stable base.
 
-# build your app
-RUN git clone -b v0.3.1 --depth=1 https://github.com/edgelesssys/ego \
+# Download and install EGo
+# Use --force-depends to ignore SGX dependencies, which aren't required for building
+RUN wget https://github.com/edgelesssys/ego/releases/download/v${egover}/ego_${egover}_amd64.deb \
+  && dpkg -i --force-depends ego_${egover}_amd64.deb
+
+# Build your app
+RUN git clone -b v${egover} --depth=1 https://github.com/edgelesssys/ego \
   && cd ego/samples/helloworld \
   && ego-go build -trimpath
 RUN --mount=type=secret,id=signingkey,dst=/ego/samples/helloworld/private.pem,required=true ego sign ego/samples/helloworld/helloworld
 
-# use the deploy target if you want to deploy your app as a Docker image
-FROM ghcr.io/edgelesssys/ego-deploy AS deploy
+# Use the deploy target if you want to deploy your app as a Docker image
+FROM ghcr.io/edgelesssys/ego-deploy:v${egover} AS deploy
 COPY --from=build /ego/samples/helloworld/helloworld /
 ENTRYPOINT ["ego", "run", "helloworld"]
 
-# use the export target if you just want to use Docker to build your app and then export it
+# Use the export target if you just want to use Docker to build your app and then export it
 FROM scratch AS export
 COPY --from=build /ego/samples/helloworld/helloworld /
