@@ -1,20 +1,18 @@
-FROM ubuntu:focal-20220531 AS build
+FROM ghcr.io/edgelesssys/ego/build-base:v1.0.0 AS build
 
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+# don't run `apt-get update` because required packages are cached in build-base for reproducibility
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   build-essential \
+  ca-certificates \
   clang-10 \
   cmake \
-  doxygen \
   git \
   libssl-dev \
-  locales \
   ninja-build \
-  wget \
-  && locale-gen en_US.UTF-8
-ENV LANG=en_US.UTF-8
+  wget
 
-ARG erttag=v0.3.3
-ARG egotag=v0.5.1
+ARG erttag=v0.3.4
+ARG egotag=v1.0.0
 RUN wget -qO- https://golang.org/dl/go1.18.1.linux-amd64.tar.gz | tar -C /usr/local -xz \
   && git clone -b $erttag --depth=1 https://github.com/edgelesssys/edgelessrt \
   && git clone -b $egotag --depth=1 https://github.com/edgelesssys/ego \
