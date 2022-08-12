@@ -39,8 +39,10 @@ var errReportDataTooLarge = errors.New("reportData too large")
 // GetRemoteReport gets a report signed by the enclave platform for use in remote attestation.
 //
 // The report shall contain the data given by the reportData parameter. The report can only
-// hold a maximum of 64 byte reportData. Use a 64 byte hash value of your data as reportData
-// if your data exceeds this limit.
+// hold a maximum of 64 byte reportData. Use a hash value of your data as reportData if your
+// data exceeds this limit.
+//
+// If reportData is less than 64 bytes, it will be padded with zero bytes.
 func GetRemoteReport(reportData []byte) ([]byte, error) {
 	if len(reportData) > maxReportData {
 		return nil, errReportDataTooLarge
@@ -118,8 +120,10 @@ func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 // GetLocalReport gets a report signed by the enclave platform for use in local attestation.
 //
 // The report shall contain the data given by the reportData parameter. The report can only
-// hold a maximum of 64 byte reportData. Use a 64 byte hash value of your data as reportData
-// if your data exceeds this limit.
+// hold a maximum of 64 byte reportData. Use a hash value of your data as reportData if your
+// data exceeds this limit.
+//
+// If reportData is less than 64 bytes, it will be padded with zero bytes.
 //
 // The report can only be verified by the enclave identified by targetReport. So you must
 // first get a report from the target enclave. This report is allowed to be empty, i.e.,
