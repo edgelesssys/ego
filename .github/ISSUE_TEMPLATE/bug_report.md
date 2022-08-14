@@ -21,5 +21,5 @@ Steps to reproduce the behavior:
 ### Expected behavior
 <!-- A clear and concise description of what you expected to happen -->
 
-### Additional info / screenshot
+### Additional info
 <!-- Any additional information or context -->
