@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11)
-project(ego VERSION 1.0.0)
+project(ego VERSION 1.0.1)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
@@ -138,7 +138,7 @@ endif()
 set(CPACK_PACKAGE_CONTACT "contact@edgeless.systems​")
 set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
-  "libsgx-enclave-common (>=2.3.100.46354-1), libsgx-dcap-ql (>=1.0.100.46460-1.0), libsgx-dcap-ql-dev (>=1.0.100.46460-1.0)")
+  "libsgx-enclave-common (>=2.3.100.46354-1), libsgx-dcap-ql (>=1.0.100.46460-1.0)")
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 set(CPACK_DEBIAN_ARCHIVE_TYPE gnutar)
 include(CPack)
@@ -178,7 +178,7 @@ add_custom_command(
 add_custom_command(
   OUTPUT marble-test
   DEPENDS ego/cmd/marble-test/main.go ego/test/t.go
-  COMMAND go build -o ${CMAKE_BINARY_DIR}
+  COMMAND CGO_ENABLED=0 go build -o ${CMAKE_BINARY_DIR}
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/cmd/marble-test)
 
 add_custom_target(testexes ALL DEPENDS concurrency-test test-marble marble-test)
