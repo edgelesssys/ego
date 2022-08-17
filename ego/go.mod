@@ -6,7 +6,7 @@ require (
 	github.com/edgelesssys/marblerun v0.6.0
 	github.com/google/go-cmp v0.5.8
 	github.com/klauspost/cpuid/v2 v2.1.0
-	github.com/spf13/afero v1.9.0
+	github.com/spf13/afero v1.9.2
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0
 	google.golang.org/grpc v1.48.0
