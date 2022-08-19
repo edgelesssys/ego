@@ -91,7 +91,7 @@ Now you're ready to build applications with EGo! To start, check out the followi
 
 * Got a question? Please get in touch via [Discord][discord] or file an [issue](https://github.com/edgelesssys/ego/issues).
 * If you see an error message or run into an issue, please make sure to create a [bug report](https://github.com/edgelesssys/ego/issues).
-* Get the latest news and announcements on [Twitter](https://twitter.com/EdgelessSystems), [LinkedIn](https://www.linkedin.com/company/edgeless-systems/) or sign up for our monthly [newsletter](http://eepurl.com/hmjo3H).
+* Get the latest news and announcements on [Twitter](https://twitter.com/EdgelessSystems), [LinkedIn](https://www.linkedin.com/company/edgeless-systems/) or sign up for our monthly [newsletter](https://www.edgeless.systems/#newsletter-signup).
 * Visit our [blog](https://blog.edgeless.systems/) for technical deep-dives and tutorials.
 
 ## Contribute
