@@ -10,8 +10,12 @@ import (
 	"debug/elf"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"strings"
+
+	"github.com/fatih/color"
 )
 
 func (c *Cli) embedConfigAsPayload(path string, jsonData []byte) error {
@@ -99,6 +103,40 @@ func getPayloadInformation(f io.ReaderAt) (uint64, int64, int64, error) {
 	}
 
 	return payloadSize, int64(payloadOffset), int64(oeInfo.Offset), nil
+}
+
+// checkUnsupportedImports checks whether the to-be-signed or to-be-executed binary uses Go imports which are not supported.
+func (c *Cli) checkUnsupportedImports(path string) error {
+	// Load ELF executable
+	file, err := c.fs.OpenFile(path, os.O_RDONLY, 0)
+	if err != nil {
+		return err
+	}
+
+	elfFile, err := elf.NewFile(file)
+	if err != nil {
+		return err
+	}
+	defer elfFile.Close()
+
+	// Check imports based on symbols in the ELF file
+	symbols, err := elfFile.Symbols()
+	if err != nil {
+		return fmt.Errorf("cannot read symbol table from given ELF binary: %w", err)
+	}
+
+	// Iterate through all symbols and find whether it matches a known unsupported one
+	for _, symbol := range symbols {
+		if strings.Contains(symbol.Name, "github.com/edgelesssys/ego/eclient") {
+			boldPrint := color.New(color.Bold).SprintFunc()
+			fmt.Printf("ERROR: You cannot import the %s package within the EGo enclave.\n", boldPrint("github.com/edgelesssys/ego/eclient"))
+			fmt.Printf("It is intended to be used for applications running outside the SGX enclave.\n")
+			fmt.Printf("You can use the %s package as a replacement for usage inside the enclave.\n", boldPrint("github.com/edgelesssys/ego/enclave"))
+			return errors.New("unsupported import: github.com/edgelesssys/ego/eclient")
+		}
+	}
+
+	return nil
 }
 
 func writeUint64At(w io.WriterAt, x uint64, off int64) error {
