@@ -14,11 +14,17 @@ import (
 
 // Run runs a signed executable in standalone mode.
 func (c *Cli) Run(filename string, args []string) (int, error) {
+	if err := c.checkUnsupportedImports(filename); err != nil {
+		return 1, err
+	}
 	return launch.RunEnclave(filename, args, c.getEgoHostPath(), c.getEgoEnclavePath(), c.runner)
 }
 
 // Marblerun runs a signed executable as a MarbleRun Marble.
 func (c *Cli) Marblerun(filename string) (int, error) {
+	if err := c.checkUnsupportedImports(filename); err != nil {
+		return 1, err
+	}
 	return launch.RunEnclaveMarblerun(filename, c.getEgoHostPath(), c.getEgoEnclavePath(), c.runner)
 }
 

@@ -28,6 +28,11 @@ const (
 var ErrNoOEInfo = errors.New("could not find .oeinfo section")
 
 func (c *Cli) signWithJSON(conf *config.Config) error {
+	// First, check if the executable does not contain unsupported imports / symbols.
+	if err := c.checkUnsupportedImports(conf.Exe); err != nil {
+		return err
+	}
+
 	// write temp .conf file
 	cProduct := "ProductID=" + strconv.Itoa(conf.ProductID) + "\n"
 	cSecurityVersion := "SecurityVersion=" + strconv.Itoa(conf.SecurityVersion) + "\n"

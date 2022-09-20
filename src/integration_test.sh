@@ -10,6 +10,7 @@ onexit()
     fi
     rm -r $tPath
     rm -r /tmp/ego-integration-test
+    rm -r /tmp/ego-unsupported-import-test
 }
 
 trap onexit EXIT
@@ -47,3 +48,11 @@ run ego-go build -o /tmp/ego-integration-test/integration-test
 cd /tmp/ego-integration-test
 run ego sign
 run ego run integration-test
+
+# Test unsupported import detection on sign & run
+mkdir -p /tmp/ego-unsupported-import-test
+cd $egoPath/ego/cmd/unsupported-import-test
+run ego-go build -o /tmp/ego-unsupported-import-test/unsupported-import
+cd /tmp/ego-unsupported-import-test
+run ego sign unsupported-import |& grep "unsupported import"
+run ego run unsupported-import |& grep "unsupported import"
