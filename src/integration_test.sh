@@ -54,5 +54,5 @@ mkdir -p /tmp/ego-unsupported-import-test
 cd $egoPath/ego/cmd/unsupported-import-test
 run ego-go build -o /tmp/ego-unsupported-import-test/unsupported-import
 cd /tmp/ego-unsupported-import-test
-run ego sign unsupported-import |& grep "unsupported import"
-run ego run unsupported-import |& grep "unsupported import"
+run ego sign unsupported-import |& grep "You cannot import the github.com/edgelesssys/ego/eclient package"
+run ego run unsupported-import |& grep "You cannot import the github.com/edgelesssys/ego/eclient package"

@@ -14,9 +14,10 @@ import (
 	"io"
 	"os"
 	"strings"
-
-	"github.com/fatih/color"
 )
+
+// ErrErrUnsupportedImportEClient is returned when an EGo binary uses the eclient package instead of the enclave package.
+var ErrUnsupportedImportEClient = errors.New("unsupported import: github.com/edgelesssys/ego/eclient")
 
 func (c *Cli) embedConfigAsPayload(path string, jsonData []byte) error {
 	// Load ELF executable
@@ -128,11 +129,7 @@ func (c *Cli) checkUnsupportedImports(path string) error {
 	// Iterate through all symbols and find whether it matches a known unsupported one
 	for _, symbol := range symbols {
 		if strings.Contains(symbol.Name, "github.com/edgelesssys/ego/eclient") {
-			boldPrint := color.New(color.Bold).SprintFunc()
-			fmt.Printf("ERROR: You cannot import the %s package within the EGo enclave.\n", boldPrint("github.com/edgelesssys/ego/eclient"))
-			fmt.Printf("It is intended to be used for applications running outside the SGX enclave.\n")
-			fmt.Printf("You can use the %s package as a replacement for usage inside the enclave.\n", boldPrint("github.com/edgelesssys/ego/enclave"))
-			return errors.New("unsupported import: github.com/edgelesssys/ego/eclient")
+			return ErrUnsupportedImportEClient
 		}
 	}
 
