@@ -8,9 +8,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
-
-	"ego/internal/launch"
 
 	"github.com/spf13/cobra"
 )
@@ -21,13 +18,12 @@ func newSigneridCmd() *cobra.Command {
 		Short:                 "Print the SignerID of a signed executable",
 		Long:                  "Print the SignerID either from a signed executable or by reading a key file.",
 		Args:                  cobra.ExactArgs(1),
+		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := newCli().Signerid(args[0])
-			if err == launch.ErrOECrypto {
-				log.Fatalf("ERROR: signerid failed with %v.\nMake sure to pass a valid public key.", err)
-			}
+			handleErr(err)
 			if err != nil {
 				return err
 			}

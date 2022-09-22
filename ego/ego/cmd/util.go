@@ -13,6 +13,7 @@ import (
 	"ego/cli"
 	"ego/internal/launch"
 
+	"github.com/fatih/color"
 	"github.com/klauspost/cpuid/v2"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -69,7 +70,16 @@ func handleErr(err error) {
 		fmt.Println("ERROR: failed to initialize the enclave")
 		fmt.Println("Install the SGX base package with: sudo ego install libsgx-enclave-common")
 		fmt.Println("Or temporarily fix the error with: sudo mount -o remount,exec /dev")
+	case launch.ErrOECrypto:
+		fmt.Printf("ERROR: signerid failed with %v.\nMake sure to pass a valid public key.\n", err)
+	case cli.ErrNoOEInfo:
+		fmt.Println("ERROR: The .oeinfo section is missing in the binary.\nMaybe the binary was not built with 'ego-go build'?")
+	case cli.ErrUnsupportedImportEClient:
+		boldPrint := color.New(color.Bold).SprintFunc()
+		fmt.Printf("ERROR: You cannot import the %s package within the EGo enclave.\n", boldPrint("github.com/edgelesssys/ego/eclient"))
+		fmt.Printf("It is intended to be used for applications running outside the SGX enclave.\n")
+		fmt.Printf("You can use the %s package as a replacement for usage inside the enclave.\n", boldPrint("github.com/edgelesssys/ego/enclave"))
 	default:
-		fmt.Println(err)
+		fmt.Println("ERROR:", err)
 	}
 }

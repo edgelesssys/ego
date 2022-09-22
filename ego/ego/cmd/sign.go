@@ -7,18 +7,15 @@
 package cmd
 
 import (
-	"log"
-
-	"ego/cli"
-
 	"github.com/spf13/cobra"
 )
 
 func newSignCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "sign [executable | config.json]",
-		Short: "Sign an executable built with ego-go",
-		Long:  "Sign an executable built with ego-go. Executables must be signed before they can be run in an enclave.",
+		Use:           "sign [executable | config.json]",
+		Short:         "Sign an executable built with ego-go",
+		Long:          "Sign an executable built with ego-go. Executables must be signed before they can be run in an enclave.",
+		SilenceErrors: true,
 		Example: `  ego sign <executable>
     Generates a new key "private.pem" and a default configuration "enclave.json" in the current directory and signs the executable.
 
@@ -36,10 +33,8 @@ func newSignCmd() *cobra.Command {
 				filename = args[0]
 			}
 			err := newCli().Sign(filename)
-			if err == cli.ErrNoOEInfo {
-				log.Fatalln("ERROR: The .oeinfo section is missing in the binary.\nMaybe the binary was not built with 'ego-go build'?")
-			}
-			return err
+			handleErr(err)
+			return err // nil if no error
 		},
 	}
 }
