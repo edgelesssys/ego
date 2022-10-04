@@ -3,6 +3,8 @@
 This sample shows how to do local attestation between EGo enclaves.
 Local attestation doesn't require additional infrastructure to be set up, but it's limited to enclaves running on the same host.
 
+**Note: This sample doesn't work in simulation mode.**
+
 The sample consists of a server and a client, both running in enclaves.
 The enclaves first exchange certificates and reports over an insecure channel, verify these objects, and then establish a mutal TLS connection.
 
