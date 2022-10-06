@@ -31,6 +31,10 @@
         {
             "source": "/tmp/ego-integration-test/file-host.txt",
             "target": "/path/to/file_enclave.txt"
+        },
+        {
+            "source": "/tmp/ego-integration-test/file-host.txt",
+            "target": "/path/to/even/deeper/nested/file_enclave.txt"
         }
     ]
 }

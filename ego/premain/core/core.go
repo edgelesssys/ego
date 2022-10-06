@@ -76,6 +76,7 @@ func PreMain(payload string, mounter Mounter, fs afero.Fs, hostEnviron []string)
 			return err
 		}
 
+		// Write embedded files to file system
 		if err := writeFiles(config.Files, fs); err != nil {
 			return err
 		}
@@ -192,7 +193,7 @@ func writeFiles(files []config.File, fs afero.Fs) error {
 		if err != nil {
 			return err
 		}
-		if err := afs.MkdirAll(filepath.Dir(file.Target), 0); err != nil {
+		if err := afs.MkdirAll(filepath.Dir(file.Target), 0o700); err != nil {
 			return err
 		}
 		if err := afs.WriteFile(file.Target, buf, 0o600); err != nil {
