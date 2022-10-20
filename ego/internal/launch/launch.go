@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"syscall"
 )
 
 // run launches an application with a CappedBuffer and also translates potential Edgeless RT / Open Enclave errors into more user-friendly ones.
@@ -31,8 +32,12 @@ func run(runner Runner, cmd *exec.Cmd) (int, error) {
 	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
 
 	if err := runner.Run(cmd); err != nil {
-		if _, ok := err.(*exec.ExitError); !ok {
+		if exitErr, ok := err.(*exec.ExitError); !ok {
 			return 1, err
+		} else if !exitErr.Exited() {
+			// Terminated due to signal. ExitCode will be -1, so return WaitStatus instead (e.g., 139
+			// for segfault) to mimic the behavior as if the process would have been invoked directly.
+			return int(exitErr.Sys().(syscall.WaitStatus)), err
 		}
 	}
 	return runner.ExitCode(cmd), findCommonError(string(stdout) + string(stderr))
