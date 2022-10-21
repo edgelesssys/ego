@@ -13,8 +13,8 @@ docker push ghcr.io/OWNER/ego-sample
 
 ## 1. Deploy on AKS
 
-### Prerequisites: Setting up an [AKS cluster](https://docs.microsoft.com/en-us/azure/confidential-computing/confidential-nodes-aks-get-started)
-* Note: see available [VM sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/dcv2-series) and supported [regions](https://azure.microsoft.com/en-us/global-infrastructure/services/?products=virtual-machines&regions=all#select-product) for confidential nodes
+### Prerequisites: Setting up an [AKS cluster](https://learn.microsoft.com/en-us/azure/confidential-computing/confidential-enclave-nodes-aks-get-started)
+* Note: see available [VM sizes](https://learn.microsoft.com/en-us/azure/virtual-machines/dcv2-series) and supported [regions](https://azure.microsoft.com/en-us/global-infrastructure/services/?products=virtual-machines&regions=all#select-product) for confidential nodes
 
 ### Push configuration to cluster
 * switch to AKS context:
@@ -62,5 +62,5 @@ listening ...
 * stop cluster: ```az aks stop --name myAKSCluster --resource-group myResourceGroup```
 
 ## References
-* [az aks documentation](https://docs.microsoft.com/en-us/cli/azure/aks?view=azure-cli-latest)
+* [az aks documentation](https://learn.microsoft.com/en-us/cli/azure/aks?view=azure-cli-latest)
 * [kubectl cheat sheet](https://kubernetes.io/de/docs/reference/kubectl/cheatsheet/)
