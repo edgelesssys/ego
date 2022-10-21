@@ -2,9 +2,17 @@ name: Unit Tests
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+    paths:
+      - "**.go"
+      - "**/go.mod"
+      - "src/**"
   pull_request:
-    branches: [master]
+    paths:
+      - "**.go"
+      - "**/go.mod"
+      - "src/**"
 
 jobs:
   build:
