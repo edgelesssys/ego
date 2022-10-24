@@ -24,7 +24,7 @@ const (
 	defaultPubKeyFilename  = "public.pem"
 )
 
-// ErrNoOEInfo defines an error when no .oeinfo section could be found. This likely occures whend the binary to sign was not built with ego-go.
+// ErrNoOEInfo defines an error when no .oeinfo section could be found. This likely occurs when the binary to sign was not built with ego-go.
 var ErrNoOEInfo = errors.New("could not find .oeinfo section")
 
 // errConfigDoesNotExist defines an error when enclave.json or the expected .json file from user input does not exist. It is only used for internal error handling.
@@ -85,7 +85,7 @@ func (c *Cli) signWithJSON(conf *config.Config) error {
 		return err
 	}
 
-	// create public and private key if private key does not exits
+	// create public and private key if private key does not exist
 	c.createDefaultKeypair(conf.Key)
 
 	enclavePath := filepath.Join(c.egoPath, "share", "ego-enclave")
