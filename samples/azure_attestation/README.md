@@ -1,7 +1,7 @@
 # Go remote attestation sample using Microsoft Azure Attestation
 This sample shows how to do remote attestation of an EGo enclave in combination with [Microsoft Azure Attestation](https://docs.microsoft.com/en-us/azure/attestation/). It consists of a server running in an enclave and a client (the relying party) that attests the server before sending a secret. The Azure Attestation Provider simplifies the attestation process for the client.
 
-**Note: This sample only works on SGX-FLC systems with a [quote provider](https://docs.edgeless.systems/ego/#/reference/attest) installed.**
+**Note: This sample only works on SGX-FLC systems with a [quote provider](https://docs.edgeless.systems/ego/reference/attest) installed.**
 
 ## How it works
 
