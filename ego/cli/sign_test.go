@@ -9,6 +9,7 @@ package cli
 import (
 	"encoding/json"
 	"errors"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -204,11 +205,9 @@ func TestEmbedFile(t *testing.T) {
 	const exe = "exefile"
 	require.NoError(fs.WriteFile(exe, elfUnsigned, 0))
 
-	// Create file to embed
+	// Specify file to embed
 	const sourcePath = "/src"
 	const targetPath = "/path/to/file"
-	content := []byte{2, 0, 3}
-	require.NoError(fs.WriteFile(sourcePath, content, 0))
 
 	// Sign executable, which should embed the file
 	const configJSON = `
@@ -231,8 +230,24 @@ NumHeapPages=256
 NumStackPages=1024
 NumTCS=32
 `
+	// First, test error handling if source file doesn't exist
 	require.NoError(fs.WriteFile("enclave.json", []byte(configJSON), 0))
+	err := cli.Sign("")
+	require.ErrorContains(err, "failed to populate embedded file content")
+	require.ErrorIs(err, os.ErrNotExist)
+	err = cli.Sign("enclave.json")
+	require.ErrorContains(err, "failed to populate embedded file content")
+	require.ErrorIs(err, os.ErrNotExist)
+	err = cli.Sign(exe)
+	require.ErrorContains(err, "failed to populate embedded file content")
+	require.ErrorIs(err, os.ErrNotExist)
+
+	// Create source file, test should pass
+	content := []byte{2, 0, 3}
+	require.NoError(fs.WriteFile(sourcePath, content, 0))
 	require.NoError(cli.Sign(""))
+	require.NoError(cli.Sign("enclave.json"))
+	require.NoError(cli.Sign(exe))
 
 	// Get payload
 	file, err := fs.Open(exe)

@@ -27,6 +27,9 @@ const (
 // ErrNoOEInfo defines an error when no .oeinfo section could be found. This likely occures whend the binary to sign was not built with ego-go.
 var ErrNoOEInfo = errors.New("could not find .oeinfo section")
 
+// errConfigDoesNotExist defines an error when enclave.json or the expected .json file from user input does not exist. It is only used for internal error handling.
+var errConfigDoesNotExist = errors.New("enclave config file not found")
+
 func (c *Cli) signWithJSON(conf *config.Config) error {
 	// First, check if the executable does not contain unsupported imports / symbols.
 	if err := c.checkUnsupportedImports(conf.Exe); err != nil {
@@ -98,7 +101,7 @@ func (c *Cli) signExecutable(path string) error {
 	conf, err := c.readConfigJSONtoStruct(defaultConfigFilename)
 
 	if err != nil {
-		if !os.IsNotExist(err) {
+		if !errors.Is(err, errConfigDoesNotExist) {
 			return err
 		}
 	} else if conf.Exe == path {
@@ -134,6 +137,9 @@ func (c *Cli) signExecutable(path string) error {
 // JSON could not be unmarshalled
 func (c *Cli) readConfigJSONtoStruct(path string) (*config.Config, error) {
 	data, err := c.fs.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("%w: %v", errConfigDoesNotExist, path)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -152,12 +158,12 @@ func (c *Cli) readConfigJSONtoStruct(path string) (*config.Config, error) {
 	conf.Key = filepath.Join(dir, conf.Key)
 
 	if err := conf.PopulateContent(c.fs); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to populate embedded file content: %w", err)
 	}
 	return &conf, nil
 }
 
-// Creates a public/secret keypair if the provided secret key does not exists
+// Creates a public/secret keypair if the provided secret key does not exist
 func (c *Cli) createDefaultKeypair(file string) {
 	if _, err := c.fs.Stat(file); err != nil {
 		if !os.IsNotExist(err) {
