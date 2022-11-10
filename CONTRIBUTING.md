@@ -32,7 +32,7 @@ For pull requests, we employ the following workflow:
 ## Reporting issues and bugs, asking questions
 This project uses the GitHub issue tracker. Please check the existing issues before submitting to avoid duplicates.
 
-To report a security issue, contact security@edgeless.systems.
+Please report any security issue via a [private GitHub vulnerability report](https://github.com/edgelesssys/ego/security/advisories/new) or write to security@edgeless.systems.
 
 Your bug report should cover the following points:
 *	A quick summary and/or background of the issue

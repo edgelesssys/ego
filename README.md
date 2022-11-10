@@ -99,7 +99,7 @@ Now you're ready to build applications with EGo! To start, check out the followi
 * Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for information on issue reporting, code guidelines, and our PR process.
 * Pull requests are welcome! You need to agree to our [Contributor License Agreement](https://cla-assistant.io/edgelesssys/ego).
 * This project and everyone participating in it are governed by the [Code of Conduct](/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
-* To report a security issue, write to security@edgeless.systems.
+* Please report any security issue via a [private GitHub vulnerability report](https://github.com/edgelesssys/ego/security/advisories/new) or write to security@edgeless.systems.
 
 
 <!-- refs -->
