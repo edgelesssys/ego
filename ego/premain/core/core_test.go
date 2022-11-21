@@ -7,7 +7,6 @@
 package core
 
 import (
-	"ego/config"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -17,6 +16,8 @@ import (
 	"syscall"
 	"testing"
 
+	"ego/config"
+
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,7 +25,7 @@ import (
 
 type assertionMounter struct {
 	assert          *assert.Assertions
-	config          *config.Config
+	expectedMounts  []config.FileSystemMount
 	usedTargets     map[string]bool
 	remountAsHostFS bool
 }
@@ -33,9 +34,10 @@ func TestPremain(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
+	hostEnviron := []string{"EDG_CWD=/host"}
 	fs := afero.NewMemMapFs()
 
-	//sane default values
+	// sane default values
 	conf := &config.Config{
 		Exe:             "helloworld",
 		Key:             "privatekey",
@@ -48,26 +50,27 @@ func TestPremain(t *testing.T) {
 	}
 
 	// Supply valid payload, no Marble
-	mounter := assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool), remountAsHostFS: false}
-	assert.NoError(PreMain("", &mounter, fs, nil))
+	mounter := assertionMounter{assert: assert, expectedMounts: conf.Mounts, usedTargets: make(map[string]bool), remountAsHostFS: false}
+	assert.NoError(PreMain("", &mounter, fs, hostEnviron))
 
 	// Supply valid payload, no Marble
 	payload, err := json.Marshal(conf)
 	require.NoError(err)
-	mounter = assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool), remountAsHostFS: false}
-	assert.NoError(PreMain(string(payload), &mounter, fs, nil))
+	mounter = assertionMounter{assert: assert, expectedMounts: conf.Mounts, usedTargets: make(map[string]bool), remountAsHostFS: false}
+	assert.NoError(PreMain(string(payload), &mounter, fs, hostEnviron))
 
 	// Supply invalid payload, should fail
 	payload = []byte("blablarubbish")
-	assert.Error(PreMain(string(payload), &mounter, fs, nil))
+	assert.Error(PreMain(string(payload), &mounter, fs, hostEnviron))
 }
 
 func TestPerformMounts(t *testing.T) {
 	assert := assert.New(t)
 
+	const hostCWD = "/host"
 	fs := afero.NewMemMapFs()
 
-	//sane default values
+	// sane default values
 	conf := &config.Config{
 		Exe:             "helloworld",
 		Key:             "privatekey",
@@ -75,8 +78,14 @@ func TestPerformMounts(t *testing.T) {
 		HeapSize:        512, //[MB]
 		ProductID:       1,
 		SecurityVersion: 1,
-		Mounts:          []config.FileSystemMount{{Source: "/", Target: "/memfs", Type: "memfs", ReadOnly: false}, {Source: "/home/benjaminfranklin", Target: "/data", Type: "hostfs", ReadOnly: true}},
+		Mounts: []config.FileSystemMount{
+			{Source: "/", Target: "/memfs", Type: "memfs", ReadOnly: false},
+			{Source: "/home/benjaminfranklin", Target: "/data", Type: "hostfs", ReadOnly: true},
+			{Source: "relative/path", Target: "/reldata", Type: "hostfs", ReadOnly: true},
+		},
 	}
+	confExpectedMounts := append([]config.FileSystemMount(nil), conf.Mounts...)
+	confExpectedMounts[2].Source = "/host/relative/path"
 
 	// Same as above, but with remounting the hostfs as root
 	confWithRemount := &config.Config{
@@ -89,15 +98,15 @@ func TestPerformMounts(t *testing.T) {
 		Mounts:          []config.FileSystemMount{{Source: "/", Target: "/", Type: "hostfs", ReadOnly: false}, {Source: "/", Target: "/memfs", Type: "memfs", ReadOnly: true}},
 	}
 
-	mounter := assertionMounter{assert: assert, config: conf, usedTargets: make(map[string]bool), remountAsHostFS: false}
-	assert.NoError(performUserMounts(*conf, &mounter, fs))
+	mounter := assertionMounter{assert: assert, expectedMounts: confExpectedMounts, usedTargets: make(map[string]bool), remountAsHostFS: false}
+	assert.NoError(performUserMounts(*conf, &mounter, fs, hostCWD))
 
 	conf.Mounts = []config.FileSystemMount{{Source: "/home/benjaminfranklin", Target: "/data", Type: "rubbishfs", ReadOnly: true}}
-	assert.Error(performUserMounts(*conf, &mounter, fs))
+	assert.Error(performUserMounts(*conf, &mounter, fs, hostCWD))
 
 	// Test '/' as host fs special case. Should work without an error, but we do not recommend doing this
-	mounter = assertionMounter{assert: assert, config: confWithRemount, usedTargets: make(map[string]bool), remountAsHostFS: true}
-	assert.NoError(performUserMounts(*confWithRemount, &mounter, fs))
+	mounter = assertionMounter{assert: assert, expectedMounts: confWithRemount.Mounts, usedTargets: make(map[string]bool), remountAsHostFS: true}
+	assert.NoError(performUserMounts(*confWithRemount, &mounter, fs, hostCWD))
 }
 
 func (a *assertionMounter) Mount(source string, target string, filesystem string, flags uintptr, data string) error {
@@ -115,7 +124,7 @@ func (a *assertionMounter) Mount(source string, target string, filesystem string
 
 	// Find target from config to check against
 	// Additionally, check if it's already been mounted
-	for _, mountPoint := range a.config.Mounts {
+	for _, mountPoint := range a.expectedMounts {
 		if target == mountPoint.Target {
 			if _, ok := a.usedTargets[mountPoint.Target]; ok {
 				return errors.New("target already exists")
@@ -188,7 +197,7 @@ func TestAddEnvVars(t *testing.T) {
 	originalEnvironMap["EDG_WILL_I_SURVIVE?"] = "hopefully"                // Should stay due to the EDG_ prefix
 	originalEnvironMap["PWD"] = existingPwdEnvVar                          // Value should be copied from host
 
-	//sane default values
+	// sane default values
 	conf := &config.Config{
 		Exe:             "helloworld",
 		Key:             "privatekey",
@@ -243,6 +252,7 @@ func TestEmbeddedFile(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
+	hostEnviron := []string{"EDG_CWD=/host"}
 	const target = "/path/to/file"
 	content := []byte{2, 0, 3}
 
@@ -253,7 +263,7 @@ func TestEmbeddedFile(t *testing.T) {
 	payload, err := json.Marshal(conf)
 	require.NoError(err)
 	fs := afero.NewMemMapFs()
-	require.NoError(PreMain(string(payload), &assertionMounter{}, fs, nil))
+	require.NoError(PreMain(string(payload), &assertionMounter{}, fs, hostEnviron))
 
 	actualContent, err := afero.Afero{Fs: fs}.ReadFile(target)
 	require.NoError(err)

@@ -34,8 +34,9 @@ make install
 export PATH="$tPath/install/bin:$PATH"
 
 # Setup integration test
-mkdir -p /tmp/ego-integration-test
+mkdir -p /tmp/ego-integration-test/relative/path
 echo -n 'It works!' > /tmp/ego-integration-test/test-file.txt
+echo -n 'It relatively works!' > /tmp/ego-integration-test/relative/path/test-file.txt
 echo -n 'i should be in memfs' > /tmp/ego-integration-test/file-host.txt
 
 # Build integration test

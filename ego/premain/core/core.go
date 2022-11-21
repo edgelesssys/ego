@@ -71,8 +71,13 @@ func PreMain(payload string, mounter Mounter, fs afero.Fs, hostEnviron []string)
 			return err
 		}
 
+		hostCWD := hostEnvironMap["EDG_CWD"]
+		if !filepath.IsAbs(hostCWD) {
+			return fmt.Errorf("invalid path in EDG_CWD: %v", hostCWD)
+		}
+
 		// Perform user mounts based on embedded config
-		if err := performUserMounts(config, mounter, fs); err != nil {
+		if err := performUserMounts(config, mounter, fs, hostCWD); err != nil {
 			return err
 		}
 
@@ -111,7 +116,7 @@ func performPredefinedMounts(mounter Mounter, isMarble bool) error {
 	return nil
 }
 
-func performUserMounts(config config.Config, mounter Mounter, fs afero.Fs) error {
+func performUserMounts(config config.Config, mounter Mounter, fs afero.Fs, hostCWD string) error {
 	// Sort slice by length of target, so that we can catch "/" as special case without having to double loop or build another data structure
 	sort.Slice(config.Mounts, func(i, j int) bool {
 		return len(config.Mounts[i].Target) < len(config.Mounts[j].Target)
@@ -151,6 +156,9 @@ func performUserMounts(config config.Config, mounter Mounter, fs afero.Fs) error
 		switch mountPoint.Type {
 		case "hostfs":
 			filesystem = mountTypeHostFS
+			if !filepath.IsAbs(mountPoint.Source) {
+				mountPoint.Source = filepath.Join(hostCWD, mountPoint.Source)
+			}
 		case "memfs":
 			filesystem = mountTypeMemFS
 

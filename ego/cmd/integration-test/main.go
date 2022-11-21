@@ -51,6 +51,9 @@ func testFileSystemMounts(assert *assert.Assertions, require *require.Assertions
 
 	// Check hostfs mounts specified in manifest
 	log.Println("Testing hostfs mounts...")
+	fileContent, err = os.ReadFile("/reldata/test-file.txt")
+	require.NoError(err)
+	assert.Equal("It relatively works!", string(fileContent))
 	fileContent, err = os.ReadFile("/data/test-file.txt")
 	require.NoError(err)
 	assert.Equal("It works!", string(fileContent))
