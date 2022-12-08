@@ -16,8 +16,8 @@ If you're on Ubuntu 18.04 or above, you can install the DEB package:
 ```bash
 wget -qO- https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add
 sudo add-apt-repository "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu `lsb_release -cs` main"
-wget https://github.com/edgelesssys/ego/releases/download/v1.0.1/ego_1.0.1_amd64.deb
-sudo apt install ./ego_1.0.1_amd64.deb build-essential libssl-dev
+wget https://github.com/edgelesssys/ego/releases/download/v1.1.0/ego_1.1.0_amd64.deb
+sudo apt install ./ego_1.1.0_amd64.deb build-essential libssl-dev
 ```
 
 ## Build from source
