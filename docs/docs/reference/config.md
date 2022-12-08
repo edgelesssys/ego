@@ -68,7 +68,7 @@ If `executableHeap` is true, the enclave heap will be executable. This is requir
 ## Mounts
 `mounts` define custom mount points that apply to the file system presented to the enclave. This can be omitted if no mounts other than the default mounts should be performed, or you can define multiple entries with the following parameters:
 
-  * `source` (required for `hostfs`): The directory from the host file system that should be mounted in the enclave when using `hostfs`. For `memfs`, this value will be ignored and can be omitted.
+  * `source` (required for `hostfs`): The directory from the host file system that should be mounted in the enclave when using `hostfs`. If this is a relative path, it will be relative to the working directory of the ego host process. For `memfs`, this value will be ignored and can be omitted.
   * `target` (required): Defines the mount path in the enclave.
   * `type` (required): Either `hostfs` if you want to mount a path from the host's file system in the enclave, or `memfs` if you want to use a temporary file system similar to *tmpfs* on UNIX systems, with your data stored in the secure memory environment of the enclave.
   * `readOnly`: Can be `true` or `false` depending on if you want to mount the path as read-only or read-write. When omitted, will default to read-write.
