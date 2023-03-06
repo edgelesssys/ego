@@ -276,22 +276,7 @@ type signRunner struct {
 }
 
 func (s signRunner) Run(cmd *exec.Cmd) error {
-	if cmp.Equal(cmd.Args[:3], []string{"openssl", "genrsa", "-out"}) &&
-		cmp.Equal(cmd.Args[4:], []string{"-3", "3072"}) {
-		return s.fs.WriteFile(cmd.Args[3], []byte("newkey"), 0)
-	}
-	if cmp.Equal(cmd.Args[:3], []string{"openssl", "rsa", "-in"}) &&
-		cmp.Equal(cmd.Args[4:6], []string{"-pubout", "-out"}) {
-		exists, err := s.fs.Exists(cmd.Args[3])
-		if err != nil {
-			return err
-		}
-		if !exists {
-			return errors.New("openssl rsa: " + cmd.Args[3] + " does not exist")
-		}
-		return s.fs.WriteFile(cmd.Args[6], nil, 0)
-	}
-	return errors.New("unexpected cmd: " + cmd.Path)
+	panic(cmd.Path)
 }
 
 func (signRunner) Output(cmd *exec.Cmd) ([]byte, error) {
@@ -299,21 +284,35 @@ func (signRunner) Output(cmd *exec.Cmd) ([]byte, error) {
 }
 
 func (s signRunner) CombinedOutput(cmd *exec.Cmd) ([]byte, error) {
-	if !(filepath.Base(cmd.Path) == "ego-oesign" &&
+	switch {
+	case cmp.Equal(cmd.Args[:3], []string{"openssl", "genrsa", "-out"}) &&
+		cmp.Equal(cmd.Args[4:], []string{"-3", "3072"}):
+		return nil, s.fs.WriteFile(cmd.Args[3], []byte("newkey"), 0)
+	case cmp.Equal(cmd.Args[:3], []string{"openssl", "rsa", "-in"}) &&
+		cmp.Equal(cmd.Args[4:6], []string{"-pubout", "-out"}):
+		exists, err := s.fs.Exists(cmd.Args[3])
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			return nil, errors.New("openssl rsa: " + cmd.Args[3] + " does not exist")
+		}
+		return nil, s.fs.WriteFile(cmd.Args[6], nil, 0)
+	case filepath.Base(cmd.Path) == "ego-oesign" &&
 		cmp.Equal(cmd.Args[1:3], []string{"sign", "-e"}) &&
 		cmp.Equal(cmd.Args[6], "-k") &&
-		cmp.Equal(cmd.Args[8:], []string{"--payload", "exefile"})) {
-		return nil, errors.New("unexpected cmd: " + cmd.Path + strings.Join(cmd.Args, " "))
+		cmp.Equal(cmd.Args[8:], []string{"--payload", "exefile"}):
+		data, err := s.fs.ReadFile(cmd.Args[5])
+		if err != nil {
+			return nil, err
+		}
+		config := string(data)
+		if config != s.expectedConfig {
+			return nil, errors.New("unexpected config: " + config)
+		}
+		return nil, nil
 	}
-	data, err := s.fs.ReadFile(cmd.Args[5])
-	if err != nil {
-		return nil, err
-	}
-	config := string(data)
-	if config != s.expectedConfig {
-		return nil, errors.New("unexpected config: " + config)
-	}
-	return nil, nil
+	return nil, errors.New("unexpected cmd: " + cmd.Path + strings.Join(cmd.Args, " "))
 }
 
 func (signRunner) ExitCode(cmd *exec.Cmd) int {
