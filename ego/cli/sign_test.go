@@ -275,7 +275,7 @@ type signRunner struct {
 	expectedConfig string
 }
 
-func (s signRunner) Run(cmd *exec.Cmd) error {
+func (signRunner) Run(cmd *exec.Cmd) error {
 	panic(cmd.Path)
 }
 
