@@ -171,11 +171,13 @@ func (c *Cli) createDefaultKeypair(file string) {
 		}
 		fmt.Println("Generating new " + file)
 		// SGX requires the RSA exponent to be 3. Go's API does not support this.
-		if err := c.runner.Run(exec.Command("openssl", "genrsa", "-out", file, "-3", "3072")); err != nil {
+		if out, err := c.runner.CombinedOutput(exec.Command("openssl", "genrsa", "-out", file, "-3", "3072")); err != nil {
+			fmt.Println(string(out))
 			panic(err)
 		}
 		pubPath := filepath.Join(filepath.Dir(file), defaultPubKeyFilename)
-		if err := c.runner.Run(exec.Command("openssl", "rsa", "-in", file, "-pubout", "-out", pubPath)); err != nil {
+		if out, err := c.runner.CombinedOutput(exec.Command("openssl", "rsa", "-in", file, "-pubout", "-out", pubPath)); err != nil {
+			fmt.Println(string(out))
 			panic(err)
 		}
 	}
