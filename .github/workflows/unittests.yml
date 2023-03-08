@@ -8,11 +8,13 @@ on:
       - "**.go"
       - "**/go.mod"
       - "src/**"
+      - "_ertgo"
   pull_request:
     paths:
       - "**.go"
       - "**/go.mod"
       - "src/**"
+      - "_ertgo"
 
 jobs:
   build:
