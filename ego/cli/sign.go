@@ -98,6 +98,7 @@ func (c *Cli) signWithJSON(conf *config.Config) error {
 }
 
 func (c *Cli) signExecutable(path string) error {
+	// Try to parse existing config
 	conf, err := c.readConfigJSONtoStruct(defaultConfigFilename)
 
 	if err != nil {
@@ -107,8 +108,11 @@ func (c *Cli) signExecutable(path string) error {
 	} else if conf.Exe == path {
 		return c.signWithJSON(conf)
 	} else {
-		return fmt.Errorf("provided path to executable does not match the one in enclave.json")
+		return fmt.Errorf("provided path to executable does not match the one in %s", defaultConfigFilename)
 	}
+
+	// If there's no suitable existing config, generate a new one.
+	fmt.Println("Generating new", defaultConfigFilename)
 
 	// sane default values
 	conf = &config.Config{
