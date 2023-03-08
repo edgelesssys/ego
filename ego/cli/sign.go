@@ -101,6 +101,8 @@ func (c *Cli) signExecutable(path string) error {
 	// Try to parse existing config
 	conf, err := c.readConfigJSONtoStruct(defaultConfigFilename)
 
+	// If an enclave.json exists, check if the path inside it matches the user input and call signWithJSON.
+	// Otherwise, throw an error.
 	if err != nil {
 		if !errors.Is(err, errConfigDoesNotExist) {
 			return err
@@ -111,7 +113,7 @@ func (c *Cli) signExecutable(path string) error {
 		return fmt.Errorf("provided path to executable does not match the one in %s", defaultConfigFilename)
 	}
 
-	// If there's no suitable existing config, generate a new one.
+	// If no enclave.json exists, generate a new one.
 	fmt.Println("Generating new", defaultConfigFilename)
 
 	// sane default values
@@ -190,6 +192,7 @@ func (c *Cli) createDefaultKeypair(file string) {
 // Sign signs an executable built with ego-go.
 func (c *Cli) Sign(filename string) error {
 	if filename == "" {
+		// When no filename is defined, use an existing enclave.json for reference, or fail otherwise.
 		conf, err := c.readConfigJSONtoStruct(defaultConfigFilename)
 		if err != nil {
 			return err
@@ -197,11 +200,13 @@ func (c *Cli) Sign(filename string) error {
 		return c.signWithJSON(conf)
 	}
 	if filepath.Ext(filename) == ".json" {
+		// If the supplied filename seems to be a JSON file, interpret it as a config file.
 		conf, err := c.readConfigJSONtoStruct(filename)
 		if err != nil {
 			return err
 		}
 		return c.signWithJSON(conf)
 	}
+	// If no config exists or no JSON file has been specified, assume the supplied file name is an executable.
 	return c.signExecutable(filename)
 }
