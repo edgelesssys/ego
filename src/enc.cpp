@@ -224,7 +224,7 @@ static char** _merge_argv_env(int argc, char** argv, char** envp)
     }
 
     // [argv][null][env][null][auxv][null]
-    char** p = (char**)oe_allocator_calloc(argc + 1 + envc + 1 + 2, sizeof *p);
+    char** p = (char**)oe_allocator_calloc(argc + 1 + envc + 1 + 4, sizeof *p);
 
     if (!p)
         abort();
@@ -233,6 +233,10 @@ static char** _merge_argv_env(int argc, char** argv, char** envp)
     memcpy(p, argv, (size_t)argc * sizeof *argv);
     p += argc + 1;
     memcpy(p, envp, (size_t)envc * sizeof *envp);
+    p += envc + 1;
+    const auto pa = reinterpret_cast<intptr_t*>(p);
+    pa[0] = AT_PAGESZ;
+    pa[1] = OE_PAGE_SIZE;
 
     return result;
 }
