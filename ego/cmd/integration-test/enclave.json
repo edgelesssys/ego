@@ -2,7 +2,7 @@
     "exe": "integration-test",
     "key": "private.pem",
     "debug": true,
-    "heapSize": 512,
+    "heapSize": 16,
     "productID": 1,
     "securityVersion": 1,
     "mounts": [
