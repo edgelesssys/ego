@@ -13,7 +13,6 @@ import (
 	"ego/cli"
 	"ego/internal/launch"
 
-	"github.com/fatih/color"
 	"github.com/klauspost/cpuid/v2"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -75,10 +74,9 @@ func handleErr(err error) {
 	case cli.ErrNoOEInfo:
 		fmt.Println("ERROR: The .oeinfo section is missing in the binary.\nMaybe the binary was not built with 'ego-go build'?")
 	case cli.ErrUnsupportedImportEClient:
-		boldPrint := color.New(color.Bold).SprintFunc()
-		fmt.Printf("ERROR: You cannot import the %s package within the EGo enclave.\n", boldPrint("github.com/edgelesssys/ego/eclient"))
-		fmt.Printf("It is intended to be used for applications running outside the SGX enclave.\n")
-		fmt.Printf("You can use the %s package as a replacement for usage inside the enclave.\n", boldPrint("github.com/edgelesssys/ego/enclave"))
+		fmt.Println("ERROR: You cannot import the github.com/edgelesssys/ego/eclient package within the EGo enclave.")
+		fmt.Println("It is intended to be used for applications running outside the SGX enclave.")
+		fmt.Println("You can use the github.com/edgelesssys/ego/enclave package as a replacement for usage inside the enclave.")
 	default:
 		fmt.Println("ERROR:", err)
 	}
