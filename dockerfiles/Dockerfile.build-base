@@ -1,8 +1,8 @@
-FROM ubuntu:focal-20230301
+FROM ubuntu:focal-20230412
 RUN apt-get update && apt-get install -dy --no-install-recommends \
   build-essential \
   ca-certificates \
-  clang-10 \
+  clang-11 \
   cmake \
   git \
   libssl-dev \
