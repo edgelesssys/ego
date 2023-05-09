@@ -1,18 +1,18 @@
-FROM ghcr.io/edgelesssys/ego/build-base:v1.2.0 AS build
+FROM ghcr.io/edgelesssys/ego/build-base:v1.3.0 AS build
 
 # don't run `apt-get update` because required packages are cached in build-base for reproducibility
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   build-essential \
   ca-certificates \
-  clang-10 \
+  clang-11 \
   cmake \
   git \
   libssl-dev \
   ninja-build \
   wget
 
-ARG erttag=v0.3.7
-ARG egotag=v1.2.0
+ARG erttag=v0.3.9
+ARG egotag=v1.3.0
 RUN wget -qO- https://golang.org/dl/go1.20.1.linux-amd64.tar.gz | tar -C /usr/local -xz \
   && git clone -b $erttag --depth=1 https://github.com/edgelesssys/edgelessrt \
   && git clone -b $egotag --depth=1 https://github.com/edgelesssys/ego \
