@@ -1,0 +1,8 @@
+{
+    "exe": "sealkeyid-test",
+    "key": "private1.pem",
+    "debug": true,
+    "heapSize": 16,
+    "productID": 2,
+    "securityVersion": 3
+}
