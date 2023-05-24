@@ -28,8 +28,27 @@ func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 // CreateAttestationClientTLSConfig creates a tls.Config object that verifies a certificate with embedded report.
 //
 // verifyReport is called after the certificate has been verified against the report data. The caller must verify either the UniqueID or the tuple (SignerID, ProductID, SecurityVersion, Debug) in the callback.
-func CreateAttestationClientTLSConfig(verifyReport func(attestation.Report) error) *tls.Config {
-	return internal.CreateAttestationClientTLSConfig(verifyRemoteReport, func(report internal.Report) error {
-		return verifyReport(attestation.Report(report))
-	})
+func CreateAttestationClientTLSConfig(verifyReport func(attestation.Report) error, opts ...AttestOption) *tls.Config {
+	var appliedOpts internal.Options
+	for _, o := range opts {
+		o.apply(&appliedOpts)
+	}
+
+	return internal.CreateAttestationClientTLSConfig(
+		verifyRemoteReport,
+		appliedOpts,
+		func(rep internal.Report) error { return verifyReport(attestation.Report(rep)) },
+	)
+}
+
+// AttestOption	configures an attestation function.
+type AttestOption struct {
+	apply func(*internal.Options)
+}
+
+// WithIgnoreTCBStatus ignores an invalid TCB level.
+//
+// Callers must verify the TCBStatus field in the report themselves.
+func WithIgnoreTCBStatus() AttestOption {
+	return AttestOption{func(o *internal.Options) { o.IgnoreErr = attestation.ErrTCBLevelInvalid }}
 }

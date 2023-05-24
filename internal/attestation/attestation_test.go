@@ -9,7 +9,6 @@ package attestation
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -40,8 +39,12 @@ func TestTLSConfig(t *testing.T) {
 		}, nil
 	}
 
+	failToVerifyRemoteReportErr := errors.New("invalid remote report")
 	failToVerifyRemoteReport := func(reportBytes []byte) (Report, error) {
-		return Report{}, errors.New("invalid remote report")
+		return Report{
+			Data:            reportBytes[1:],
+			SecurityVersion: 2,
+		}, failToVerifyRemoteReportErr
 	}
 
 	verifyReport := func(report Report) error {
@@ -63,13 +66,16 @@ func TestTLSConfig(t *testing.T) {
 		name               string
 		getRemoteReport    func([]byte) ([]byte, error)
 		verifyRemoteReport func([]byte) (Report, error)
+		opts               Options
 		verifyReport       func(Report) error
 		expectErr          bool
 	}{
-		{"basic", getRemoteReport, verifyRemoteReport, verifyReport, false},
-		{"invalid remote report", getRemoteReport, failToVerifyRemoteReport, verifyReport, true},
-		{"invalid report", getRemoteReport, verifyRemoteReport, failToVerifyReport, true},
-		{"invalid remote report and report", getRemoteReport, failToVerifyRemoteReport, failToVerifyReport, true},
+		{"basic", getRemoteReport, verifyRemoteReport, Options{}, verifyReport, false},
+		{"invalid remote report", getRemoteReport, failToVerifyRemoteReport, Options{}, verifyReport, true},
+		{"invalid report", getRemoteReport, verifyRemoteReport, Options{}, failToVerifyReport, true},
+		{"invalid remote report and report", getRemoteReport, failToVerifyRemoteReport, Options{}, failToVerifyReport, true},
+		{"ignore remote report error", getRemoteReport, failToVerifyRemoteReport, Options{IgnoreErr: failToVerifyRemoteReportErr}, verifyReport, false},
+		{"ignore other remote report error", getRemoteReport, failToVerifyRemoteReport, Options{IgnoreErr: errors.New("")}, verifyReport, true},
 	}
 
 	//
@@ -94,7 +100,7 @@ func TestTLSConfig(t *testing.T) {
 		// Create client.
 		//
 
-		clientConfig := CreateAttestationClientTLSConfig(test.verifyRemoteReport, test.verifyReport)
+		clientConfig := CreateAttestationClientTLSConfig(test.verifyRemoteReport, test.opts, test.verifyReport)
 		client := http.Client{Transport: &http.Transport{TLSClientConfig: clientConfig}}
 
 		//
@@ -113,7 +119,7 @@ func TestTLSConfig(t *testing.T) {
 			require.NoError(err)
 			defer resp.Body.Close()
 
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			require.NoError(err)
 			assert.EqualValues("hello", body)
 		}()
