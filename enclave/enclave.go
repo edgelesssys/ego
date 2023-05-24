@@ -54,6 +54,25 @@ func CreateAttestationServerTLSConfig() (*tls.Config, error) {
 	return internal.CreateAttestationServerTLSConfig(GetRemoteReport)
 }
 
+// CreateAttestationClientTLSConfig creates a tls.Config object that verifies a certificate with embedded report.
+//
+// verifyReport is called after the certificate has been verified against the report data. The caller must verify either the UniqueID or the tuple (SignerID, ProductID, SecurityVersion, Debug) in the callback.
+func CreateAttestationClientTLSConfig(verifyReport func(attestation.Report) error, opts ...AttestOption) *tls.Config {
+	var appliedOpts internal.Options
+	for _, o := range opts {
+		o.apply(&appliedOpts)
+	}
+
+	return internal.CreateAttestationClientTLSConfig(
+		func(reportBytes []byte) (internal.Report, error) {
+			report, err := VerifyRemoteReport(reportBytes)
+			return internal.Report(report), err
+		},
+		appliedOpts,
+		func(rep internal.Report) error { return verifyReport(attestation.Report(rep)) },
+	)
+}
+
 // CreateAzureAttestationToken creates a Microsoft Azure Attestation token by creating a
 // remote report and sending it to an Attestation Provider, who is reachable under url.
 // A JSON Web Token in compact serialization is returned.
@@ -64,4 +83,16 @@ func CreateAzureAttestationToken(data []byte, url string) (string, error) {
 		return "", err
 	}
 	return internal.CreateAzureAttestationToken(report, data, url)
+}
+
+// AttestOption	configures an attestation function.
+type AttestOption struct {
+	apply func(*internal.Options)
+}
+
+// WithIgnoreTCBStatus ignores an invalid TCB level.
+//
+// Callers must verify the TCBStatus field in the report themselves.
+func WithIgnoreTCBStatus() AttestOption {
+	return AttestOption{func(o *internal.Options) { o.IgnoreErr = attestation.ErrTCBLevelInvalid }}
 }
