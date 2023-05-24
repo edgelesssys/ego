@@ -22,7 +22,7 @@ import (
 // The caller must verify the returned report's content.
 func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 	report, err := verifyRemoteReport(reportBytes)
-	return toAttestationReport(report), err
+	return attestation.Report(report), err
 }
 
 // CreateAttestationClientTLSConfig creates a tls.Config object that verifies a certificate with embedded report.
@@ -30,18 +30,6 @@ func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 // verifyReport is called after the certificate has been verified against the report data. The caller must verify either the UniqueID or the tuple (SignerID, ProductID, SecurityVersion, Debug) in the callback.
 func CreateAttestationClientTLSConfig(verifyReport func(attestation.Report) error) *tls.Config {
 	return internal.CreateAttestationClientTLSConfig(verifyRemoteReport, func(report internal.Report) error {
-		return verifyReport(toAttestationReport(report))
+		return verifyReport(attestation.Report(report))
 	})
-}
-
-func toAttestationReport(report internal.Report) attestation.Report {
-	return attestation.Report{
-		Data:            report.Data,
-		SecurityVersion: report.SecurityVersion,
-		Debug:           report.Debug,
-		UniqueID:        report.UniqueID,
-		SignerID:        report.SignerID,
-		ProductID:       report.ProductID,
-		TCBStatus:       report.TCBStatus,
-	}
 }
