@@ -98,7 +98,7 @@ func CreateAttestationServerTLSConfig(getRemoteReport func([]byte) ([]byte, erro
 }
 
 // CreateAttestationClientTLSConfig creates a tls.Config object that verifies a certificate with embedded report.
-func CreateAttestationClientTLSConfig(verifyRemoteReport func([]byte) (Report, error), verifyReport func(Report) error) *tls.Config {
+func CreateAttestationClientTLSConfig(verifyRemoteReport func([]byte) (Report, error), opts Options, verifyReport func(Report) error) *tls.Config {
 	verify := func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
 		// parse certificate
 		if len(rawCerts) <= 0 {
@@ -126,7 +126,7 @@ func CreateAttestationClientTLSConfig(verifyRemoteReport func([]byte) (Report, e
 		for _, ex := range cert.Extensions {
 			if ex.Id.Equal(oidOeNewQuote) {
 				report, err := verifyRemoteReport(ex.Value)
-				if err != nil {
+				if err != nil && err != opts.IgnoreErr {
 					return err
 				}
 				if !bytes.Equal(report.Data[:len(hash)], hash) {
@@ -140,4 +140,9 @@ func CreateAttestationClientTLSConfig(verifyRemoteReport func([]byte) (Report, e
 	}
 
 	return &tls.Config{VerifyPeerCertificate: verify, InsecureSkipVerify: true}
+}
+
+// Options are attestation options.
+type Options struct {
+	IgnoreErr error
 }
