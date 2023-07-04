@@ -1,7 +1,7 @@
-FROM ghcr.io/edgelesssys/ego/build-base:v1.3.0 AS build
+FROM ghcr.io/edgelesssys/ego/build-base:v1.4.0 AS build
 
 # don't run `apt-get update` because required packages are cached in build-base for reproducibility
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+RUN apt-get install -y --no-install-recommends \
   build-essential \
   ca-certificates \
   clang-11 \
@@ -11,8 +11,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   ninja-build \
   wget
 
-ARG erttag=v0.3.9
-ARG egotag=v1.3.0
+ARG erttag=v0.4.0
+ARG egotag=v1.4.0
 RUN wget -qO- https://golang.org/dl/go1.20.1.linux-amd64.tar.gz | tar -C /usr/local -xz \
   && git clone -b $erttag --depth=1 https://github.com/edgelesssys/edgelessrt \
   && git clone -b $egotag --depth=1 https://github.com/edgelesssys/ego \
@@ -27,10 +27,21 @@ RUN cd edgelessrt && export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct) && cd /
 RUN cd ego && export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct) && cd /egobuild \
   && . /opt/edgelessrt/share/openenclave/openenclaverc \
   && cmake -DCMAKE_BUILD_TYPE=Release /ego \
-  && PATH=$PATH:/usr/local/go/bin make -j`nproc` \
+  && PATH=$PATH:/usr/local/go/bin make -j`nproc` install \
   && cpack -G DEB \
-  # the md5sums file is randomly sorted, which affects the hash of the package. To achieve reproducible build, we have to unpack the package, sort md5sums (in any consistent way) and pack it again.
-  && mkdir tmp && dpkg-deb -R ego_*_amd64.deb tmp && sort tmp/DEBIAN/md5sums >tmp/DEBIAN/md5sums && dpkg-deb -b tmp ego_*_amd64.deb
+  && DEBNAME=$(ls ego_*_amd64.deb) \
+  && mv $DEBNAME ${DEBNAME%.*}_ubuntu-22.04.deb
 
 FROM scratch AS export
-COPY --from=build /egobuild/ego_*_amd64.deb /
+COPY --from=build /egobuild/ego_*_amd64_ubuntu-22.04.deb /
+
+FROM ghcr.io/edgelesssys/edgelessrt-dev AS dev
+LABEL description="EGo is an SDK to build confidential enclaves in Go - as simple as conventional Go programming!"
+COPY --from=build /opt/ego /opt/ego
+ENV PATH=${PATH}:/opt/ego/bin
+
+FROM ghcr.io/edgelesssys/edgelessrt-deploy AS deploy
+LABEL description="A runtime version of EGo to handle enclave-related tasks such as signing and running Go SGX enclaves."
+COPY --from=build /opt/ego/bin/ /opt/ego/bin
+COPY --from=build /opt/ego/share /opt/ego/share
+ENV PATH=${PATH}:/opt/ego/bin
