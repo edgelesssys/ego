@@ -2,6 +2,7 @@ Alibaba
 attestable
 cgo
 [Cc]loud
+collateral
 debuggable
 dereference
 env
@@ -12,6 +13,7 @@ SignerID
 signerid
 syscall
 tmpfs
+uncomment
 UniqueID
 uniqueid
 untrusted
