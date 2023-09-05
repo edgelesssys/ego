@@ -23,7 +23,7 @@ Locate its configuration file at `/etc/sgx_default_qcnl.conf`.
 If the file doesn't exist or is outdated, download it with the following command:
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/intel/SGXDataCenterAttestationPrimitives/master/QuoteGeneration/qpl/sgx_default_qcnl.conf | sudo tee /etc/sgx_default_qcnl.conf > /dev/null
+wget -qO- https://raw.githubusercontent.com/intel/SGXDataCenterAttestationPrimitives/master/QuoteGeneration/qcnl/linux/sgx_default_qcnl.conf | sudo tee /etc/sgx_default_qcnl.conf > /dev/null
 ```
 
 You can configure the quote provider to get the collaterals from the Intel PCS, the PCCS of your cloud service provider (CSP), or your own PCCS.
