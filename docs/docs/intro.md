@@ -18,7 +18,7 @@ ego sign myapp
 ego run myapp
 ```
 
-## Architecture 🏗
+## Architecture
 
 In a nutshell, EGo comprises a modified Go compiler, additional tooling, and a Go library.
 
