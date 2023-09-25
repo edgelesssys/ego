@@ -7,6 +7,7 @@
 package cli
 
 import (
+	"debug/elf"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -148,4 +149,56 @@ func TestEmbedConfigAsPayload(t *testing.T) {
 	// Finally, check if we got the new JSON config and not the old one
 	assert.NotEqualValues(jsonData, reconstructedJSON)
 	assert.EqualValues(jsonNewData, reconstructedJSON)
+}
+
+func TestCheckHeapMode(t *testing.T) {
+	testCases := map[string]struct {
+		symbols  []elf.Symbol
+		heapSize int
+		want     error
+	}{
+		"default heap, small": {
+			symbols:  []elf.Symbol{{Name: "runtime.arenaBaseOffset"}},
+			heapSize: 511,
+			want:     nil,
+		},
+		"default heap, lower bound": {
+			symbols:  []elf.Symbol{{Name: "runtime.arenaBaseOffset"}},
+			heapSize: 512,
+			want:     nil,
+		},
+		"default heap, upper bound": {
+			symbols:  []elf.Symbol{{Name: "runtime.arenaBaseOffset"}},
+			heapSize: 16384,
+			want:     nil,
+		},
+		"default heap, large": {
+			symbols:  []elf.Symbol{{Name: "runtime.arenaBaseOffset"}},
+			heapSize: 16385,
+			want:     ErrNoLargeHeapWithLargeHeapSize,
+		},
+		"large heap, small": {
+			heapSize: 511,
+			want:     ErrLargeHeapWithSmallHeapSize,
+		},
+		"large heap, lower bound": {
+			heapSize: 512,
+			want:     nil,
+		},
+		"large heap, upper bound": {
+			heapSize: 16384,
+			want:     nil,
+		},
+		"large heap, large": {
+			heapSize: 16385,
+			want:     nil,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			assert.Equal(tc.want, checkHeapMode(tc.symbols, tc.heapSize))
+		})
+	}
 }

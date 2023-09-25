@@ -49,6 +49,22 @@ cd /tmp/ego-integration-test
 run ego sign
 run ego run integration-test
 
+# Test heap size check on sign
+sed -i 's/"heapSize": 16,/"heapSize": 16385,/' enclave.json
+run ego sign |& grep "heapSize is set to more than"
+
+# Test ego_largeheap
+cd "$egoPath/ego/cmd/integration-test"
+run ego-go build -o /tmp/ego-integration-test/integration-test -tags ego_largeheap
+cd /tmp/ego-integration-test
+run ego sign  # sign with 16385 heapSize should succeed now
+sed -i 's/"heapSize": 16385,/"heapSize": 511,/' enclave.json
+run ego sign |& grep "heapSize is set to less than"
+# Run integration test built with ego_largeheap and heapSize of 512 MB
+sed -i 's/"heapSize": 511,/"heapSize": 512,/' enclave.json
+run ego sign
+run ego run integration-test
+
 # Test unsupported import detection on sign & run
 mkdir "$tPath/unsupported-import-test"
 cd "$egoPath/ego/cmd/unsupported-import-test"

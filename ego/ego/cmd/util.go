@@ -77,6 +77,13 @@ func handleErr(err error) {
 		fmt.Println("ERROR: You cannot import the github.com/edgelesssys/ego/eclient package within the EGo enclave.")
 		fmt.Println("It is intended to be used for applications running outside the SGX enclave.")
 		fmt.Println("You can use the github.com/edgelesssys/ego/enclave package as a replacement for usage inside the enclave.")
+	case cli.ErrLargeHeapWithSmallHeapSize:
+		fmt.Println("ERROR: The binary is built with build tag \"ego_largeheap\", but heapSize is set to less than 512.")
+		fmt.Println("Either increase heapSize or rebuild without this build tag.")
+	case cli.ErrNoLargeHeapWithLargeHeapSize:
+		fmt.Println("ERROR: The binary is built without build tag \"ego_largeheap\", but heapSize is set to more than 16384.")
+		fmt.Println("Either decrease heapSize or rebuild with this build tag:")
+		fmt.Println("\tego-go build -tags ego_largeheap ...")
 	default:
 		fmt.Println("ERROR:", err)
 	}

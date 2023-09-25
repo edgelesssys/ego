@@ -19,6 +19,12 @@ import (
 // ErrErrUnsupportedImportEClient is returned when an EGo binary uses the eclient package instead of the enclave package.
 var ErrUnsupportedImportEClient = errors.New("unsupported import: github.com/edgelesssys/ego/eclient")
 
+// ErrLargeHeapWithSmallHeapSize is returned when a binary is built with ego_largehap, but the heap size is set to less than 512MB.
+var ErrLargeHeapWithSmallHeapSize = errors.New("large heap is enabled, but heapSize is too small")
+
+// ErrNoLargeHeapWithLargeHeapSize is returned when a binary is built without ego_largeheap, but the heap size is set to more than 16GB.
+var ErrNoLargeHeapWithLargeHeapSize = errors.New("this heapSize requires large heap mode")
+
 func (c *Cli) embedConfigAsPayload(path string, jsonData []byte) error {
 	// Load ELF executable
 	f, err := c.fs.OpenFile(path, os.O_RDWR, 0)
@@ -106,33 +112,59 @@ func getPayloadInformation(f io.ReaderAt) (uint64, int64, int64, error) {
 	return payloadSize, int64(payloadOffset), int64(oeInfo.Offset), nil
 }
 
-// checkUnsupportedImports checks whether the to-be-signed or to-be-executed binary uses Go imports which are not supported.
-func (c *Cli) checkUnsupportedImports(path string) error {
+func (c *Cli) getSymbolsFromELF(path string) ([]elf.Symbol, error) {
 	// Load ELF executable
 	file, err := c.fs.OpenFile(path, os.O_RDONLY, 0)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	elfFile, err := elf.NewFile(file)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer elfFile.Close()
 
-	// Check imports based on symbols in the ELF file
-	symbols, err := elfFile.Symbols()
-	if err != nil {
-		return fmt.Errorf("cannot read symbol table from given ELF binary: %w", err)
-	}
+	return elfFile.Symbols()
+}
 
+// checkUnsupportedImports checks whether the to-be-signed or to-be-executed binary uses Go imports which are not supported.
+func (c *Cli) checkUnsupportedImports(path string) error {
+	symbols, err := c.getSymbolsFromELF(path)
+	if err != nil {
+		return fmt.Errorf("getting symbols: %w", err)
+	}
+	return checkUnsupportedImports(symbols)
+}
+
+func checkUnsupportedImports(symbols []elf.Symbol) error {
 	// Iterate through all symbols and find whether it matches a known unsupported one
 	for _, symbol := range symbols {
 		if strings.Contains(symbol.Name, "github.com/edgelesssys/ego/eclient") {
 			return ErrUnsupportedImportEClient
 		}
 	}
+	return nil
+}
 
+// checkHeapMode checks whether the heapSize is compatible with the binary.
+// If it is built with the ego_largeheap build tag, heapSize must be >= 512.
+// If it is built without this tag, heapSize must be <= 16384.
+// (If 512 <= heapSize <= 16384, both modes work.)
+func checkHeapMode(symbols []elf.Symbol, heapSize int) error {
+	for _, symbol := range symbols {
+		if symbol.Name == "runtime.arenaBaseOffset" {
+			// if this symbol is found, the binary wasn't built with ego_largeheap
+			if heapSize > 16384 {
+				return ErrNoLargeHeapWithLargeHeapSize
+			}
+			return nil
+		}
+	}
+	// if the symbol isn't found, the binary was built with ego_largeheap
+	if heapSize < 512 {
+		return ErrLargeHeapWithSmallHeapSize
+	}
 	return nil
 }
 
