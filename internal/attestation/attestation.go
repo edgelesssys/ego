@@ -32,6 +32,42 @@ type Report struct {
 	SignerID        []byte           // The signer ID for the enclave. For SGX enclaves, this is the MRSIGNER value.
 	ProductID       []byte           // The Product ID for the enclave. For SGX enclaves, this is the ISVPRODID value.
 	TCBStatus       tcbstatus.Status // The status of the enclave's TCB level.
+	UEID            []byte           // The universal entity ID. For SGX enclaves, this is QE identity value with an additional first bit that indicates the OE UEID type.
+	HardwareModel   []byte
+	SGXClaims       *SGXClaims
+}
+
+// SGX specific claims provided by Open Enclave
+type SGXClaims struct {
+	SGXRequired SGXRequired
+	SGXOptional *SGXOptional
+}
+
+// Claims that are in every Open Enclave generated report for SGX
+type SGXRequired struct {
+	PfGpExinfoEnabled    bool
+	ISVExtendedProductID []byte
+	IsMode64Bit          bool
+	HasProvisionKey      bool
+	HasEINITTokenKey     bool
+	UsesKSS              bool
+	ConfigID             []byte
+	ConfigSVN            []byte
+	ISVFamilyID          []byte
+	CPUSVN               []byte
+}
+
+// SQX quote verification collaterals and PCESVN claims from OE.
+// Those are optional and might be empty
+type SGXOptional struct {
+	TCBInfo         []byte
+	TCBIssuerChain  []byte
+	PCKCRL          []byte
+	RootCACRL       []byte
+	CRLIssuerChain  []byte
+	QEIDInfo        []byte
+	QEIDIssuerChain []byte
+	PCESVN          []byte
 }
 
 // https://github.com/openenclave/openenclave/blob/master/include/openenclave/internal/report.h

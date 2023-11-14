@@ -22,6 +22,127 @@ type Report struct {
 	SignerID        []byte           // The signer ID for the enclave. For SGX enclaves, this is the MRSIGNER value.
 	ProductID       []byte           // The Product ID for the enclave. For SGX enclaves, this is the ISVPRODID value.
 	TCBStatus       tcbstatus.Status // The status of the enclave's TCB level.
+	UEID            []byte           // The universal entity ID. For SGX enclaves, this is QE identity value with an additional first bit that indicates the OE UEID type.
+	SGXClaims       *SGXClaims
+}
+
+// SGX specific claims provided by Open Enclave
+type SGXClaims struct {
+	SGXRequired SGXRequired
+	SGXOptional *SGXOptional
+}
+
+// Claims that are in every Open Enclave generated report for SGX
+type SGXRequired struct {
+	PfGpExinfoEnabled    bool
+	ISVExtendedProductID []byte
+	IsMode64Bit          bool
+	HasProvisionKey      bool
+	HasEINITTokenKey     bool
+	UsesKSS              bool
+	ConfigID             []byte
+	ConfigSVN            []byte
+	ISVFamilyID          []byte
+	CPUSVN               []byte
+}
+
+// SQX quote verification collaterals and PCESVN claims from OE.
+// Those are optional and might be empty
+type SGXOptional struct {
+	TCBInfo         []byte
+	TCBIssuerChain  []byte
+	PCKCRL          []byte
+	RootCACRL       []byte
+	CRLIssuerChain  []byte
+	QEIDInfo        []byte
+	QEIDIssuerChain []byte
+	PCESVN          []byte
+}
+
+func FromInternal(internal attestation.Report) Report {
+	var reportSGXClaims *SGXClaims
+	if internal.SGXClaims != nil {
+		reportSGXClaims = &SGXClaims{}
+		reportSGXClaims.SGXRequired = SGXRequired{
+			PfGpExinfoEnabled:    internal.SGXClaims.SGXRequired.PfGpExinfoEnabled,
+			ISVExtendedProductID: internal.SGXClaims.SGXRequired.ISVExtendedProductID,
+			IsMode64Bit:          internal.SGXClaims.SGXRequired.IsMode64Bit,
+			HasProvisionKey:      internal.SGXClaims.SGXRequired.HasProvisionKey,
+			HasEINITTokenKey:     internal.SGXClaims.SGXRequired.HasEINITTokenKey,
+			UsesKSS:              internal.SGXClaims.SGXRequired.UsesKSS,
+			ConfigID:             internal.SGXClaims.SGXRequired.ConfigID,
+			ConfigSVN:            internal.SGXClaims.SGXRequired.ConfigSVN,
+			ISVFamilyID:          internal.SGXClaims.SGXRequired.ISVFamilyID,
+			CPUSVN:               internal.SGXClaims.SGXRequired.CPUSVN,
+		}
+		if internal.SGXClaims.SGXOptional != nil {
+			reportSGXClaims.SGXOptional = &SGXOptional{
+				TCBInfo:         internal.SGXClaims.SGXOptional.TCBInfo,
+				TCBIssuerChain:  internal.SGXClaims.SGXOptional.TCBIssuerChain,
+				PCKCRL:          internal.SGXClaims.SGXOptional.PCKCRL,
+				RootCACRL:       internal.SGXClaims.SGXOptional.RootCACRL,
+				CRLIssuerChain:  internal.SGXClaims.SGXOptional.CRLIssuerChain,
+				QEIDInfo:        internal.SGXClaims.SGXOptional.QEIDInfo,
+				QEIDIssuerChain: internal.SGXClaims.SGXOptional.QEIDIssuerChain,
+				PCESVN:          internal.SGXClaims.SGXOptional.PCESVN,
+			}
+		}
+	}
+
+	return Report{
+		Data:            internal.Data,
+		SecurityVersion: internal.SecurityVersion,
+		Debug:           internal.Debug,
+		UniqueID:        internal.UniqueID,
+		SignerID:        internal.SignerID,
+		ProductID:       internal.ProductID,
+		TCBStatus:       internal.TCBStatus,
+		UEID:            internal.UEID,
+		SGXClaims:       reportSGXClaims,
+	}
+}
+
+func (report Report) ToInternal() attestation.Report {
+	var reportSGXClaims *attestation.SGXClaims
+	if report.SGXClaims != nil {
+		reportSGXClaims = &attestation.SGXClaims{}
+		reportSGXClaims.SGXRequired = attestation.SGXRequired{
+			PfGpExinfoEnabled:    report.SGXClaims.SGXRequired.PfGpExinfoEnabled,
+			ISVExtendedProductID: report.SGXClaims.SGXRequired.ISVExtendedProductID,
+			IsMode64Bit:          report.SGXClaims.SGXRequired.IsMode64Bit,
+			HasProvisionKey:      report.SGXClaims.SGXRequired.HasProvisionKey,
+			HasEINITTokenKey:     report.SGXClaims.SGXRequired.HasEINITTokenKey,
+			UsesKSS:              report.SGXClaims.SGXRequired.UsesKSS,
+			ConfigID:             report.SGXClaims.SGXRequired.ConfigID,
+			ConfigSVN:            report.SGXClaims.SGXRequired.ConfigSVN,
+			ISVFamilyID:          report.SGXClaims.SGXRequired.ISVFamilyID,
+			CPUSVN:               report.SGXClaims.SGXRequired.CPUSVN,
+		}
+		if report.SGXClaims.SGXOptional != nil {
+			reportSGXClaims.SGXOptional = &attestation.SGXOptional{
+				TCBInfo:         report.SGXClaims.SGXOptional.TCBInfo,
+				TCBIssuerChain:  report.SGXClaims.SGXOptional.TCBIssuerChain,
+				PCKCRL:          report.SGXClaims.SGXOptional.PCKCRL,
+				RootCACRL:       report.SGXClaims.SGXOptional.RootCACRL,
+				CRLIssuerChain:  report.SGXClaims.SGXOptional.CRLIssuerChain,
+				QEIDInfo:        report.SGXClaims.SGXOptional.QEIDInfo,
+				QEIDIssuerChain: report.SGXClaims.SGXOptional.QEIDIssuerChain,
+				PCESVN:          report.SGXClaims.SGXOptional.PCESVN,
+			}
+		}
+	}
+
+	return attestation.Report{
+		Data:            report.Data,
+		SecurityVersion: report.SecurityVersion,
+		Debug:           report.Debug,
+		UniqueID:        report.UniqueID,
+		SignerID:        report.SignerID,
+		ProductID:       report.ProductID,
+		TCBStatus:       report.TCBStatus,
+		UEID:            report.UEID,
+		SGXClaims:       reportSGXClaims,
+	}
 }
 
 var (
