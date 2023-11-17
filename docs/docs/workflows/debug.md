@@ -1,11 +1,15 @@
-# Debug your app 🔬
+# Debug your app
+
 EGo executables can be debugged inside as well as outside of enclaves. Depending on the task, you may prefer one or the other.
 
 ## Outside an enclave
+
 An EGo executable can be run as a normal host process without an enclave. Thus, it can also be debugged like any other Go program. This should be your first attempt if the problem isn't related to specific enclave functionality. Use your favorite tools (e.g. the Delve debugger) as usual.
 
 ## Inside an enclave
+
 EGo comes with `ego-gdb` that augments `gdb` with enclave support. The `console` interface is the same as `gdb`:
+
 ```bash
 ego-gdb --args ./helloworld
 ```
@@ -17,7 +21,9 @@ Setting up the `mi` interface for VSCode is a bit trickier. First, install the [
 Use one of the following templates for your `.vscode/launch.json` file. Just replace `samples/helloworld/helloworld` with the path to your EGo executable.
 
 ### Snap
+
 If you installed the EGo snap, use this:
+
 ```json
 {
     "version": "0.2.0",
@@ -57,7 +63,9 @@ If you installed the EGo snap, use this:
 ```
 
 ### DEB package or built from source
+
 If you installed the DEB package or built it yourself, use this:
+
 ```json
 {
     "version": "0.2.0",

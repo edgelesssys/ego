@@ -1,4 +1,4 @@
-# Installing EGo 📦
+# Installing EGo
 
 ## Install the snap
 
