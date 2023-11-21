@@ -1,5 +1,11 @@
-ARG egover=1.0.0
+ARG egover=1.4.1
+
+# Use this to build an executable for Ubuntu 22.04
 FROM ghcr.io/edgelesssys/ego/build-base:v${egover} AS build
+
+# Use this to build an executable for Ubuntu 20.04
+# FROM ghcr.io/edgelesssys/ego/build-base-focal:v${egover} AS build
+
 ARG egover
 
 # Install required packages
@@ -22,14 +28,17 @@ RUN apt-get install -y --no-install-recommends \
 
 # Download and install EGo
 # Use --force-depends to ignore SGX dependencies, which aren't required for building
-RUN wget https://github.com/edgelesssys/ego/releases/download/v${egover}/ego_${egover}_amd64.deb \
-  && dpkg -i --force-depends ego_${egover}_amd64.deb
+RUN egodeb=ego_${egover}_amd64_ubuntu-$(grep -oP 'VERSION_ID="\K[^"]+' /etc/os-release).deb \
+  && wget https://github.com/edgelesssys/ego/releases/download/v${egover}/${egodeb} \
+  && dpkg -i --force-depends ${egodeb}
 
 # Build your app
 RUN git clone -b v${egover} --depth=1 https://github.com/edgelesssys/ego \
   && cd ego/samples/helloworld \
   && ego-go build -trimpath
-RUN --mount=type=secret,id=signingkey,dst=/ego/samples/helloworld/private.pem,required=true ego sign ego/samples/helloworld/helloworld
+WORKDIR ego/samples/helloworld
+RUN --mount=type=secret,id=signingkey,dst=private.pem,required=true ego sign helloworld
+RUN ego bundle helloworld
 
 # Use the deploy target if you want to deploy your app as a Docker image
 FROM ghcr.io/edgelesssys/ego-deploy:v${egover} AS deploy
@@ -38,4 +47,4 @@ ENTRYPOINT ["ego", "run", "helloworld"]
 
 # Use the export target if you just want to use Docker to build your app and then export it
 FROM scratch AS export
-COPY --from=build /ego/samples/helloworld/helloworld /
+COPY --from=build /ego/samples/helloworld/helloworld /ego/samples/helloworld/helloworld-bundle /
