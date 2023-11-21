@@ -37,4 +37,7 @@ You can also build a docker image for deployment:
 
 ```sh
 DOCKER_BUILDKIT=1 docker build --secret id=signingkey,src=private.pem --target deploy -t ego-helloworld .
+
+# To run the container, expose the SGX devices to it:
+docker run --device /dev/sgx_enclave --device /dev/sgx_provision ego-helloworld
 ```
