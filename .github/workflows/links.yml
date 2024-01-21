@@ -7,10 +7,12 @@ on:
     paths:
       - "**.md"
       - "**.html"
+      - ".github/workflows/links.yml"
   pull_request:
     paths:
       - "**.md"
       - "**.html"
+      - ".github/workflows/links.yml"
 
 jobs:
   linkChecker:
