@@ -2,20 +2,33 @@
 
 This sample shows how to run WebAssembly inside EGo using [Wasmtime](https://pkg.go.dev/github.com/bytecodealliance/wasmtime-go).
 
-By default, *wasmtime-go* comes with a shared library. EGo only supports static linking. To this end, download the wasmtime static library and tell the Go compiler to use it:
+By default, *wasmtime-go* comes with a library that makes direct syscalls.
+EGo only supports syscall via libc.
+To this end, build the wasmtime library with libc backend:
+
 ```sh
-mkdir wasmtime
-wget -O- https://github.com/bytecodealliance/wasmtime/releases/download/v15.0.0/wasmtime-v15.0.0-x86_64-linux-c-api.tar.xz | tar xvJf - -C ./wasmtime --strip-components=1
-CGO_CFLAGS="-I$PWD/wasmtime/include" CGO_LDFLAGS="$PWD/wasmtime/lib/libwasmtime.a -ldl -lm -static-libgcc" ego-go build
+git clone -bv15.0.1 --depth=1 https://github.com/bytecodealliance/wasmtime
+cd wasmtime
+git submodule update --init --depth=1
+RUSTFLAGS=--cfg=rustix_use_libc cargo build --release -p wasmtime-c-api
+cd ..
+```
+
+Tell the Go compiler to use it:
+
+```sh
+CGO_LDFLAGS=wasmtime/target/release/libwasmtime.a ego-go build
 ```
 
 Then you can sign and run as usual:
+
 ```sh
 ego sign wasmtime_sample
 ego run wasmtime_sample
 ```
 
 You should see an output similar to:
+
 ```
 [erthost] loading enclave ...
 [erthost] entering enclave ...
