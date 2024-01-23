@@ -16,7 +16,7 @@ ego-gdb --args ./helloworld
 
 The enclave may raise SIGILL signals during startup. These are expected and will be handled by EGo, so you can just `continue`. Use `handle SIGILL nostop` to do this automatically.
 
-Setting up the `mi` interface for VSCode is a bit trickier. First, install the [C/C++ extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools).
+Setting up the `mi` interface for Visual Studio Code is a bit trickier. First, install the [C/C++ extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools).
 
 Use one of the following templates for your `.vscode/launch.json` file. Just replace `samples/helloworld/helloworld` with the path to your EGo executable.
 

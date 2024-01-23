@@ -18,7 +18,7 @@ func newMarblerunCmd() *cobra.Command {
 		Short: "Run a signed executable as a MarbleRun Marble",
 		Long: `Run a signed executable as a MarbleRun Marble.
 Requires a running MarbleRun Coordinator instance.
-Environment variables are only readable from within the enclave if they start with "EDG_" and
+Environment variables are only readable from within the enclave if they start with ` + "`EDG_`" + ` and
 will be extended/overwritten with the ones specified in the manifest.
 
 Requires the following configuration environment variables:
