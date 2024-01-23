@@ -17,7 +17,7 @@ These usually compile, but return an error at runtime.
 * `os/exec`: spawning processes is unsupported
 * `os/signal`: signals aren't passed to the enclave
 
-## cgo: Unsupported libc functions
+## cgo: Unsupported `libc` functions
 
 Using these functions causes a build, sign, or runtime error.
 
