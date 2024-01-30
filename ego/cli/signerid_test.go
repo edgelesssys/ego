@@ -14,28 +14,51 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUniqueid(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 
-	cli := NewCli(signeridRunner{}, afero.NewMemMapFs())
+	fs := afero.Afero{Fs: afero.NewMemMapFs()}
+	cli := NewCli(nil, fs)
+	const filename = "foo"
 
-	res, err := cli.Uniqueid("foo")
-	assert.NoError(err)
-	assert.Equal("uid foo", res)
+	_, err := cli.Uniqueid(filename)
+	assert.Error(err)
+
+	require.NoError(fs.WriteFile(filename, elfUnsigned, 0))
+
+	res, err := cli.Uniqueid(filename)
+	require.NoError(err)
+	assert.Equal("0000000000000000000000000000000000000000000000000000000000000000", res)
 }
 
-func TestSignerid(t *testing.T) {
+func TestSigneridByExecutable(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	fs := afero.Afero{Fs: afero.NewMemMapFs()}
+	cli := NewCli(nil, fs)
+	const filename = "foo"
+
+	_, err := cli.Signerid(filename)
+	assert.Error(err)
+
+	require.NoError(fs.WriteFile(filename, elfUnsigned, 0))
+
+	res, err := cli.Signerid(filename)
+	require.NoError(err)
+	assert.Equal("0000000000000000000000000000000000000000000000000000000000000000", res)
+}
+
+func TestSigneridByKey(t *testing.T) {
 	assert := assert.New(t)
 
 	cli := NewCli(signeridRunner{}, afero.NewMemMapFs())
 
-	res, err := cli.Signerid("foo")
-	assert.NoError(err)
-	assert.Equal("sid foo", res)
-
-	res, err = cli.Signerid("foo.pem")
+	res, err := cli.Signerid("foo.pem")
 	assert.NoError(err)
 	assert.Equal("id foo.pem", res)
 }

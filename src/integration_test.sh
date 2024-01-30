@@ -44,9 +44,22 @@ cp enclave.json /tmp/ego-integration-test/enclave.json
 export CGO_ENABLED=0  # test that ego-go ignores this
 run ego-go build -o /tmp/ego-integration-test/integration-test
 
-# Sign & run intergration test
+# Sign intergration test
 cd /tmp/ego-integration-test
 run ego sign
+
+# Test id commands
+dump=$(ego-oesign dump -e integration-test)
+run echo "$dump" | grep "^mrenclave=$(ego uniqueid integration-test)$"
+run echo "$dump" | grep "^mrsigner=$(ego signerid integration-test)$"
+run echo "$dump" | grep "^mrsigner=$(ego signerid public.pem)$"
+export OE_LOG_LEVEL=INFO # regression: id commands were broken with OE_LOG_LEVEL set
+run echo "$dump" | grep "^mrenclave=$(ego uniqueid integration-test)$"
+run echo "$dump" | grep "^mrsigner=$(ego signerid integration-test)$"
+run echo "$dump" | grep "^mrsigner=$(ego signerid public.pem)$"
+unset OE_LOG_LEVEL
+
+# Run integration test
 run ego run integration-test
 
 # Test heap size check on sign
