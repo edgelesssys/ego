@@ -16,6 +16,8 @@ import (
 	"strings"
 )
 
+const oeinfoSectionName = ".oeinfo"
+
 // ErrErrUnsupportedImportEClient is returned when an EGo binary uses the eclient package instead of the enclave package.
 var ErrUnsupportedImportEClient = errors.New("unsupported import: github.com/edgelesssys/ego/eclient")
 
@@ -95,7 +97,7 @@ func getPayloadInformation(f io.ReaderAt) (uint64, int64, int64, error) {
 		return 0, 0, 0, err
 	}
 
-	oeInfo := elfFile.Section(".oeinfo")
+	oeInfo := elfFile.Section(oeinfoSectionName)
 	if oeInfo == nil {
 		return 0, 0, 0, ErrNoOEInfo
 	}
@@ -113,19 +115,43 @@ func getPayloadInformation(f io.ReaderAt) (uint64, int64, int64, error) {
 }
 
 func (c *Cli) getSymbolsFromELF(path string) ([]elf.Symbol, error) {
-	// Load ELF executable
-	file, err := c.fs.OpenFile(path, os.O_RDONLY, 0)
+	file, err := c.fs.Open(path)
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	elfFile, err := elf.NewFile(file)
 	if err != nil {
 		return nil, err
 	}
-	defer elfFile.Close()
 
 	return elfFile.Symbols()
+}
+
+func (c *Cli) readDataFromELF(path string, section string, offset int, size int) ([]byte, error) {
+	file, err := c.fs.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	elfFile, err := elf.NewFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	sec := elfFile.Section(section)
+	if sec == nil {
+		return nil, errors.New("section not found")
+	}
+
+	data := make([]byte, size)
+	if _, err := sec.ReadAt(data, int64(offset)); err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 // checkUnsupportedImports checks whether the to-be-signed or to-be-executed binary uses Go imports which are not supported.

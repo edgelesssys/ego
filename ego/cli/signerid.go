@@ -7,7 +7,9 @@
 package cli
 
 import (
-	"encoding/json"
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -18,12 +20,11 @@ import (
 	"ego/internal/launch"
 )
 
-type eradump struct {
-	SecurityVersion int
-	ProductID       int
-	UniqueID        string
-	SignerID        string
-}
+const (
+	offsetSigstruct = 144
+	offsetModulus   = 128
+	offsetMRENCLAVE = 960
+)
 
 func (c *Cli) signeridByKey(path string) (string, error) {
 	outBytes, err := c.runner.Output(exec.Command(c.getOesignPath(), "signerid", "-k", path))
@@ -46,37 +47,29 @@ func (c *Cli) signeridByKey(path string) (string, error) {
 	return "", err
 }
 
-func (c *Cli) readEradumpJSONtoStruct(path string) (*eradump, error) {
-	data, err := c.runner.Output(exec.Command(c.getOesignPath(), "eradump", "-e", path))
-	if err != nil {
-		if err, ok := err.(*exec.ExitError); ok {
-			return nil, errors.New(string(err.Stderr))
-		}
-		return nil, err
-	}
-
-	var dump eradump
-	if err := json.Unmarshal(data, &dump); err != nil {
-		return nil, err
-	}
-	return &dump, nil
-}
-
 func (c *Cli) signeridByExecutable(path string) (string, error) {
-	dump, err := c.readEradumpJSONtoStruct(path)
+	const modulusSize = 384
+	modulus, err := c.readDataFromELF(path, oeinfoSectionName, offsetSigstruct+offsetModulus, modulusSize)
 	if err != nil {
 		return "", err
 	}
-	return dump.SignerID, nil
+	if bytes.Equal(modulus, make([]byte, modulusSize)) {
+		// if enclave is unsigned, return all zeros
+		return strings.Repeat("0", 64), nil
+	}
+
+	// MRSIGNER is the sha256 of the modulus
+	sum := sha256.Sum256(modulus)
+	return hex.EncodeToString(sum[:]), nil
 }
 
 // Uniqueid returns the UniqueID of a signed executable.
 func (c *Cli) Uniqueid(path string) (string, error) {
-	dump, err := c.readEradumpJSONtoStruct(path)
+	data, err := c.readDataFromELF(path, oeinfoSectionName, offsetSigstruct+offsetMRENCLAVE, 32)
 	if err != nil {
 		return "", err
 	}
-	return dump.UniqueID, nil
+	return hex.EncodeToString(data), nil
 }
 
 // Signerid returns the SignerID of a signed executable.
