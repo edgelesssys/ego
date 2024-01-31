@@ -8,47 +8,54 @@ package cli
 
 import (
 	"bytes"
+	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/hex"
+	"encoding/pem"
 	"errors"
 	"fmt"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"ego/internal/launch"
+	"golang.org/x/exp/slices"
 )
 
 const (
+	modulusSize = 384
+
 	offsetSigstruct = 144
 	offsetModulus   = 128
 	offsetMRENCLAVE = 960
 )
 
 func (c *Cli) signeridByKey(path string) (string, error) {
-	outBytes, err := c.runner.Output(exec.Command(c.getOesignPath(), "signerid", "-k", path))
-	out := string(outBytes)
-	if err == nil {
-		return out, nil
+	// get RSA key from PEM file
+	pemBytes, err := c.fs.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("reading key file: %w", err)
+	}
+	block, _ := pem.Decode(pemBytes)
+	if block == nil {
+		return "", errors.New("failed to decode PEM")
+	}
+	key, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return "", fmt.Errorf("parsing public key: %w", err)
+	}
+	rsaKey, ok := key.(*rsa.PublicKey)
+	if !ok {
+		return "", fmt.Errorf("expected RSA public key, got %T", key)
 	}
 
-	if err, ok := err.(*exec.ExitError); ok {
-		// oesign tends to print short errors to stderr and logs to stdout
-		if len(err.Stderr) > 0 {
-			return "", errors.New(string(err.Stderr))
-		}
-		fmt.Fprintln(os.Stderr, out)
-		if strings.Contains(out, launch.ErrOECrypto.Error()) {
-			return "", launch.ErrOECrypto
-		}
-	}
-
-	return "", err
+	// MRSIGNER is the sha256 of the modulus in little endian
+	n := rsaKey.N.FillBytes(make([]byte, modulusSize))
+	slices.Reverse(n)
+	sum := sha256.Sum256(n)
+	return hex.EncodeToString(sum[:]), nil
 }
 
 func (c *Cli) signeridByExecutable(path string) (string, error) {
-	const modulusSize = 384
 	modulus, err := c.readDataFromELF(path, oeinfoSectionName, offsetSigstruct+offsetModulus, modulusSize)
 	if err != nil {
 		return "", err
