@@ -4,7 +4,6 @@ package main
 
 /*
 int __longjmp_chk() { return 0; }
-int __res_init() { return -1; }
 int __sigsetjmp() { return 0; }
 */
 import "C"
