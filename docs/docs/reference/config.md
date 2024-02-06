@@ -102,3 +102,42 @@ A special environment variable is `PWD`. Depending on the mount options you have
 `source` is the path to the file that should be embedded. `target` Is the path within the in-enclave-memory filesystem where the file will reside at runtime.
 
 A common use case is to embed CA certificates so that an app can make secure TLS connections from inside the enclave.
+
+## Advanced users: Tweak underlying enclave configuration
+
+:::warning
+
+The EGo enclave configuration described above covers all settings relevant for most users.
+
+Changing the following settings can negatively impact the stability of your app.
+
+:::
+
+<details>
+<summary>Open Enclave configuration file</summary>
+
+EGo is based on Open Enclave.
+You can apply your own Open Enclave configuration as follows:
+
+1. Create a file `enclave.conf`. Start with the following settings:
+
+   ```
+   Debug=1
+   NumHeapPages=131072
+   NumStackPages=1024
+   NumTCS=32
+   ProductID=1
+   SecurityVersion=1
+   ```
+
+2. Adapt the configuration as needed. See the [Open Enclave documentation](https://github.com/openenclave/openenclave/blob/v0.19.x/docs/GettingStartedDocs/buildandsign.md#signing-an-sgx-enclave) for details.
+
+3. Sign your app with `ego sign`
+
+4. Sign your app with `ego-oesign`:
+
+   ```bash
+   /opt/ego/bin/ego-oesign sign -e /opt/ego/share/ego-enclave -c enclave.conf -k private.pem --payload helloworld
+   ```
+
+</details>
