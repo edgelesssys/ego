@@ -87,7 +87,9 @@ It's not recommended to use the mount options to remount `/` as `hostfs` other t
 
 ## Environment variables
 
-`env` holds environment variables to set or take over from the host inside the enclave. By default, all environment variables not starting with `EDG_` are dropped when entering the enclave.
+To protect against manipulations by the untrusted host, all environment variables not starting with `EDG_` are dropped when entering the enclave.
+
+To securely provide environment variables to your application (not starting with `EDG_`), define them in the `env` section. You can either set a static value or whitelist a variable to be taken over from the host.
 
 * `name` (required): The name of the environment variable
 * `value` (required if not `fromHost`): The value of the environment variable
