@@ -71,7 +71,7 @@ func main() {
 func verifyReportValues(report attestation.Report, signer []byte) error {
 	// You can either verify the UniqueID or the tuple (SignerID, ProductID, SecurityVersion, Debug).
 
-	if !bytes.Equal(report.SignerID, []byte(signer)) {
+	if !bytes.Equal(report.SignerID, signer) {
 		return errors.New("token does not contain the right signer id")
 	}
 	fmt.Println("✅ SignerID of the report equals the SignerID you passed to the client.")
