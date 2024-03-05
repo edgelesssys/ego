@@ -12,4 +12,8 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(resp.Status)
+	err = resp.Body.Close()
+	if err != nil {
+		panic(err)
+	}
 }
