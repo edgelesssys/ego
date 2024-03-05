@@ -4,6 +4,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+//go:build !ego_mock_eclient
+
 package eclient
 
 // #cgo LDFLAGS: -loehostverify -lcrypto -ldl
