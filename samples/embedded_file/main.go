@@ -12,4 +12,7 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(resp.Status)
+	if err := resp.Body.Close(); err != nil {
+		panic(err)
+	}
 }
