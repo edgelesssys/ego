@@ -20,5 +20,8 @@ This package requires the following environment variables to be set during build
 Or if using the EGo snap:
 	CGO_CFLAGS=-I/snap/ego-dev/current/opt/ego/include
 	CGO_LDFLAGS=-L/snap/ego-dev/current/opt/ego/lib
+
+For development and testing purposes, you can set the build tag `ego_mock_eclient`
+instead of setting the environment variables. VerifyRemoteReport will always fail then.
 */
 package eclient
