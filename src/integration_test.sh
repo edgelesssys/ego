@@ -73,8 +73,8 @@ cd /tmp/ego-integration-test
 run ego sign  # sign with 16385 heapSize should succeed now
 sed -i 's/"heapSize": 16385,/"heapSize": 511,/' enclave.json
 run ego sign |& grep "heapSize is set to less than"
-# Run integration test built with ego_largeheap and heapSize of 512 MB
-sed -i 's/"heapSize": 511,/"heapSize": 512,/' enclave.json
+# Run integration test built with ego_largeheap and heapSize of 768 MB
+sed -i 's/"heapSize": 511,/"heapSize": 768,/' enclave.json
 run ego sign
 run ego run integration-test
 

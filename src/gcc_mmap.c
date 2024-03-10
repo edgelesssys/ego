@@ -2,48 +2,39 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build linux,amd64 linux,arm64
+//go:build (linux && (amd64 || arm64 || ppc64le)) || (freebsd && amd64)
 
 #include <errno.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
-#include "go_runtime_cleanup.h"
 
 #include "libcgo.h"
+#include "go_runtime_cleanup.h"
 
-uintptr_t x_cgo_mmap(
-    void* addr,
-    uintptr_t length,
-    int32_t prot,
-    int32_t flags,
-    int32_t fd,
-    uint32_t offset)
-{
-    void* p;
+uintptr_t
+x_cgo_mmap(void *addr, uintptr_t length, int32_t prot, int32_t flags, int32_t fd, uint32_t offset) {
+	void *p;
 
-    _cgo_tsan_acquire();
-    p = go_rc_mmap(addr, length, prot, flags, fd, offset);
-    _cgo_tsan_release();
-    if (p == MAP_FAILED)
-    {
-        /* This is what the Go code expects on failure.  */
-        return (uintptr_t)errno;
-    }
-    return (uintptr_t)p;
+	_cgo_tsan_acquire();
+	p = go_rc_mmap(addr, length, prot, flags, fd, offset);
+	_cgo_tsan_release();
+	if (p == MAP_FAILED) {
+		/* This is what the Go code expects on failure.  */
+		return (uintptr_t)errno;
+	}
+	return (uintptr_t)p;
 }
 
-void x_cgo_munmap(void* addr, uintptr_t length)
-{
-    int r;
+void
+x_cgo_munmap(void *addr, uintptr_t length) {
+	int r;
 
-    _cgo_tsan_acquire();
-    r = go_rc_munmap(addr, length);
-    _cgo_tsan_release();
-    if (r < 0)
-    {
-        /* The Go runtime is not prepared for munmap to fail.  */
-        abort();
-    }
+	_cgo_tsan_acquire();
+	r = go_rc_munmap(addr, length);
+	_cgo_tsan_release();
+	if (r < 0) {
+		/* The Go runtime is not prepared for munmap to fail.  */
+		abort();
+	}
 }

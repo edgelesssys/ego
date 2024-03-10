@@ -52,6 +52,11 @@ extern void (*_cgo_thread_start)(ThreadStart *ts);
 extern void (*_cgo_sys_thread_create)(void* (*func)(void*), void* arg);
 
 /*
+ * Indicates whether a dummy pthread per-thread variable is allocated.
+ */
+extern uintptr_t *_cgo_pthread_key_created;
+
+/*
  * Creates the new operating system thread (OS, arch dependent).
  */
 void _cgo_sys_thread_start(ThreadStart *ts);
@@ -66,7 +71,7 @@ uintptr_t _cgo_wait_runtime_init_done(void);
 /*
  * Call fn in the 6c world.
  */
-void crosscall_amd64(void (*fn)(void));
+void crosscall_amd64(void (*fn)(void), void (*setg_gcc)(void*), void *g);
 
 /*
  * Call fn in the 8c world.
