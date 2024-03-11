@@ -3,7 +3,7 @@ This sample shows how to port an existing Go application to EGo.
 
 First clone the repo:
 ```sh
-git clone --depth=1 --branch=v1.9.4 https://github.com/hashicorp/vault
+git clone --depth=1 --branch=v1.14.8 https://github.com/hashicorp/vault
 cd vault
 ```
 
