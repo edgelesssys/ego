@@ -9,11 +9,11 @@ package main
 import "C"
 
 import (
-	"ego/premain/core"
 	"os"
 	"syscall"
 	"unsafe"
 
+	"github.com/edgelesssys/ego/ego/premain/core"
 	"github.com/spf13/afero"
 )
 

@@ -10,9 +10,8 @@ import (
 	"fmt"
 	"os"
 
-	"ego/cli"
-	"ego/internal/launch"
-
+	"github.com/edgelesssys/ego/ego/cli"
+	"github.com/edgelesssys/ego/ego/internal/launch"
 	"github.com/klauspost/cpuid/v2"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"

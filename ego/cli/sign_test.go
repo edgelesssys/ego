@@ -15,8 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	"ego/config"
-
+	"github.com/edgelesssys/ego/ego/config"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"

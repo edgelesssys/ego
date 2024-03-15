@@ -18,9 +18,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"ego/config"
-	"ego/internal/launch"
-
+	"github.com/edgelesssys/ego/ego/config"
+	"github.com/edgelesssys/ego/ego/internal/launch"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

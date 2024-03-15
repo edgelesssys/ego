@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"os"
 
-	"ego/ego/cmd"
+	"github.com/edgelesssys/ego/ego/ego/cmd"
 )
 
 // Don't touch! Automatically injected at build-time.

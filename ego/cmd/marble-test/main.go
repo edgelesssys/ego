@@ -13,7 +13,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"ego/test"
 	"io/ioutil"
 	"math/big"
 	"net"
@@ -23,6 +22,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/edgelesssys/ego/ego/test"
 	"github.com/edgelesssys/marblerun/coordinator/rpc"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"

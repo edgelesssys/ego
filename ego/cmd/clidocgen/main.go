@@ -12,8 +12,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"ego/ego/cmd"
-
+	"github.com/edgelesssys/ego/ego/ego/cmd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )
