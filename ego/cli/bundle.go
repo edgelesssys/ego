@@ -39,7 +39,7 @@ func (c *Cli) Bundle(filename string, outputFilename string) (reterr error) {
 	if err != nil {
 		return err
 	}
-	defer c.fs.Remove(tarFilename)
+	defer func() { _ = c.fs.Remove(tarFilename) }()
 
 	if outputFilename == "" {
 		outputFilename = filepath.Base(filename) + "-bundle"
@@ -51,7 +51,7 @@ func (c *Cli) Bundle(filename string, outputFilename string) (reterr error) {
 	}
 	defer func() {
 		if reterr != nil {
-			c.fs.Remove(outputFilename)
+			_ = c.fs.Remove(outputFilename)
 		}
 	}()
 
@@ -125,7 +125,7 @@ func (c *Cli) buildImage(enclaveFilename string) (tempFileName string, reterr er
 	}
 	defer func() {
 		if reterr != nil {
-			c.fs.Remove(tempFile.Name())
+			_ = c.fs.Remove(tempFile.Name())
 		}
 	}()
 	defer tempFile.Close()
@@ -209,7 +209,7 @@ func (c *Cli) prepareBundle(inputFilename string, outputFilename string) (reterr
 	}
 	defer func() {
 		if reterr != nil {
-			c.fs.Remove(binaryToPack.Name())
+			_ = c.fs.Remove(binaryToPack.Name())
 		}
 	}()
 	defer binaryToPack.Close()

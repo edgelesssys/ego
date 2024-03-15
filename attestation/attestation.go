@@ -57,5 +57,6 @@ func VerifyAzureAttestationToken(token string, providerURL string) (Report, erro
 		Debug:           report.Debug,
 		UniqueID:        report.UniqueID,
 		SignerID:        report.SignerID,
-		ProductID:       report.ProductID}, nil
+		ProductID:       report.ProductID,
+	}, nil
 }

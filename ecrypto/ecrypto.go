@@ -29,9 +29,11 @@ type enclaveSealer struct{}
 func (enclaveSealer) GetUniqueSealKey() (key, keyInfo []byte, err error) {
 	return enclave.GetUniqueSealKey()
 }
+
 func (enclaveSealer) GetProductSealKey() (key, keyInfo []byte, err error) {
 	return enclave.GetProductSealKey()
 }
+
 func (enclaveSealer) GetSealKey(keyInfo []byte) ([]byte, error) {
 	return enclave.GetSealKey(keyInfo)
 }

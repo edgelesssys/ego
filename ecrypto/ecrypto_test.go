@@ -22,9 +22,11 @@ type stubSealer struct{}
 func (stubSealer) GetUniqueSealKey() (key, keyInfo []byte, err error) {
 	return []byte("1234567890123456"), []byte("unique"), nil
 }
+
 func (stubSealer) GetProductSealKey() (key, keyInfo []byte, err error) {
 	return []byte("2345678901234567"), []byte("product"), nil
 }
+
 func (stubSealer) GetSealKey(keyInfo []byte) ([]byte, error) {
 	switch string(keyInfo) {
 	case "unique":

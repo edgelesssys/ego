@@ -68,7 +68,7 @@ func work(in, out chan int) {
 		out <- x
 
 		// cgo call triggers specific scheduling logic
-		syscall.Nanosleep(&syscall.Timespec{Sec: 0, Nsec: 1_000}, nil)
+		_ = syscall.Nanosleep(&syscall.Timespec{Sec: 0, Nsec: 1_000}, nil)
 
 		// triggers GC from time to time
 		garbage = make([]byte, 1024)

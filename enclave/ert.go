@@ -65,7 +65,7 @@ func GetRemoteReport(reportData []byte) ([]byte, error) {
 	}
 
 	result := C.GoBytes(unsafe.Pointer(report), C.int(reportSize))
-	syscall.Syscall(sysFreeReport, uintptr(unsafe.Pointer(report)), 0, 0)
+	_, _, _ = syscall.Syscall(sysFreeReport, uintptr(unsafe.Pointer(report)), 0, 0)
 	return result, nil
 }
 
@@ -100,7 +100,7 @@ func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 		verifyErr = attestation.ErrTCBLevelInvalid
 	}
 
-	defer syscall.Syscall(sysFreeClaims, claims, claimsLength, 0)
+	defer func() { _, _, _ = syscall.Syscall(sysFreeClaims, claims, claimsLength, 0) }()
 
 	report, err := internal.ParseClaims(claims, claimsLength)
 	if err != nil {
@@ -150,7 +150,7 @@ func GetLocalReport(reportData []byte, targetReport []byte) ([]byte, error) {
 	}
 
 	result := C.GoBytes(unsafe.Pointer(report), C.int(reportSize))
-	syscall.Syscall(sysFreeReport, uintptr(unsafe.Pointer(report)), 0, 0)
+	_, _, _ = syscall.Syscall(sysFreeReport, uintptr(unsafe.Pointer(report)), 0, 0)
 	return result, nil
 }
 
@@ -231,7 +231,7 @@ func GetSealKey(keyInfo []byte) ([]byte, error) {
 	}
 
 	key := C.GoBytes(unsafe.Pointer(keyBuffer), C.int(keySize))
-	syscall.Syscall(sysFreeSealKey, uintptr(unsafe.Pointer(keyBuffer)), 0, 0)
+	_, _, _ = syscall.Syscall(sysFreeSealKey, uintptr(unsafe.Pointer(keyBuffer)), 0, 0)
 	return key, nil
 }
 
@@ -257,7 +257,7 @@ func getSealKeyByPolicy(sealPolicy uintptr) (key, keyInfo []byte, err error) {
 
 	key = C.GoBytes(unsafe.Pointer(keyBuffer), C.int(keySize))
 	keyInfo = C.GoBytes(unsafe.Pointer(keyInfoBuffer), C.int(keyInfoSize))
-	syscall.Syscall(
+	_, _, _ = syscall.Syscall(
 		sysFreeSealKey,
 		uintptr(unsafe.Pointer(keyBuffer)),
 		uintptr(unsafe.Pointer(keyInfoBuffer)),

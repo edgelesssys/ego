@@ -92,7 +92,7 @@ func TestTLSConfig(t *testing.T) {
 		require.NoError(err)
 
 		server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			io.WriteString(w, "hello")
+			_, _ = io.WriteString(w, "hello")
 		}))
 		server.TLS = serverConfig
 

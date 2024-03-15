@@ -7,7 +7,7 @@
 /*
 Package ecrypto provides convenience functions for cryptography inside an enclave.
 
-Sealing
+# Sealing
 
 Sealing is the process of encrypting data with a key derived from the enclave and the CPU it is running on.
 Sealed data can only be decrypted by the same enclave and CPU. Use it to persist data to disk.

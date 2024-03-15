@@ -9,7 +9,6 @@ package cli
 import (
 	"debug/elf"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,7 +30,7 @@ var elfUnsigned = func() []byte {
 		panic(err)
 	}
 
-	dir, err := ioutil.TempDir("", "")
+	dir, err := os.MkdirTemp("", "")
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +38,7 @@ var elfUnsigned = func() []byte {
 
 	// write minimal source file
 	const src = `package main;import _"time";func main(){}`
-	if err := ioutil.WriteFile(filepath.Join(dir, srcFile), []byte(src), 0o400); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, srcFile), []byte(src), 0o400); err != nil {
 		panic(err)
 	}
 
@@ -54,7 +53,7 @@ var elfUnsigned = func() []byte {
 	}
 
 	// read resulting executable
-	data, err := ioutil.ReadFile(filepath.Join(dir, outFile))
+	data, err := os.ReadFile(filepath.Join(dir, outFile))
 	if err != nil {
 		panic(err)
 	}

@@ -13,7 +13,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"io/ioutil"
 	"math/big"
 	"net"
 	"os"
@@ -54,7 +53,7 @@ func main() {
 	// Run the test marble.
 	//
 
-	uuidDir, err := ioutil.TempDir("", "")
+	uuidDir, err := os.MkdirTemp("", "")
 	require.NoError(err)
 	defer os.RemoveAll(uuidDir)
 

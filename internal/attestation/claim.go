@@ -8,6 +8,7 @@ package attestation
 
 // #include "claim.h"
 import "C"
+
 import (
 	"errors"
 	"unsafe"

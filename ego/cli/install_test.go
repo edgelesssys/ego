@@ -45,8 +45,10 @@ func (i *installerRunner) ClearRun() {
 	i.run = make([]*exec.Cmd, 0)
 }
 
-const ubuntu1804 = "ID=ubuntu\nVERSION_ID=18.04"
-const ubuntu2004 = "ID=ubuntu\nVERSION_ID=20.04"
+const (
+	ubuntu1804 = "ID=ubuntu\nVERSION_ID=18.04"
+	ubuntu2004 = "ID=ubuntu\nVERSION_ID=20.04"
+)
 
 var jsonData = `
 {
@@ -129,30 +131,31 @@ var jsonData = `
 // Test whether getOsInfo can correctly determine details from os-release
 func TestInstallGetOsInfo(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 	runner := installerRunner{}
 	fs := afero.NewMemMapFs()
 
 	cli := NewCli(&runner, fs)
 
-	cli.fs.WriteFile("/etc/os-release", []byte("ID=\"ubuntu\"\nsome other infos\nVERSION_ID=\"20.04\""), 0)
+	require.NoError(cli.fs.WriteFile("/etc/os-release", []byte("ID=\"ubuntu\"\nsome other infos\nVERSION_ID=\"20.04\""), 0))
 	id, versionID, err := cli.getOsInfo()
 	assert.Equal("ubuntu", id)
 	assert.Equal("20.04", versionID)
 	assert.Equal(nil, err)
 
-	cli.fs.WriteFile("/etc/os-release", []byte("ID=foo\nVERSION_ID=bar"), 0)
+	require.NoError(cli.fs.WriteFile("/etc/os-release", []byte("ID=foo\nVERSION_ID=bar"), 0))
 	id, versionID, err = cli.getOsInfo()
 	assert.Equal("foo", id)
 	assert.Equal("bar", versionID)
 	assert.Equal(nil, err)
 
-	cli.fs.WriteFile("/etc/os-release", []byte("VERSION_ID=20.04"), 0)
+	require.NoError(cli.fs.WriteFile("/etc/os-release", []byte("VERSION_ID=20.04"), 0))
 	id, versionID, err = cli.getOsInfo()
 	assert.Equal("", id)
 	assert.Equal("", versionID)
 	assert.NotEqual(nil, err)
 
-	cli.fs.WriteFile("/etc/os-release", []byte("IID=ubuntu\nVERSION_ID=20.04"), 0)
+	require.NoError(cli.fs.WriteFile("/etc/os-release", []byte("IID=ubuntu\nVERSION_ID=20.04"), 0))
 	id, versionID, err = cli.getOsInfo()
 	assert.Equal("", id)
 	assert.Equal("", versionID)
@@ -162,12 +165,13 @@ func TestInstallGetOsInfo(t *testing.T) {
 // Run tests that should all pass the installation
 func TestInstallValidTests(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 
 	runner := installerRunner{}
 	cli := NewCli(&runner, afero.NewMemMapFs())
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, jsonData)
+		_, _ = io.WriteString(w, jsonData)
 	}))
 	askTrue := func(string) bool { return true }
 
@@ -180,7 +184,7 @@ func TestInstallValidTests(t *testing.T) {
 	fmt.Println("Valid nonflc tests:")
 	fmt.Println("------------------------------------------------------------------------------------")
 	for osReleaseData, testComponents := range validNonflcTests {
-		cli.fs.WriteFile("/etc/os-release", []byte(osReleaseData), 0600)
+		require.NoError(cli.fs.WriteFile("/etc/os-release", []byte(osReleaseData), 0o600))
 		for _, component := range testComponents {
 			fmt.Print("\nStarting installation of \"", component, "\"\n")
 			assert.Equal(nil, cli.install(askTrue, "nonflc", component, server.URL))
@@ -206,7 +210,7 @@ func TestInstallValidTests(t *testing.T) {
 	fmt.Println("Valid flc tests:")
 	fmt.Println("------------------------------------------------------------------------------------")
 	for osReleaseData, testComponents := range validFlcTests {
-		cli.fs.WriteFile("/etc/os-release", []byte(osReleaseData), 0600)
+		require.NoError(cli.fs.WriteFile("/etc/os-release", []byte(osReleaseData), 0o600))
 		for _, component := range testComponents {
 			fmt.Print("\nStarting installation of \"", component, "\"\n")
 			assert.Equal(nil, cli.install(askTrue, "flc", component, server.URL))
@@ -224,7 +228,6 @@ func TestInstallValidTests(t *testing.T) {
 			fmt.Println("------------------------------------------------------------------------------------")
 		}
 	}
-
 }
 
 // Run tests that should all fail the installation process
@@ -236,7 +239,7 @@ func TestInstallNotValidTests(t *testing.T) {
 	cli := NewCli(&runner, afero.NewMemMapFs())
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, jsonData)
+		_, _ = io.WriteString(w, jsonData)
 	}))
 
 	askTrue := func(string) bool { return true }
@@ -249,7 +252,7 @@ func TestInstallNotValidTests(t *testing.T) {
 	unvalidTests[ubuntu2004] = []string{"az-dcap-client", "echo abc", "?libsgx-launch", "! libsgx-launch", "|libsgx-launch", "  . libsgx-launch"}
 
 	for osReleaseData, testComponents := range unvalidTests {
-		cli.fs.WriteFile("/etc/os-release", []byte(osReleaseData), 0600)
+		require.NoError(cli.fs.WriteFile("/etc/os-release", []byte(osReleaseData), 0o600))
 		for _, component := range testComponents {
 			fmt.Print("\nStarting installation of \"", component, "\"\n")
 			assert.NotEqual(nil, cli.install(askTrue, "nonflc", component, server.URL))
@@ -269,7 +272,7 @@ func TestExactCommand(t *testing.T) {
 	cli := NewCli(&runner, afero.NewMemMapFs())
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, jsonData)
+		_, _ = io.WriteString(w, jsonData)
 	}))
 
 	askTrue := func(string) bool { return true }
@@ -277,7 +280,7 @@ func TestExactCommand(t *testing.T) {
 	fmt.Println("\n\nExact Command Test")
 	fmt.Println("------------------------------------------------------------------------------------")
 
-	cli.fs.WriteFile("/etc/os-release", []byte(ubuntu1804), 0600)
+	require.NoError(cli.fs.WriteFile("/etc/os-release", []byte(ubuntu1804), 0o600))
 	assert.Equal(nil, cli.install(askTrue, "flc", "sgx-driver", server.URL))
 	cmds := runner.run
 	fmt.Println(cmds[0].Dir)
@@ -299,7 +302,7 @@ func TestInstallErrorCheck(t *testing.T) {
 	cli := NewCli(&runner, afero.NewMemMapFs())
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, jsonData)
+		_, _ = io.WriteString(w, jsonData)
 	}))
 
 	askTrue := func(string) bool { return true }
@@ -308,31 +311,31 @@ func TestInstallErrorCheck(t *testing.T) {
 	fmt.Println("\n\nTest Install Errors")
 
 	// os-release file does not contain necessary information, but no error
-	cli.fs.WriteFile("/etc/os-release", []byte(""), 0600)
+	require.NoError(cli.fs.WriteFile("/etc/os-release", []byte(""), 0o600))
 	assert.NotEqual(nil, cli.install(askTrue, "flc", "sgx-driver", server.URL))
 	runner.ClearRun()
 	fmt.Println("------------------------------------------------------------------------------------")
 
 	// os "foo" does not exist in json file
-	cli.fs.WriteFile("/etc/os-release", []byte("ID=foo\nVERSION_ID=bar"), 0600)
+	require.NoError(cli.fs.WriteFile("/etc/os-release", []byte("ID=foo\nVERSION_ID=bar"), 0o600))
 	assert.Equal(nil, cli.install(askTrue, "flc", "sgx-driver", server.URL))
 	runner.ClearRun()
 	fmt.Println("------------------------------------------------------------------------------------")
 
 	// no available components to install for nonsgx
-	cli.fs.WriteFile("/etc/os-release", []byte(ubuntu2004), 0600)
+	require.NoError(cli.fs.WriteFile("/etc/os-release", []byte(ubuntu2004), 0o600))
 	assert.Equal(nil, cli.install(askTrue, "nonsgx", "sgx-driver", server.URL))
 	runner.ClearRun()
 	fmt.Println("------------------------------------------------------------------------------------")
 
 	// component "foo" does not exist in json file
-	cli.fs.WriteFile("/etc/os-release", []byte(ubuntu2004), 0600)
+	require.NoError(cli.fs.WriteFile("/etc/os-release", []byte(ubuntu2004), 0o600))
 	assert.Equal(ErrTargetNotSupported, cli.install(askTrue, "nonflc", "foo", server.URL))
 	runner.ClearRun()
 	fmt.Println("------------------------------------------------------------------------------------")
 
 	// askFalse: user does not want to continue installation, so installation stops without error
-	cli.fs.WriteFile("/etc/os-release", []byte(ubuntu2004), 0600)
+	require.NoError(cli.fs.WriteFile("/etc/os-release", []byte(ubuntu2004), 0o600))
 	assert.Equal(ErrInstallUserQuit, cli.install(askFalse, "nonflc", "sgx-driver", server.URL))
 	require.Len(runner.run, 0)
 	runner.ClearRun()

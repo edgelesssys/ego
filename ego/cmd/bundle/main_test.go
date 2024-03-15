@@ -13,7 +13,6 @@ import (
 	"debug/elf"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,7 +33,7 @@ var elfUnsigned = func() []byte {
 		panic(err)
 	}
 
-	dir, err := ioutil.TempDir("", "")
+	dir, err := os.MkdirTemp("", "")
 	if err != nil {
 		panic(err)
 	}
@@ -168,7 +167,7 @@ func TestUnpackBundledImage(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	unpackingPath, err := afero.TempDir(fs, "", "ego-unittest")
 	require.NoError(err)
-	defer fs.RemoveAll(unpackingPath)
+	defer func() { _ = fs.RemoveAll(unpackingPath) }()
 
 	assert.NoError(unpackBundledImage(fs, unpackingPath, elfFile))
 
