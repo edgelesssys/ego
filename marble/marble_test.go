@@ -149,7 +149,7 @@ func resetEnv() {
 // x509 cert pools don't allow to extract certificates inside them. How great is that? So we gotta extract the ASN.1 subject and work with it.
 // This was taken (and slightly modified) from: https://github.com/golang/go/issues/26614#issuecomment-613640345
 func getCommonNameFromX509Pool(pool *x509.CertPool) (string, error) {
-	poolSubjects := pool.Subjects()
+	poolSubjects := pool.Subjects() //nolint:staticcheck
 
 	var rdnSequence pkix.RDNSequence
 	_, err := asn1.Unmarshal(poolSubjects[0], &rdnSequence)

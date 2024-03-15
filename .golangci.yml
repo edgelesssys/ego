@@ -1,0 +1,6 @@
+run:
+  timeout: 10m
+  build-tags: [ego_mock_eclient]
+
+linters:
+  enable: [gofumpt]

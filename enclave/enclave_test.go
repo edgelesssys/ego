@@ -20,7 +20,7 @@ func ExampleCreateAttestationServerTLSConfig() {
 
 	// Create HTTPS server.
 	http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("this is a test handler"))
+		_, _ = w.Write([]byte("this is a test handler"))
 	})
 	server := http.Server{Addr: "0.0.0.0:8080", TLSConfig: tlsConfig}
 	log.Fatal(server.ListenAndServeTLS("", ""))

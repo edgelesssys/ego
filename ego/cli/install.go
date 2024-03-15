@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -23,10 +23,12 @@ import (
 
 const shellToUse = "bash"
 
-var ErrTargetNotSupported = errors.New("component not found")
-var ErrInstallUserQuit = errors.New("user denied installation")
-var ErrExitCodeValue = errors.New("exit code not 0")
-var ErrSysInfoFail = errors.New("could not determine necessary details about operating system")
+var (
+	ErrTargetNotSupported = errors.New("component not found")
+	ErrInstallUserQuit    = errors.New("user denied installation")
+	ErrExitCodeValue      = errors.New("exit code not 0")
+	ErrSysInfoFail        = errors.New("could not determine necessary details about operating system")
+)
 
 type installInfoV1 struct {
 	Desc     map[string]string
@@ -184,7 +186,7 @@ func httpGet(url string) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("http response has status %v", resp.Status)
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

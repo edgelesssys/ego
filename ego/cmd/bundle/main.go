@@ -66,7 +66,7 @@ func run(fs afero.Fs, selfElfFile *elf.File, runner launch.Runner) (int, error) 
 	if err != nil {
 		return 1, err
 	}
-	defer fs.RemoveAll(tempEGoRootPath)
+	defer func() { _ = fs.RemoveAll(tempEGoRootPath) }()
 
 	// Register cleanup handler to clean-up on STRG+C
 	cleanupHandler(tempEGoRootPath)

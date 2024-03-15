@@ -156,7 +156,7 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 			http.Error(w, "could not marshal json keys", http.StatusInternalServerError)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(response)
+		_, _ = w.Write(response)
 	}
 	attestationProvider := httptest.NewServer(http.HandlerFunc(serveKeys))
 	defer attestationProvider.Close()

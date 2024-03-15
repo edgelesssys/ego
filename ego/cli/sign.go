@@ -73,7 +73,7 @@ func (c *Cli) signWithJSON(conf *config.Config) error {
 	if err != nil {
 		return err
 	}
-	defer c.fs.Remove(file.Name())
+	defer func() { _ = c.fs.Remove(file.Name()) }()
 
 	_, err = file.Write([]byte(cProduct + cSecurityVersion + cDebug + cNumHeapPages + cStackPages + cNumTCS + cExecutableHeap))
 	if err != nil {
