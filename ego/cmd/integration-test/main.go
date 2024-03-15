@@ -7,11 +7,11 @@
 package main
 
 import (
-	"ego/test"
 	"io"
 	"log"
 	"os"
 
+	"github.com/edgelesssys/ego/ego/test"
 	"github.com/klauspost/cpuid/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

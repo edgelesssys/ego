@@ -1,4 +1,4 @@
-module ego
+module github.com/edgelesssys/ego/ego
 
 go 1.20
 

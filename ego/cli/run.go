@@ -9,7 +9,7 @@ package cli
 import (
 	"path/filepath"
 
-	"ego/internal/launch"
+	"github.com/edgelesssys/ego/ego/internal/launch"
 )
 
 // Run runs a signed executable in standalone mode.

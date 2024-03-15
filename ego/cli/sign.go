@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"ego/config"
+	"github.com/edgelesssys/ego/ego/config"
 )
 
 const (

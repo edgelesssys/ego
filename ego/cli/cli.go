@@ -10,8 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"ego/internal/launch"
-
+	"github.com/edgelesssys/ego/ego/internal/launch"
 	"github.com/spf13/afero"
 )
 

@@ -17,8 +17,7 @@ import (
 	"strings"
 	"syscall"
 
-	"ego/config"
-
+	"github.com/edgelesssys/ego/ego/config"
 	"github.com/edgelesssys/marblerun/marble/premain"
 	"github.com/spf13/afero"
 )
