@@ -98,3 +98,11 @@ run ego sign enclave2.json
 keyid2=$(ego run sealkeyid-test)
 echo 'test keyid1 = keyid2'
 test "$keyid1" = "$keyid2"
+
+# Test building module with newer go version
+mkdir "$tPath/newer-go-ver-test"
+cd "$egoPath/ego/cmd/newer-go-ver-test"
+run ego-go build -o "$tPath/newer-go-ver-test"
+cd "$tPath/newer-go-ver-test"
+run ego sign newer-go-ver-test
+run ego run newer-go-ver-test
