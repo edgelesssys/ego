@@ -33,7 +33,7 @@ func TestPremain(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	hostEnviron := []string{"EDG_CWD=/host"}
+	hostEnviron := []string{"EDG_CWD=/host", "EDG_CONTAINS_EQUAL_SIGN=foo=bar"}
 	fs := afero.NewMemMapFs()
 
 	// sane default values
@@ -51,6 +51,7 @@ func TestPremain(t *testing.T) {
 	// Supply valid payload, no Marble
 	mounter := assertionMounter{assert: assert, expectedMounts: conf.Mounts, usedTargets: make(map[string]bool), remountAsHostFS: false}
 	assert.NoError(PreMain("", &mounter, fs, hostEnviron))
+	assert.Equal("foo=bar", os.Getenv("EDG_CONTAINS_EQUAL_SIGN"))
 
 	// Supply valid payload, no Marble
 	payload, err := json.Marshal(conf)
