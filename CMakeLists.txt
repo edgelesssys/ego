@@ -4,7 +4,10 @@ project(ego VERSION 1.5.0)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
-if(NOT CMAKE_BUILD_TYPE STREQUAL Debug)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+  # disable optimizations to improve debugging with gdb
+  set(PREMAIN_DEBUG_FLAGS -gcflags=all='-N -l')
+else()
   set(TRIMPATH -trimpath)
 endif()
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -39,7 +42,7 @@ target_link_libraries(ego-enclave-lib PRIVATE openenclave::oe_includes)
 add_custom_command(
   OUTPUT premain.a
   DEPENDS ego/premain/main.go ego/premain/core/core.go
-  COMMAND ertgo build -buildmode=c-archive -o ${CMAKE_BINARY_DIR} ${TRIMPATH}
+  COMMAND ertgo build -buildmode=c-archive -o ${CMAKE_BINARY_DIR} ${TRIMPATH} ${PREMAIN_DEBUG_FLAGS}
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/premain)
 add_custom_target(premainbuild DEPENDS premain.a)
 
