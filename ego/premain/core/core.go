@@ -51,8 +51,8 @@ func PreMain(payload string, mounter Mounter, fs afero.Fs, hostEnviron []string)
 	// Convert host environment string array to key-value map
 	hostEnvironMap := make(map[string]string, len(hostEnviron))
 	for _, envVar := range hostEnviron {
-		splitString := strings.Split(envVar, "=")
-		hostEnvironMap[splitString[0]] = splitString[1]
+		envName, envValue, _ := strings.Cut(envVar, "=")
+		hostEnvironMap[envName] = envValue
 	}
 
 	// Check if we run as a Marble or a normal EGo application
