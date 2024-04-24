@@ -8,7 +8,10 @@ An EGo executable can be run as a normal host process without an enclave. Thus, 
 
 ## Inside an enclave
 
-EGo comes with `ego-gdb` that augments `gdb` with enclave support. The `console` interface is the same as `gdb`:
+EGo comes with `ego-gdb` that augments `gdb` with enclave support.
+For a better debugging experience with it, compile your app without optimizations by passing `-gcflags=all="-N -l"` to `ego-go build`.
+
+The `console` interface of `ego-gdb` is the same as `gdb`:
 
 ```bash
 ego-gdb --args ./helloworld
