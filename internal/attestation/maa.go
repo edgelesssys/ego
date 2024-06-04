@@ -21,8 +21,8 @@ import (
 	"net/url"
 	"time"
 
-	"gopkg.in/square/go-jose.v2"
-	"gopkg.in/square/go-jose.v2/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 )
 
 // CreateAzureAttestationToken creates a Microsoft Azure Attestation Token by sending a report
@@ -98,7 +98,7 @@ func VerifyAzureAttestationToken(rawToken string, baseURL *url.URL) (Report, err
 	}
 
 	// Parse token.
-	token, err := jwt.ParseSigned(rawToken)
+	token, err := jwt.ParseSigned(rawToken, []jose.SignatureAlgorithm{jose.RS256})
 	if err != nil {
 		return Report{}, err
 	}

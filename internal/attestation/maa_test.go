@@ -23,9 +23,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/square/go-jose.v2"
-	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 func TestCreateAzureAttestationToken(t *testing.T) {
@@ -245,7 +245,7 @@ func TestVerifyAzureAttestationToken(t *testing.T) {
 		}
 		sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: test.Key}, (&jose.SignerOptions{}).WithType("JWT").WithHeader("kid", "aaa"))
 		require.NoError(err)
-		rawToken, err := jwt.Signed(sig).Claims(publicClaims).Claims(privateClaims).CompactSerialize()
+		rawToken, err := jwt.Signed(sig).Claims(publicClaims).Claims(privateClaims).Serialize()
 		require.NoError(err)
 		//
 		// Verify token and check report.
