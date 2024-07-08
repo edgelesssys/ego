@@ -97,7 +97,8 @@ Now you're ready to build applications with EGo! To start, check out the followi
 * [remote_attestation](samples/remote_attestation) shows how to use the basic remote attestation API of EGo.
 * [attested_tls](samples/attested_tls) is similar to the above, but uses a higher level API to establish an attested TLS connection.
 * [vault](samples/vault) demonstrates how to port a Go application exemplified by Hashicorp Vault.
-* [wasmer](samples/wasmer) shows how to run WebAssembly inside EGo using Wasmer.
+* [estore](samples/estore) shows how to securely persist data using [EStore](https://github.com/edgelesssys/estore).
+* [wasmer](samples/wasmer) and [wasmtime](samples/wasmtime) show how to run WebAssembly inside EGo.
 * [embedded_file](samples/embedded_file) shows how to embed files into an EGo enclave.
 * [reproducible_build](samples/reproducible_build) builds the helloworld sample reproducibly, resulting in the same UniqueID.
 * [cgo](samples/cgo) demonstrates the experimental cgo support.
@@ -107,6 +108,12 @@ Now you're ready to build applications with EGo! To start, check out the followi
 
 * The [EGo documentation](https://docs.edgeless.systems/ego) covers building, signing, running, and debugging confidential apps.
 * The [EGo API](https://pkg.go.dev/github.com/edgelesssys/ego) provides access to *remote attestation* and *sealing* to your confidential app at runtime.
+
+## Beyond EGo
+
+* Use [MarbleRun](https://github.com/edgelesssys/marblerun) to create distributed EGo applications and run them on Kubernetes.
+* Use [EStore](https://github.com/edgelesssys/estore) to securely persist your application's data.
+* Not only using Go? Check out [Contrast](https://github.com/edgelesssys/contrast) to run your confidential containers on Kubernetes.
 
 ## Community & help
 

@@ -1,0 +1,15 @@
+{
+    "exe": "estore-sample",
+    "key": "private.pem",
+    "debug": true,
+    "heapSize": 512,
+    "productID": 1,
+    "securityVersion": 1,
+    "mounts": [
+        {
+            "source": "db",
+            "target": "/db",
+            "type": "hostfs"
+        }
+    ]
+}

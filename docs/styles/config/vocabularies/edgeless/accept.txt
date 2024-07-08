@@ -5,6 +5,7 @@ cloud
 collateral
 dereference
 env
+EStore
 MarbleRun
 OCALL
 SignerID
@@ -12,3 +13,4 @@ uncomment
 UniqueID
 untrusted
 Wasmer
+Wasmtime
