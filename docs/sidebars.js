@@ -85,6 +85,11 @@ const sidebars = {
         },
         {
           type: 'doc',
+          label: 'Secure storage',
+          id: 'knowledge/storage',
+        },
+        {
+          type: 'doc',
           label: 'TLS inside the enclave',
           id: 'knowledge/tls',
         },

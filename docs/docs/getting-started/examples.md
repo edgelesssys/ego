@@ -18,9 +18,14 @@ Similar to the above, but the server manages remote attestation by itself. This 
 
 Vault is a common way to store secrets and share them on dynamic infrastructures. With EGo, you can build a confidential version of unmodified Vault.
 
-## [WebAssembly with Wasmer](https://github.com/edgelesssys/ego/tree/master/samples/wasmer)
+## [Secure storage with EStore](https://github.com/edgelesssys/ego/tree/master/samples/estore)
 
-You can run WebAssembly inside EGo using Wasmer.
+You should use strong encryption for your application's data at rest.
+Using EStore with EGo makes this easy.
+
+## WebAssembly with [Wasmer](https://github.com/edgelesssys/ego/tree/master/samples/wasmer) or [Wasmtime](https://github.com/edgelesssys/ego/tree/master/samples/wasmtime)
+
+You can run WebAssembly inside EGo.
 
 ## [Microsoft Azure Attestation (MAA)](https://github.com/edgelesssys/ego/tree/master/samples/azure_attestation)
 
