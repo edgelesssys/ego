@@ -7,6 +7,7 @@
 package cli
 
 import (
+	"debug/elf"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,19 +32,18 @@ var ErrNoOEInfo = errors.New("could not find .oeinfo section")
 var errConfigDoesNotExist = errors.New("enclave config file not found")
 
 func (c *Cli) signWithJSON(conf *config.Config) error {
-	symbols, err := c.getSymbolsFromELF(conf.Exe)
-	if err != nil {
+	if symbols, err := c.getSymbolsFromELF(conf.Exe); err == nil {
+		// First, check if the executable does not contain unsupported imports / symbols.
+		if err := checkUnsupportedImports(symbols); err != nil {
+			return err
+		}
+
+		// Check that heapSize is in the supported range of the heap mode the binary was built with.
+		if err := checkHeapMode(symbols, conf.HeapSize); err != nil {
+			return err
+		}
+	} else if !errors.Is(err, elf.ErrNoSymbols) {
 		return fmt.Errorf("getting symbols: %w", err)
-	}
-
-	// First, check if the executable does not contain unsupported imports / symbols.
-	if err := checkUnsupportedImports(symbols); err != nil {
-		return err
-	}
-
-	// Check that heapSize is in the supported range of the heap mode the binary was built with.
-	if err := checkHeapMode(symbols, conf.HeapSize); err != nil {
-		return err
 	}
 
 	// write temp .conf file

@@ -78,6 +78,14 @@ sed -i 's/"heapSize": 511,/"heapSize": 768,/' enclave.json
 run ego sign
 run ego run integration-test
 
+# Test stripped executable
+cd "$egoPath/ego/cmd/integration-test"
+cp enclave.json /tmp/ego-integration-test/enclave.json
+run ego-go build -o /tmp/ego-integration-test/integration-test -ldflags -s
+cd /tmp/ego-integration-test
+run ego sign
+run ego run integration-test
+
 # Test unsupported import detection on sign & run
 mkdir "$tPath/unsupported-import-test"
 cd "$egoPath/ego/cmd/unsupported-import-test"
