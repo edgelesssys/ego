@@ -157,10 +157,13 @@ func (c *Cli) readDataFromELF(path string, section string, offset int, size int)
 // checkUnsupportedImports checks whether the to-be-signed or to-be-executed binary uses Go imports which are not supported.
 func (c *Cli) checkUnsupportedImports(path string) error {
 	symbols, err := c.getSymbolsFromELF(path)
-	if err != nil {
-		return fmt.Errorf("getting symbols: %w", err)
+	if err == nil {
+		return checkUnsupportedImports(symbols)
 	}
-	return checkUnsupportedImports(symbols)
+	if errors.Is(err, elf.ErrNoSymbols) {
+		return nil
+	}
+	return fmt.Errorf("getting symbols: %w", err)
 }
 
 func checkUnsupportedImports(symbols []elf.Symbol) error {
