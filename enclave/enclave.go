@@ -66,10 +66,10 @@ func CreateAttestationClientTLSConfig(verifyReport func(attestation.Report) erro
 	return internal.CreateAttestationClientTLSConfig(
 		func(reportBytes []byte) (internal.Report, error) {
 			report, err := VerifyRemoteReport(reportBytes)
-			return internal.Report(report), err
+			return report.ToInternal(), err
 		},
 		appliedOpts,
-		func(rep internal.Report) error { return verifyReport(attestation.Report(rep)) },
+		func(rep internal.Report) error { return verifyReport(attestation.FromInternal(rep)) },
 	)
 }
 
