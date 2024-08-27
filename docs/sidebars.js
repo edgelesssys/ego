@@ -26,9 +26,6 @@ const sidebars = {
     {
       type: 'category',
       label: 'Getting started',
-      link: {
-        type: 'generated-index',
-      },
       items: [
         {
           type: 'doc',
@@ -50,9 +47,6 @@ const sidebars = {
     {
       type: 'category',
       label: 'Workflows',
-      link: {
-        type: 'generated-index',
-      },
       items: [
         {
           type: 'doc',
@@ -69,9 +63,6 @@ const sidebars = {
     {
       type: 'category',
       label: 'Knowledge',
-      link: {
-        type: 'generated-index',
-      },
       items: [
         {
           type: 'doc',
@@ -98,9 +89,6 @@ const sidebars = {
     {
       type: 'category',
       label: 'Reference',
-      link: {
-        type: 'generated-index',
-      },
       items: [
         {
           type: 'doc',
