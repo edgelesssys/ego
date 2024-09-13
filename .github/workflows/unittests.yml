@@ -23,7 +23,7 @@ jobs:
       image: ghcr.io/edgelesssys/edgelessrt-dev:ci
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: ego
           submodules: recursive
@@ -46,7 +46,7 @@ jobs:
         working-directory: build
 
       - name: Build artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ego
           path: build/*.deb

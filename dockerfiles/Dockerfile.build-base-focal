@@ -1,4 +1,4 @@
-FROM ubuntu:focal-20240427
+FROM ubuntu:focal-20240530
 RUN apt-get update && apt-get install -dy --no-install-recommends \
   build-essential \
   ca-certificates \
