@@ -22,3 +22,6 @@ typedef struct _oe_claim
 #define OE_CLAIM_PRODUCT_ID "product_id"
 #define OE_CLAIM_TCB_STATUS "tcb_status"
 #define OE_CLAIM_SGX_REPORT_DATA "sgx_report_data"
+#define OE_CLAIM_UEID "ueid"
+
+#define OE_UEID_TYPE_RAND 0x01

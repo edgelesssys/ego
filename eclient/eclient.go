@@ -22,7 +22,7 @@ import (
 // The caller must verify the returned report's content.
 func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 	report, err := verifyRemoteReport(reportBytes)
-	return attestation.Report(report), err
+	return attestation.FromInternal(report), err
 }
 
 // CreateAttestationClientTLSConfig creates a tls.Config object that verifies a certificate with embedded report.
@@ -37,7 +37,7 @@ func CreateAttestationClientTLSConfig(verifyReport func(attestation.Report) erro
 	return internal.CreateAttestationClientTLSConfig(
 		verifyRemoteReport,
 		appliedOpts,
-		func(rep internal.Report) error { return verifyReport(attestation.Report(rep)) },
+		func(rep internal.Report) error { return verifyReport(attestation.FromInternal(rep)) },
 	)
 }
 
