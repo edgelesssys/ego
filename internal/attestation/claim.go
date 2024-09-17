@@ -10,7 +10,9 @@ package attestation
 import "C"
 
 import (
+	"encoding/json"
 	"errors"
+	"math"
 	"unsafe"
 
 	"github.com/edgelesssys/ego/attestation/tcbstatus"
@@ -24,6 +26,8 @@ func ParseClaims(claims uintptr, claimsLength uintptr) (Report, error) {
 func parseClaims(claims []C.oe_claim_t) (Report, error) {
 	report := Report{TCBStatus: tcbstatus.Unknown}
 	hasAttributes := false
+	var tcbInfo []byte
+	var tcbInfoIndex uint = math.MaxUint
 
 	for _, claim := range claims {
 		switch C.GoString(claim.name) {
@@ -46,12 +50,17 @@ func parseClaims(claims []C.oe_claim_t) (Report, error) {
 			report.TCBStatus = tcbstatus.Status(claimUint(claim))
 		case C.OE_CLAIM_SGX_REPORT_DATA:
 			report.Data = claimBytes(claim)
+		case "sgx_tcb_info":
+			tcbInfo = claimBytes(claim)
+		case "sgx_tcb_info_index":
+			tcbInfoIndex = claimUint(claim)
 		}
 	}
 
 	if !hasAttributes {
 		return Report{}, errors.New("missing attributes in report claims")
 	}
+	report.TCBAdvisories, report.TCBAdvisoriesErr = getAdvisoriesFromTCBInfo(tcbInfo, tcbInfoIndex)
 	return report, nil
 }
 
@@ -64,4 +73,26 @@ func claimUint(claim C.oe_claim_t) uint {
 
 func claimBytes(claim C.oe_claim_t) []byte {
 	return C.GoBytes(unsafe.Pointer(claim.value), C.int(claim.value_size))
+}
+
+func getAdvisoriesFromTCBInfo(tcbInfo []byte, tcbInfoIndex uint) ([]string, error) {
+	if len(tcbInfo) == 0 {
+		return nil, errors.New("no TCB info")
+	}
+	tcbInfo = tcbInfo[:len(tcbInfo)-1] // remove terminating null
+
+	var info struct {
+		TCBInfo struct {
+			TCBLevels []struct{ AdvisoryIDs []string }
+		}
+	}
+	if err := json.Unmarshal(tcbInfo, &info); err != nil {
+		return nil, err
+	}
+
+	levels := info.TCBInfo.TCBLevels
+	if uint(len(levels)) <= tcbInfoIndex {
+		return nil, errors.New("invalid TCB info index")
+	}
+	return levels[tcbInfoIndex].AdvisoryIDs, nil
 }
