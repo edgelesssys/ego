@@ -106,15 +106,7 @@ func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 	if err != nil {
 		return attestation.Report{}, err
 	}
-	return attestation.Report{
-		Data:            report.Data,
-		SecurityVersion: report.SecurityVersion,
-		Debug:           report.Debug,
-		UniqueID:        report.UniqueID,
-		SignerID:        report.SignerID,
-		ProductID:       report.ProductID,
-		TCBStatus:       report.TCBStatus,
-	}, verifyErr
+	return attestation.Report(report), verifyErr
 }
 
 // GetLocalReport gets a report signed by the enclave platform for use in local attestation.
