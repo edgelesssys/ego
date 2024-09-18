@@ -15,13 +15,15 @@ import (
 
 // Report is a parsed enclave report.
 type Report struct {
-	Data            []byte           // The report data that has been included in the report.
-	SecurityVersion uint             // Security version of the enclave. For SGX enclaves, this is the ISVSVN value.
-	Debug           bool             // If true, the report is for a debug enclave.
-	UniqueID        []byte           // The unique ID for the enclave. For SGX enclaves, this is the MRENCLAVE value.
-	SignerID        []byte           // The signer ID for the enclave. For SGX enclaves, this is the MRSIGNER value.
-	ProductID       []byte           // The Product ID for the enclave. For SGX enclaves, this is the ISVPRODID value.
-	TCBStatus       tcbstatus.Status // The status of the enclave's TCB level.
+	Data             []byte           // The report data that has been included in the report.
+	SecurityVersion  uint             // Security version of the enclave. For SGX enclaves, this is the ISVSVN value.
+	Debug            bool             // If true, the report is for a debug enclave.
+	UniqueID         []byte           // The unique ID for the enclave. For SGX enclaves, this is the MRENCLAVE value.
+	SignerID         []byte           // The signer ID for the enclave. For SGX enclaves, this is the MRSIGNER value.
+	ProductID        []byte           // The Product ID for the enclave. For SGX enclaves, this is the ISVPRODID value.
+	TCBStatus        tcbstatus.Status // The status of the enclave's TCB level.
+	TCBAdvisories    []string         // IDs of Intel security advisories that provide insight into the reasons when the TCB status is not UpToDate.
+	TCBAdvisoriesErr error            // Error that occurred while getting the advisory array (if any).
 }
 
 var (
@@ -51,12 +53,5 @@ func VerifyAzureAttestationToken(token string, providerURL string) (Report, erro
 	if err != nil {
 		return Report{}, err
 	}
-	return Report{
-		Data:            report.Data,
-		SecurityVersion: report.SecurityVersion,
-		Debug:           report.Debug,
-		UniqueID:        report.UniqueID,
-		SignerID:        report.SignerID,
-		ProductID:       report.ProductID,
-	}, nil
+	return Report(report), nil
 }
