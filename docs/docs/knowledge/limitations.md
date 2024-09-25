@@ -7,7 +7,6 @@ Most Go apps can be compiled and run with EGo without modifications. However, th
 * cgo support is experimental
   * Libraries must be statically linked. Shared objects are unsupported.
   * Libraries must be compiled with `-fPIC`
-* Stripped executables (e.g., `ego-go build -ldflags -s`) are unsupported
 
 ## (Partially) unsupported packages
 
