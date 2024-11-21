@@ -11,6 +11,8 @@ import (
 	"os"
 	"os/exec"
 	"syscall"
+
+	"github.com/edgelesssys/ego/ego/internal/config"
 )
 
 // run launches an application with a CappedBuffer and also translates potential Edgeless RT / Open Enclave errors into more user-friendly ones.
@@ -28,7 +30,11 @@ func run(runner Runner, cmd *exec.Cmd) (int, error) {
 
 	// capture stdout and stderr
 	var stdout, stderr cappedBuffer
-	cmd.Stdout = io.MultiWriter(os.Stdout, &stdout)
+	var osStdout io.Writer = os.Stdout
+	if config.LogJSON {
+		osStdout = newJsonifier(osStdout)
+	}
+	cmd.Stdout = io.MultiWriter(osStdout, &stdout)
 	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
 
 	if err := runner.Run(cmd); err != nil {
