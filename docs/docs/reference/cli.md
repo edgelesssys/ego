@@ -63,6 +63,7 @@ Run a signed executable in an enclave. You can pass arbitrary arguments to the e
 Environment variables are only readable from within the enclave if they start with `EDG_`.
 
 Set OE_SIMULATION=1 to run in simulation mode.
+Set EDG_LOG_FORMAT=json to enable JSON-structured logs for EGo's startup code.
 
 ```
 ego run <executable> [args...]
@@ -86,6 +87,7 @@ Requires the following configuration environment variables:
   EDG_MARBLE_UUID_FILE          The location where this Marble will store its UUID
 
 Set OE_SIMULATION=1 to run in simulation mode.
+Set EDG_LOG_FORMAT=json to enable JSON-structured logs for EGo's startup code.
 
 ```
 ego marblerun <executable>

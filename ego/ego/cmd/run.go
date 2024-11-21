@@ -20,7 +20,8 @@ func newRunCmd() *cobra.Command {
 
 Environment variables are only readable from within the enclave if they start with ` + "`EDG_`" + `.
 
-Set OE_SIMULATION=1 to run in simulation mode.`,
+Set OE_SIMULATION=1 to run in simulation mode.
+Set EDG_LOG_FORMAT=json to enable JSON-structured logs for EGo's startup code.`,
 		Args:                  cobra.MinimumNArgs(1),
 		DisableFlagParsing:    true,
 		DisableFlagsInUseLine: true,

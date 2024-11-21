@@ -7,10 +7,11 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/edgelesssys/ego/ego/ego/cmd"
+	"github.com/edgelesssys/ego/ego/internal/config"
 )
 
 // Don't touch! Automatically injected at build-time.
@@ -20,7 +21,10 @@ var (
 )
 
 func main() {
-	fmt.Fprintf(os.Stderr, "EGo v%v (%v)\n", version, gitCommit)
+	if config.LogJSON {
+		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, nil)))
+	}
+	slog.Info("EGo", "version", version, "git_commit", gitCommit)
 	if cmd.Execute() != nil {
 		os.Exit(1)
 	}

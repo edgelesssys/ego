@@ -27,7 +27,8 @@ Requires the following configuration environment variables:
   EDG_MARBLE_DNS_NAMES          The alternative DNS names for this Marble's TLS certificate
   EDG_MARBLE_UUID_FILE          The location where this Marble will store its UUID
 
-Set OE_SIMULATION=1 to run in simulation mode.`,
+Set OE_SIMULATION=1 to run in simulation mode.
+Set EDG_LOG_FORMAT=json to enable JSON-structured logs for EGo's startup code.`,
 		Args:                  cobra.ExactArgs(1),
 		DisableFlagsInUseLine: true,
 
