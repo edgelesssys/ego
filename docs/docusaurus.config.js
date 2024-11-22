@@ -46,10 +46,6 @@ const config = {
         theme: {
           customCss: './src/css/custom.css',
         },
-        gtag: {
-          trackingID: 'G-3DVYB2CHLG',
-          anonymizeIP: true,
-        },
       }),
     ],
   ],
@@ -234,9 +230,11 @@ const config = {
   ],
 
   scripts: [
-    { src: 'https://plausible.io/js/plausible.js', async: true, defer: true, 'data-domain': 'docs.edgeless.systems' },
-    { id: "Cookiebot", src: "https://consent.cookiebot.com/uc.js", "data-cbid": "a0cc864f-0b67-49be-8d65-9ed354de2ee6", "data-blockingmode": "auto" },
-    { id: "CookieDeclaration", src: "https://consent.cookiebot.com/a0cc864f-0b67-49be-8d65-9ed354de2ee6/cd.js" }
+    {
+      src: '/ego/gtagman.js',
+      async: true,
+      "data-cookieconsent": "ignore",
+    },
   ],
 };
 
