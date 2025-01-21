@@ -1,6 +1,6 @@
 module github.com/edgelesssys/ego
 
-go 1.21
+go 1.23.5
 
 require (
 	github.com/go-jose/go-jose/v4 v4.0.4
