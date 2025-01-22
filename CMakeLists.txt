@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11)
-project(ego VERSION 1.6.1)
+project(ego VERSION 1.7.0)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
