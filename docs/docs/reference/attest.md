@@ -62,18 +62,17 @@ If you're running an EGo app on premises, you must host a PCCS yourself.
 
 #### Set up the PCCS
 
-To set up a PCCS, you can either follow [the instructions from Intel](https://www.intel.com/content/www/us/en/developer/articles/guide/intel-software-guard-extensions-data-center-attestation-primitives-quick-install-guide.html) or use our provided Docker image.
+To set up a PCCS, you can either follow [the instructions from Intel](https://download.01.org/intel-sgx/latest/dcap-latest/linux/docs/Intel_SGX_SW_Installation_Guide_for_Linux.pdf) or use our provided Docker image.
 
 To do the latter, follow these steps:
 
-1. Register with [Intel](https://api.portal.trustedservices.intel.com/provisioning-certification) to get a PCCS API key
-2. Run the PCCS:
+1. Run the PCCS:
 
    ```bash
-   docker run -e APIKEY=<your-API-key> -p 8081:8081 --name pccs -d ghcr.io/edgelesssys/pccs
+   docker run -p 8081:8081 --name pccs -d ghcr.io/edgelesssys/pccs
    ```
 
-3. Verify that the PCCS is running:
+2. Verify that the PCCS is running:
 
    ```bash
    curl -kv https://localhost:8081/sgx/certification/v4/rootcacrl

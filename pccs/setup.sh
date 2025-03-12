@@ -16,9 +16,6 @@ cd ../config/
 if [ -n "$APIKEY" ]; then
     apikey="$APIKEY"
     sed -i "s/\"ApiKey\"[ ]*:[ ]*\"\",/\"ApiKey\": \"$apikey\",/" default.json
-else
-    echo "ERROR: You need to submit an APIKEY, otherwise your PCCS can not connect to the PCS"
-    exit 1
 fi
 
 if [ -n "$USERPASS" ]; then
