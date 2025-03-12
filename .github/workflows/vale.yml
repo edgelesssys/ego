@@ -19,3 +19,4 @@ jobs:
         with:
           files: docs/docs
           fail_on_error: true
+          version: 3.9.3
