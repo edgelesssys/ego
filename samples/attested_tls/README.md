@@ -21,7 +21,7 @@ ego run server
 
 The client can be built either using `ego-go` or a recent Go compiler:
 ```sh
-CGO_CFLAGS=-I/opt/ego/include CGO_LDFLAGS=-L/opt/ego/lib go build ra_client/client.go
+CGO_CFLAGS="-I/opt/edgelessrt/include" CGO_LDFLAGS="-L/opt/edgelessrt/lib -L/opt/edgelessrt/lib/openenclave/host" go build ra_client/client.go
 ```
 Or if using the EGo snap:
 ```sh
