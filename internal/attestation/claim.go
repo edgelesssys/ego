@@ -61,7 +61,7 @@ func parseClaims(claims []C.oe_claim_t) (Report, error) {
 	if !hasAttributes {
 		return Report{}, errors.New("missing attributes in report claims")
 	}
-	report.TCBAdvisories, report.TCBAdvisoriesErr = getAdvisoriesFromTCBInfo(tcbInfo, tcbInfoIndex)
+	report.TCBEvaluationDataNumber, report.TCBAdvisories, report.TCBAdvisoriesErr = parseTCBInfo(tcbInfo, tcbInfoIndex)
 	return report, nil
 }
 
@@ -76,21 +76,22 @@ func claimBytes(claim C.oe_claim_t) []byte {
 	return C.GoBytes(unsafe.Pointer(claim.value), C.int(claim.value_size))
 }
 
-func getAdvisoriesFromTCBInfo(tcbInfo []byte, tcbInfoIndex uint) ([]string, error) {
+func parseTCBInfo(tcbInfo []byte, tcbInfoIndex uint) (int, []string, error) {
 	tcbInfo = bytes.Trim(tcbInfo, "\x00") // claim from OE includes null terminator
 
 	var info struct {
 		TCBInfo struct {
-			TCBLevels []struct{ AdvisoryIDs []string }
+			TCBEvaluationDataNumber int
+			TCBLevels               []struct{ AdvisoryIDs []string }
 		}
 	}
 	if err := json.Unmarshal(tcbInfo, &info); err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
 	levels := info.TCBInfo.TCBLevels
 	if uint(len(levels)) <= tcbInfoIndex {
-		return nil, errors.New("invalid TCB info index")
+		return 0, nil, errors.New("invalid TCB info index")
 	}
-	return levels[tcbInfoIndex].AdvisoryIDs, nil
+	return info.TCBInfo.TCBEvaluationDataNumber, levels[tcbInfoIndex].AdvisoryIDs, nil
 }
