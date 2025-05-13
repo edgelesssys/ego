@@ -18,9 +18,6 @@ import (
 )
 
 func TestTLSConfig(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
-
 	//
 	// Create mock functions.
 	//
@@ -62,58 +59,88 @@ func TestTLSConfig(t *testing.T) {
 	// Create Test Cases
 	//
 
-	tests := []struct {
-		name               string
+	testCases := map[string]struct {
 		getRemoteReport    func([]byte) ([]byte, error)
 		verifyRemoteReport func([]byte) (Report, error)
 		opts               Options
 		verifyReport       func(Report) error
-		expectErr          bool
+		wantErr            bool
 	}{
-		{"basic", getRemoteReport, verifyRemoteReport, Options{}, verifyReport, false},
-		{"invalid remote report", getRemoteReport, failToVerifyRemoteReport, Options{}, verifyReport, true},
-		{"invalid report", getRemoteReport, verifyRemoteReport, Options{}, failToVerifyReport, true},
-		{"invalid remote report and report", getRemoteReport, failToVerifyRemoteReport, Options{}, failToVerifyReport, true},
-		{"ignore remote report error", getRemoteReport, failToVerifyRemoteReport, Options{IgnoreErr: failToVerifyRemoteReportErr}, verifyReport, false},
-		{"ignore other remote report error", getRemoteReport, failToVerifyRemoteReport, Options{IgnoreErr: errors.New("")}, verifyReport, true},
+		"basic": {
+			getRemoteReport:    getRemoteReport,
+			verifyRemoteReport: verifyRemoteReport,
+			verifyReport:       verifyReport,
+		},
+		"invalid remote report": {
+			getRemoteReport:    getRemoteReport,
+			verifyRemoteReport: failToVerifyRemoteReport,
+			verifyReport:       verifyReport,
+			wantErr:            true,
+		},
+		"invalid report": {
+			getRemoteReport:    getRemoteReport,
+			verifyRemoteReport: verifyRemoteReport,
+			verifyReport:       failToVerifyReport,
+			wantErr:            true,
+		},
+		"invalid remote report and report": {
+			getRemoteReport: getRemoteReport, verifyRemoteReport: failToVerifyRemoteReport,
+			verifyReport: failToVerifyReport,
+			wantErr:      true,
+		},
+		"ignore remote report error": {
+			getRemoteReport:    getRemoteReport,
+			verifyRemoteReport: failToVerifyRemoteReport,
+			opts:               Options{IgnoreErr: failToVerifyRemoteReportErr},
+			verifyReport:       verifyReport,
+		},
+		"ignore other remote report error": {
+			getRemoteReport:    getRemoteReport,
+			verifyRemoteReport: failToVerifyRemoteReport,
+			opts:               Options{IgnoreErr: assert.AnError},
+			verifyReport:       verifyReport,
+			wantErr:            true,
+		},
 	}
 
 	//
 	// Run Tests.
 	//
 
-	for _, test := range tests {
-		t.Logf("Subtest: %v", test.name)
-		//
-		// Create server.
-		//
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
 
-		serverConfig, err := CreateAttestationServerTLSConfig(test.getRemoteReport)
-		require.NoError(err)
+			//
+			// Create server.
+			//
 
-		server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, _ = io.WriteString(w, "hello")
-		}))
-		server.TLS = serverConfig
+			serverConfig, err := CreateAttestationServerTLSConfig(tc.getRemoteReport)
+			require.NoError(err)
 
-		//
-		// Create client.
-		//
+			server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				_, _ = io.WriteString(w, "hello")
+			}))
+			server.TLS = serverConfig
 
-		clientConfig := CreateAttestationClientTLSConfig(test.verifyRemoteReport, test.opts, test.verifyReport)
-		client := http.Client{Transport: &http.Transport{TLSClientConfig: clientConfig}}
+			//
+			// Create client.
+			//
 
-		//
-		// Test connection.
-		//
+			clientConfig := CreateAttestationClientTLSConfig(tc.verifyRemoteReport, tc.opts, tc.verifyReport)
+			client := http.Client{Transport: &http.Transport{TLSClientConfig: clientConfig}}
 
-		func() {
+			//
+			// Test connection.
+			//
+
 			server.StartTLS()
 			defer server.Close()
 
 			resp, err := client.Get(server.URL)
-			if test.expectErr {
-				require.Error(err)
+			if tc.wantErr {
+				assert.Error(err)
 				return
 			}
 			require.NoError(err)
@@ -122,6 +149,6 @@ func TestTLSConfig(t *testing.T) {
 			body, err := io.ReadAll(resp.Body)
 			require.NoError(err)
 			assert.EqualValues("hello", body)
-		}()
+		})
 	}
 }
