@@ -16,6 +16,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"encoding/pem"
 	"errors"
 	"math/big"
 	"time"
@@ -39,7 +40,7 @@ type Report struct {
 // https://github.com/openenclave/openenclave/blob/master/include/openenclave/internal/report.h
 var oidOeNewQuote = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 311, 105, 1}
 
-func hashPublicKey(pub interface{}) ([]byte, error) {
+func HashPublicKey(pub any) ([]byte, error) {
 	pubBytes, err := x509.MarshalPKIXPublicKey(pub)
 	if err != nil {
 		return nil, err
@@ -48,8 +49,18 @@ func hashPublicKey(pub interface{}) ([]byte, error) {
 	return result[:], nil
 }
 
+func HashPublicKeyOE(pub any) ([]byte, error) {
+	pubBytes, err := x509.MarshalPKIXPublicKey(pub)
+	if err != nil {
+		return nil, err
+	}
+	pubPem := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: pubBytes})
+	result := sha256.Sum256(append(pubPem, 0))
+	return result[:], nil
+}
+
 // CreateAttestationCertificate creates an X.509 certificate with an embedded report from getRemoteReport.
-func CreateAttestationCertificate(getRemoteReport func([]byte) ([]byte, error), template, parent *x509.Certificate, pub, priv interface{}) ([]byte, error) {
+func CreateAttestationCertificate(hashPublicKey func(pub any) ([]byte, error), getRemoteReport func([]byte) ([]byte, error), template, parent *x509.Certificate, pub, priv any) ([]byte, error) {
 	// get report for the public key
 	hash, err := hashPublicKey(pub)
 	if err != nil {
@@ -66,7 +77,7 @@ func CreateAttestationCertificate(getRemoteReport func([]byte) ([]byte, error), 
 }
 
 // CreateAttestationServerTLSConfig creates a tls.Config object with a self-signed certificate and an embedded report.
-func CreateAttestationServerTLSConfig(getRemoteReport func([]byte) ([]byte, error)) (*tls.Config, error) {
+func CreateAttestationServerTLSConfig(hashPublicKey func(pub any) ([]byte, error), getRemoteReport func([]byte) ([]byte, error)) (*tls.Config, error) {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
@@ -84,7 +95,7 @@ func CreateAttestationServerTLSConfig(getRemoteReport func([]byte) ([]byte, erro
 		return nil, err
 	}
 
-	cert, err := CreateAttestationCertificate(getRemoteReport, template, template, &priv.PublicKey, priv)
+	cert, err := CreateAttestationCertificate(hashPublicKey, getRemoteReport, template, template, &priv.PublicKey, priv)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +130,11 @@ func CreateAttestationClientTLSConfig(verifyRemoteReport func([]byte) (Report, e
 			return err
 		}
 
-		hash, err := hashPublicKey(cert.PublicKey)
+		hash, err := HashPublicKey(cert.PublicKey)
+		if err != nil {
+			return err
+		}
+		hashOE, err := HashPublicKeyOE(cert.PublicKey)
 		if err != nil {
 			return err
 		}
@@ -131,7 +146,7 @@ func CreateAttestationClientTLSConfig(verifyRemoteReport func([]byte) (Report, e
 				if err != nil && err != opts.IgnoreErr {
 					return err
 				}
-				if !bytes.Equal(report.Data[:len(hash)], hash) {
+				if !bytes.Equal(report.Data[:len(hash)], hash) && !bytes.Equal(report.Data[:len(hashOE)], hashOE) {
 					return errors.New("certificate hash does not match report data")
 				}
 				return verifyReport(report)

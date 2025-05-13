@@ -45,16 +45,30 @@ func GetSealKeyID() ([]byte, error) {
 }
 
 // CreateAttestationCertificate creates an X.509 certificate with an embedded report from the underlying enclave.
-func CreateAttestationCertificate(template, parent *x509.Certificate, pub, priv interface{}) ([]byte, error) {
-	return internal.CreateAttestationCertificate(GetRemoteReport, template, parent, pub, priv)
+func CreateAttestationCertificate(template, parent *x509.Certificate, pub, priv any) ([]byte, error) {
+	return internal.CreateAttestationCertificate(internal.HashPublicKey, GetRemoteReport, template, parent, pub, priv)
+}
+
+// CreateAttestationCertificateInOpenEnclaveFormat creates an X.509 certificate with an embedded report from the underlying enclave.
+// The certificate is accepted by both EGo and Open Enclave clients.
+func CreateAttestationCertificateInOpenEnclaveFormat(template, parent *x509.Certificate, pub, priv any) ([]byte, error) {
+	return internal.CreateAttestationCertificate(internal.HashPublicKeyOE, GetRemoteReport, template, parent, pub, priv)
 }
 
 // CreateAttestationServerTLSConfig creates a tls.Config object with a self-signed certificate and an embedded report.
 func CreateAttestationServerTLSConfig() (*tls.Config, error) {
-	return internal.CreateAttestationServerTLSConfig(GetRemoteReport)
+	return internal.CreateAttestationServerTLSConfig(internal.HashPublicKey, GetRemoteReport)
+}
+
+// CreateAttestationServerTLSConfigInOpenEnclaveFormat creates a tls.Config object with a self-signed certificate and an embedded report.
+// The certificate is accepted by both EGo and Open Enclave clients.
+func CreateAttestationServerTLSConfigInOpenEnclaveFormat() (*tls.Config, error) {
+	return internal.CreateAttestationServerTLSConfig(internal.HashPublicKeyOE, GetRemoteReport)
 }
 
 // CreateAttestationClientTLSConfig creates a tls.Config object that verifies a certificate with embedded report.
+//
+// The config accepts both EGo and Open Enclave certificates.
 //
 // verifyReport is called after the certificate has been verified against the report data. The caller must verify either the UniqueID or the tuple (SignerID, ProductID, SecurityVersion, Debug) in the callback.
 func CreateAttestationClientTLSConfig(verifyReport func(attestation.Report) error, opts ...AttestOption) *tls.Config {

@@ -27,6 +27,8 @@ func VerifyRemoteReport(reportBytes []byte) (attestation.Report, error) {
 
 // CreateAttestationClientTLSConfig creates a tls.Config object that verifies a certificate with embedded report.
 //
+// The config accepts both EGo and Open Enclave certificates.
+//
 // verifyReport is called after the certificate has been verified against the report data. The caller must verify either the UniqueID or the tuple (SignerID, ProductID, SecurityVersion, Debug) in the callback.
 func CreateAttestationClientTLSConfig(verifyReport func(attestation.Report) error, opts ...AttestOption) *tls.Config {
 	var appliedOpts internal.Options

@@ -60,6 +60,7 @@ func TestTLSConfig(t *testing.T) {
 	//
 
 	testCases := map[string]struct {
+		hashPublicKey      func(pub any) ([]byte, error)
 		getRemoteReport    func([]byte) ([]byte, error)
 		verifyRemoteReport func([]byte) (Report, error)
 		opts               Options
@@ -67,34 +68,46 @@ func TestTLSConfig(t *testing.T) {
 		wantErr            bool
 	}{
 		"basic": {
+			hashPublicKey:      HashPublicKey,
+			getRemoteReport:    getRemoteReport,
+			verifyRemoteReport: verifyRemoteReport,
+			verifyReport:       verifyReport,
+		},
+		"oe": {
+			hashPublicKey:      HashPublicKeyOE,
 			getRemoteReport:    getRemoteReport,
 			verifyRemoteReport: verifyRemoteReport,
 			verifyReport:       verifyReport,
 		},
 		"invalid remote report": {
+			hashPublicKey:      HashPublicKey,
 			getRemoteReport:    getRemoteReport,
 			verifyRemoteReport: failToVerifyRemoteReport,
 			verifyReport:       verifyReport,
 			wantErr:            true,
 		},
 		"invalid report": {
+			hashPublicKey:      HashPublicKey,
 			getRemoteReport:    getRemoteReport,
 			verifyRemoteReport: verifyRemoteReport,
 			verifyReport:       failToVerifyReport,
 			wantErr:            true,
 		},
 		"invalid remote report and report": {
+			hashPublicKey:   HashPublicKey,
 			getRemoteReport: getRemoteReport, verifyRemoteReport: failToVerifyRemoteReport,
 			verifyReport: failToVerifyReport,
 			wantErr:      true,
 		},
 		"ignore remote report error": {
+			hashPublicKey:      HashPublicKey,
 			getRemoteReport:    getRemoteReport,
 			verifyRemoteReport: failToVerifyRemoteReport,
 			opts:               Options{IgnoreErr: failToVerifyRemoteReportErr},
 			verifyReport:       verifyReport,
 		},
 		"ignore other remote report error": {
+			hashPublicKey:      HashPublicKey,
 			getRemoteReport:    getRemoteReport,
 			verifyRemoteReport: failToVerifyRemoteReport,
 			opts:               Options{IgnoreErr: assert.AnError},
@@ -116,7 +129,7 @@ func TestTLSConfig(t *testing.T) {
 			// Create server.
 			//
 
-			serverConfig, err := CreateAttestationServerTLSConfig(tc.getRemoteReport)
+			serverConfig, err := CreateAttestationServerTLSConfig(tc.hashPublicKey, tc.getRemoteReport)
 			require.NoError(err)
 
 			server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
