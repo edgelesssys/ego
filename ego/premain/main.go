@@ -10,6 +10,7 @@ import "C"
 
 import (
 	"os"
+	"runtime/debug"
 	"syscall"
 	"unsafe"
 
@@ -26,6 +27,9 @@ func main() {}
 
 //export ert_ego_premain
 func ert_ego_premain(argc *C.int, argv ***C.char, envc C.int, envp **C.char, payload *C.char) {
+	// Disable garbage collection for premain (only) to prevent deadlocks in go_rc_kill_threads.
+	debug.SetGCPercent(-1)
+
 	originalEnviron := convertEnvironmentToGoStringArray(envc, envp)
 	if err := core.PreMain(C.GoString(payload), &SyscallMounter{}, afero.NewOsFs(), originalEnviron); err != nil {
 		panic(err)

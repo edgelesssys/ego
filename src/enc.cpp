@@ -20,7 +20,6 @@
 #include "go_runtime_cleanup.h"
 
 static const auto _memfs_name = "edg_memfs";
-static const auto _verbose_env_key = "EDG_EGO_VERBOSE";
 
 using namespace std;
 using namespace ert;
@@ -55,8 +54,12 @@ static void _log_verbose(string_view s)
 {
     static const bool verbose_enabled = []
     {
-        const char* const env_verbose = getenv(_verbose_env_key);
-        return env_verbose && *env_verbose == '1';
+        // env is not available via libc (see comment in ert_get_args), so look
+        // up manually
+        for (int i = 0; i < _envc; ++i)
+            if (_envp[i] == "EDG_EGO_VERBOSE=1"s)
+                return true;
+        return false;
     }();
 
     if (verbose_enabled)
