@@ -76,6 +76,8 @@ func (marbleServer) Activate(context.Context, *rpc.ActivationReq) (*rpc.Activati
 	return &rpc.ActivationResp{Parameters: &rpc.Parameters{
 		Argv: []string{"arg0", "arg1", "arg2"},
 		Env:  map[string][]byte{"key1": []byte("val1"), "key2": []byte("val2")},
+		// This triggers garbage collection during premain to cover a bug that could lead to a deadlock.
+		Files: map[string][]byte{"/a": make([]byte, 1_000_000)},
 	}}, nil
 }
 
