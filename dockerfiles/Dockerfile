@@ -1,4 +1,4 @@
-FROM ghcr.io/edgelesssys/ego/build-base:v1.7.0 AS build
+FROM ghcr.io/edgelesssys/ego/build-base:v1.7.1 AS build
 
 # don't run `apt-get update` because required packages are cached in build-base for reproducibility
 RUN apt-get install -y --no-install-recommends \
@@ -11,8 +11,8 @@ RUN apt-get install -y --no-install-recommends \
   ninja-build \
   wget
 
-ARG erttag=v0.4.9
-ARG egotag=v1.7.0
+ARG erttag=v0.4.10
+ARG egotag=v1.7.1
 RUN wget -qO- https://go.dev/dl/go1.23.5.linux-amd64.tar.gz | tar -C /usr/local -xz \
   && git clone -b $erttag --depth=1 https://github.com/edgelesssys/edgelessrt \
   && git clone -b $egotag --depth=1 https://github.com/edgelesssys/ego \
