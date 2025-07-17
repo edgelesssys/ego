@@ -12,7 +12,7 @@ RUN apt-get install -y --no-install-recommends \
   wget
 
 ARG erttag=v0.4.10
-ARG egotag=v1.7.1
+ARG egotag=v1.7.2
 RUN wget -qO- https://go.dev/dl/go1.23.5.linux-amd64.tar.gz | tar -C /usr/local -xz \
   && git clone -b $erttag --depth=1 https://github.com/edgelesssys/edgelessrt \
   && git clone -b $egotag --depth=1 https://github.com/edgelesssys/ego \
@@ -21,6 +21,7 @@ RUN wget -qO- https://go.dev/dl/go1.23.5.linux-amd64.tar.gz | tar -C /usr/local 
 # install ert
 RUN cd edgelessrt && export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct) && cd /ertbuild \
   && cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF /edgelessrt \
+  && ninja && sed -i 's/OE_ATTESTATION_ENDORSEMENT_MAX_SIZE (20 \* 1024)/OE_ATTESTATION_ENDORSEMENT_MAX_SIZE (2000 * 1024)/' 3rdparty/openenclave/openenclave-src/include/openenclave/bits/attestation.h \
   && ninja install
 
 # build ego
