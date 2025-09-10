@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/go-jose/go-jose/v4 v4.0.5
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
