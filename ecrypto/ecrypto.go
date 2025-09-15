@@ -110,23 +110,81 @@ func SealWithProductKey(plaintext []byte, additionalData []byte) ([]byte, error)
 //
 // The additionalData must match the value passed to Encrypt.
 func Unseal(ciphertext []byte, additionalData []byte) ([]byte, error) {
-	// pop key info length from ciphertext front
-	if len(ciphertext) <= keyInfoLengthLength {
-		return nil, errors.New("ciphertext is too short")
+	keyInfo, ciphertext, err := splitCiphertext(ciphertext)
+	if err != nil {
+		return nil, err
 	}
-	keyInfoLength := binary.LittleEndian.Uint32(ciphertext)
-	ciphertext = ciphertext[keyInfoLengthLength:]
-
-	// split ciphertext into key info and actual data
-	if !(0 < keyInfoLength && int(keyInfoLength) < len(ciphertext)) {
-		return nil, errors.New("ciphertext contains invalid key info length")
-	}
-	keyInfo, ciphertext := ciphertext[:keyInfoLength], ciphertext[keyInfoLength:]
 
 	sealKey, err := sealer.GetSealKey(keyInfo)
 	if err != nil {
 		return nil, err
 	}
+
+	return Decrypt(ciphertext, sealKey, additionalData)
+}
+
+// SealWithUniqueKey256 encrypts a given plaintext with a key derived from a measurement of the enclave.
+//
+// It constructs a 256-bit key by concatenating the results of two EGETKEY calls with different random KeyIDs.
+//
+// Optionally pass additionalData to be authenticated.
+//
+// Ciphertexts can't be decrypted if the UniqueID of the enclave changes. If you want
+// to be able to decrypt ciphertext across enclave versions, use SealWithProductKey256.
+func SealWithUniqueKey256(plaintext []byte, additionalData []byte) ([]byte, error) {
+	sealKey1, keyInfo1, err := sealer.GetUniqueSealKey()
+	if err != nil {
+		return nil, err
+	}
+	sealKey2, keyInfo2, err := sealer.GetUniqueSealKey()
+	if err != nil {
+		return nil, err
+	}
+	sealKey := append(sealKey1, sealKey2...)
+	keyInfo := append(keyInfo1, keyInfo2...)
+
+	return seal(plaintext, sealKey, keyInfo, additionalData)
+}
+
+// SealWithProductKey256 encrypts a given plaintext with a key derived from the signer and product id of the enclave.
+//
+// It constructs a 256-bit key by concatenating the results of two EGETKEY calls with different random KeyIDs.
+//
+// Optionally pass additionalData to be authenticated.
+func SealWithProductKey256(plaintext []byte, additionalData []byte) ([]byte, error) {
+	sealKey1, keyInfo1, err := sealer.GetProductSealKey()
+	if err != nil {
+		return nil, err
+	}
+	sealKey2, keyInfo2, err := sealer.GetProductSealKey()
+	if err != nil {
+		return nil, err
+	}
+	sealKey := append(sealKey1, sealKey2...)
+	keyInfo := append(keyInfo1, keyInfo2...)
+
+	return seal(plaintext, sealKey, keyInfo, additionalData)
+}
+
+// Unseal256 decrypts a ciphertext produced by SealWithUniqueKey256 or SealWithProductKey256.
+//
+// The additionalData must match the value passed to Encrypt.
+func Unseal256(ciphertext []byte, additionalData []byte) ([]byte, error) {
+	keyInfo, ciphertext, err := splitCiphertext(ciphertext)
+	if err != nil {
+		return nil, err
+	}
+
+	length := len(keyInfo) / 2
+	sealKey1, err := sealer.GetSealKey(keyInfo[:length])
+	if err != nil {
+		return nil, err
+	}
+	sealKey2, err := sealer.GetSealKey(keyInfo[length:])
+	if err != nil {
+		return nil, err
+	}
+	sealKey := append(sealKey1, sealKey2...)
 
 	return Decrypt(ciphertext, sealKey, additionalData)
 }
@@ -153,4 +211,19 @@ func seal(plaintext []byte, sealKey []byte, keyInfo []byte, additionalData []byt
 	keyInfoEncoded := append(keyInfoLength, keyInfo...)
 
 	return append(keyInfoEncoded, ciphertext...), nil
+}
+
+func splitCiphertext(ciphertext []byte) (keyInfo, actualCiphertext []byte, err error) {
+	// pop key info length from ciphertext front
+	if len(ciphertext) <= keyInfoLengthLength {
+		return nil, nil, errors.New("ciphertext is too short")
+	}
+	keyInfoLength := binary.LittleEndian.Uint32(ciphertext[:keyInfoLengthLength])
+	ciphertext = ciphertext[keyInfoLengthLength:]
+
+	// split ciphertext into key info and actual data
+	if !(0 < keyInfoLength && int(keyInfoLength) < len(ciphertext)) {
+		return nil, nil, errors.New("ciphertext contains invalid key info length")
+	}
+	return ciphertext[:keyInfoLength], ciphertext[keyInfoLength:], nil
 }
