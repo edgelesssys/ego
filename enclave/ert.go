@@ -184,23 +184,6 @@ func VerifyLocalReport(reportBytes []byte) (attestation.Report, error) {
 	}, nil
 }
 
-// GetUniqueSealKey gets a key derived from a measurement of the enclave.
-//
-// keyInfo can be used to retrieve the same key later, on a newer CPU security version.
-//
-// This key will change if the UniqueID of the enclave changes. If you want
-// the key to be the same across enclave versions, use GetProductSealKey.
-func GetUniqueSealKey() (key, keyInfo []byte, err error) {
-	return getSealKeyByPolicy(C.OE_SEAL_POLICY_UNIQUE)
-}
-
-// GetProductSealKey gets a key derived from the signer and product id of the enclave.
-//
-// keyInfo can be used to retrieve the same key later, on a newer CPU security version.
-func GetProductSealKey() (key, keyInfo []byte, err error) {
-	return getSealKeyByPolicy(C.OE_SEAL_POLICY_PRODUCT)
-}
-
 // GetSealKey gets a key from the enclave platform using existing key information.
 func GetSealKey(keyInfo []byte) ([]byte, error) {
 	var keyBuffer *C.uint8_t
@@ -227,37 +210,6 @@ func GetSealKey(keyInfo []byte) ([]byte, error) {
 	return key, nil
 }
 
-func getSealKeyByPolicy(sealPolicy uintptr) (key, keyInfo []byte, err error) {
-	var keyBuffer, keyInfoBuffer *C.uint8_t
-	var keySize, keyInfoSize C.size_t
-
-	res, _, errno := syscall.Syscall6(
-		sysGetSealKeyByPolicy,
-		sealPolicy,
-		uintptr(unsafe.Pointer(&keyBuffer)),
-		uintptr(unsafe.Pointer(&keySize)),
-		uintptr(unsafe.Pointer(&keyInfoBuffer)),
-		uintptr(unsafe.Pointer(&keyInfoSize)),
-		0,
-	)
-	if errno == syscall.ENOSYS {
-		return make([]byte, 16), []byte("info"), nil
-	}
-	if err := oeError(errno, res); err != nil {
-		return nil, nil, err
-	}
-
-	key = C.GoBytes(unsafe.Pointer(keyBuffer), C.int(keySize))
-	keyInfo = C.GoBytes(unsafe.Pointer(keyInfoBuffer), C.int(keyInfoSize))
-	_, _, _ = syscall.Syscall(
-		sysFreeSealKey,
-		uintptr(unsafe.Pointer(keyBuffer)),
-		uintptr(unsafe.Pointer(keyInfoBuffer)),
-		0,
-	)
-	return
-}
-
 func oeError(errno syscall.Errno, res uintptr) error {
 	if errno == syscall.ENOSYS {
 		return errors.New("OE_UNSUPPORTED")
@@ -281,4 +233,8 @@ func getBytesPointer(data []byte) uintptr {
 		return 0
 	}
 	return uintptr(unsafe.Pointer(&data[0]))
+}
+
+func getSealMasks() (flags, xfrm uint64, misc uint32) {
+	return C.OE_SEALKEY_DEFAULT_FLAGSMASK, C.OE_SEALKEY_DEFAULT_XFRMMASK, C.OE_SEALKEY_DEFAULT_MISCMASK
 }

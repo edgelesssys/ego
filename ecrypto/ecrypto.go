@@ -27,11 +27,11 @@ var sealer interface {
 type enclaveSealer struct{}
 
 func (enclaveSealer) GetUniqueSealKey() (key, keyInfo []byte, err error) {
-	return enclave.GetUniqueSealKey()
+	return enclave.GetRandomUniqueSealKey()
 }
 
 func (enclaveSealer) GetProductSealKey() (key, keyInfo []byte, err error) {
-	return enclave.GetProductSealKey()
+	return enclave.GetRandomProductSealKey()
 }
 
 func (enclaveSealer) GetSealKey(keyInfo []byte) ([]byte, error) {

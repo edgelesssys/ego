@@ -3,13 +3,34 @@
 
 #include <stdint.h>
 
-#define OE_SEAL_POLICY_UNIQUE 1
-#define OE_SEAL_POLICY_PRODUCT 2
 #define OE_UNIQUE_ID_SIZE 32
 #define OE_SIGNER_ID_SIZE 32
 #define OE_PRODUCT_ID_SIZE 16
 #define OE_REPORT_ATTRIBUTES_DEBUG 1
 #define OE_REPORT_ATTRIBUTES_REMOTE 2
+
+#define SGX_FLAGS_MODE64BIT 0x0000000000000004ULL
+#define SGX_FLAGS_PROVISION_KEY 0x0000000000000010ULL
+#define SGX_FLAGS_EINITTOKEN_KEY 0x0000000000000020ULL
+
+/* Set the bits which have no security implications to 0 for sealed data
+ migration */
+/* Bits which have no security implications in attributes.flags:
+ *    Reserved bit[55:6]  - 0xFFFFFFFFFFFFC0ULL
+ *    SGX_FLAGS_MODE64BIT
+ *    SGX_FLAGS_PROVISION_KEY
+ *    SGX_FLAGS_EINITTOKEN_KEY */
+#define SGX_FLAGS_NON_SECURITY_BITS                                        \
+    (0xFFFFFFFFFFFFC0ULL | SGX_FLAGS_MODE64BIT | SGX_FLAGS_PROVISION_KEY | \
+     SGX_FLAGS_EINITTOKEN_KEY)
+
+/* bit[27:0]: have no security implications */
+#define SGX_MISC_NON_SECURITY_BITS 0x0FFFFFFFU
+
+/* OE seal key default flag masks*/
+#define OE_SEALKEY_DEFAULT_FLAGSMASK (~SGX_FLAGS_NON_SECURITY_BITS)
+#define OE_SEALKEY_DEFAULT_MISCMASK (~SGX_MISC_NON_SECURITY_BITS)
+#define OE_SEALKEY_DEFAULT_XFRMMASK (0X0ULL)
 
 typedef int oe_enclave_type_t;
 

@@ -32,18 +32,6 @@ func GetSelfReport() (attestation.Report, error) {
 	return VerifyLocalReport(report)
 }
 
-// GetSealKeyID gets a unique ID derived from the CPU's root seal key.
-// The ID also depends on the ProductID and Debug flag of the enclave.
-func GetSealKeyID() ([]byte, error) {
-	// see https://github.com/intel/linux-sgx/blob/sgx_2.19/common/inc/sgx_key.h
-	keyRequest := make([]byte, 512)
-	keyRequest[0] = 4 // key_name = SGX_KEYSELECT_SEAL
-	// Leaving all other fields 0 means only ProductID (but not unique or signer id) of the enclave
-	// is used for derivation. The key isn't secret because everyone can create an enclave with the
-	// same ProductID that prints the key. So we can directly use it as an ID for the CPU.
-	return GetSealKey(keyRequest)
-}
-
 // CreateAttestationCertificate creates an X.509 certificate with an embedded report from the underlying enclave.
 func CreateAttestationCertificate(template, parent *x509.Certificate, pub, priv any) ([]byte, error) {
 	return internal.CreateAttestationCertificate(internal.HashPublicKey, GetRemoteReport, template, parent, pub, priv)
