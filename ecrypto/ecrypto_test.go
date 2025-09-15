@@ -181,38 +181,87 @@ func TestDecryptAdditionalDataError(t *testing.T) {
 func TestSealUnseal(t *testing.T) {
 	testCases := map[string]struct {
 		seal           func(plaintext, additionalData []byte) ([]byte, error)
+		unseal         func(ciphertext, additionalData []byte) ([]byte, error)
 		plaintext      string
 		additionalData []byte
 	}{
 		"unique: basic": {
 			seal:      SealWithUniqueKey,
+			unseal:    Unseal,
 			plaintext: "foo",
 		},
 		"unique: empty plaintext": {
-			seal: SealWithUniqueKey,
+			seal:   SealWithUniqueKey,
+			unseal: Unseal,
 		},
 		"unique: long plaintext": {
 			seal:      SealWithUniqueKey,
+			unseal:    Unseal,
 			plaintext: strings.Repeat("Edgeless Systems", 100),
 		},
 		"unique: additional data": {
 			seal:           SealWithUniqueKey,
+			unseal:         Unseal,
 			plaintext:      "foo",
 			additionalData: []byte{2, 3, 4},
 		},
 		"product: basic": {
 			seal:      SealWithProductKey,
+			unseal:    Unseal,
 			plaintext: "foo",
 		},
 		"product: empty plaintext": {
-			seal: SealWithProductKey,
+			seal:   SealWithProductKey,
+			unseal: Unseal,
 		},
 		"product: long plaintext": {
 			seal:      SealWithProductKey,
+			unseal:    Unseal,
 			plaintext: strings.Repeat("Edgeless Systems", 100),
 		},
 		"product: additional data": {
 			seal:           SealWithProductKey,
+			unseal:         Unseal,
+			plaintext:      "foo",
+			additionalData: []byte{2, 3, 4},
+		},
+		"unique256: basic": {
+			seal:      SealWithUniqueKey256,
+			unseal:    Unseal256,
+			plaintext: "foo",
+		},
+		"unique256: empty plaintext": {
+			seal:   SealWithUniqueKey256,
+			unseal: Unseal256,
+		},
+		"unique256: long plaintext": {
+			seal:      SealWithUniqueKey256,
+			unseal:    Unseal256,
+			plaintext: strings.Repeat("Edgeless Systems", 100),
+		},
+		"unique256: additional data": {
+			seal:           SealWithUniqueKey256,
+			unseal:         Unseal256,
+			plaintext:      "foo",
+			additionalData: []byte{2, 3, 4},
+		},
+		"product256: basic": {
+			seal:      SealWithProductKey256,
+			unseal:    Unseal256,
+			plaintext: "foo",
+		},
+		"product256: empty plaintext": {
+			seal:   SealWithProductKey256,
+			unseal: Unseal256,
+		},
+		"product256: long plaintext": {
+			seal:      SealWithProductKey256,
+			unseal:    Unseal256,
+			plaintext: strings.Repeat("Edgeless Systems", 100),
+		},
+		"product256: additional data": {
+			seal:           SealWithProductKey256,
+			unseal:         Unseal256,
 			plaintext:      "foo",
 			additionalData: []byte{2, 3, 4},
 		},
@@ -232,7 +281,7 @@ func TestSealUnseal(t *testing.T) {
 				assert.False(bytes.Contains(ciphertext, plaintext))
 			}
 
-			decryptedPlaintext, err := Unseal(ciphertext, tc.additionalData)
+			decryptedPlaintext, err := tc.unseal(ciphertext, tc.additionalData)
 			require.NoError(err)
 			if tc.plaintext == "" {
 				assert.Empty(decryptedPlaintext)
@@ -263,6 +312,8 @@ func TestUnsealError(t *testing.T) {
 			assert := assert.New(t)
 			_, err := Unseal(tc.ciphertext, nil)
 			assert.Error(err)
+			_, err = Unseal256(tc.ciphertext, nil)
+			assert.Error(err)
 		})
 	}
 }
@@ -278,6 +329,20 @@ func TestUnsealAdditionalDataError(t *testing.T) {
 	assert.Error(err)
 
 	_, err = Unseal(ciphertext, []byte{2, 3, 5})
+	assert.Error(err)
+}
+
+func TestUnseal256AdditionalDataError(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	ciphertext, err := SealWithUniqueKey256([]byte("foo"), []byte{2, 3, 4})
+	require.NoError(err)
+
+	_, err = Unseal256(ciphertext, nil)
+	assert.Error(err)
+
+	_, err = Unseal256(ciphertext, []byte{2, 3, 5})
 	assert.Error(err)
 }
 
