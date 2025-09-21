@@ -13,6 +13,12 @@ import (
 )
 
 func main() {
+	// regression: did not work in simulation mode
+	_, _, err := enclave.GetUniqueSealKey()
+	if err != nil {
+		panic(err)
+	}
+
 	id, err := enclave.GetSealKeyID()
 	if err != nil {
 		panic(err)
