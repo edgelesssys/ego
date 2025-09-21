@@ -1,6 +1,7 @@
 package enclave
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/binary"
 )
@@ -70,7 +71,10 @@ func getSealKeyByPolicy(sealPolicy uint16, random bool) (key, keyInfo []byte, er
 	// https://github.com/openenclave/openenclave/blob/v0.19.13/enclave/core/sgx/keys.c#L191
 	report, err := GetLocalReport(nil, nil)
 	if err != nil {
-		return nil, nil, err
+		if !(err.Error() == "OE_UNSUPPORTED" && isSimulationMode()) {
+			return nil, nil, err
+		}
+		report = make([]byte, 276)
 	}
 	report = report[16:] // skip OE header
 	req := sgxKeyRequest{
@@ -94,6 +98,14 @@ func getSealKeyByPolicy(sealPolicy uint16, random bool) (key, keyInfo []byte, er
 	}
 	key, err = GetSealKey(keyInfo)
 	return key, keyInfo, err
+}
+
+func isSimulationMode() bool {
+	id, err := GetSealKeyID()
+	if err != nil {
+		return false
+	}
+	return bytes.Equal(id, make([]byte, 16))
 }
 
 // https://github.com/intel/linux-sgx/blob/sgx_2.3/common/inc/sgx_key.h
