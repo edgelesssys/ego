@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/edgelesssys/ego v1.8.1-0.20250921171206-71b29a7ce1a4 h1:4g4zw5qTJ/KWhdvf6yqzSof3kjK1RtgbTzWQVCHKd24=
-github.com/edgelesssys/ego v1.8.1-0.20250921171206-71b29a7ce1a4/go.mod h1:fg0M/xfLWnrkoD2OZpY9xmltGlAPFsIiUmyHTuCS7zo=
+github.com/edgelesssys/ego v1.8.1-0.20250922064727-10c2aabf5767 h1:kylk0TzkYaWrEnMdx6Oqhcmh8sv4u6/Aqz1EFiLD4II=
+github.com/edgelesssys/ego v1.8.1-0.20250922064727-10c2aabf5767/go.mod h1:fg0M/xfLWnrkoD2OZpY9xmltGlAPFsIiUmyHTuCS7zo=
 github.com/go-jose/go-jose/v4 v4.0.5 h1:M6T8+mKZl/+fNNuFHvGIzDz7BTLQPIounk/b9dw3AaE=
 github.com/go-jose/go-jose/v4 v4.0.5/go.mod h1:s3P1lRrkT8igV8D9OjyL4WRyHvjB6a4JSllnOrmmBOA=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
