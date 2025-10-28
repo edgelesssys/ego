@@ -6,7 +6,6 @@ Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) when interacting with th
 If you want to support our development:
 * Add a GitHub Star to the project
 * Share our projects on social media
-* Join the [Confidential Computing Discord](https://discord.gg/rH8QTH56JN)
 
 EGo is licensed under the [Mozilla Public License 2.0](LICENSE). When contributing, you also need to agree to our [Contributor License Agreement](https://cla-assistant.io/edgelesssys/ego).
 
