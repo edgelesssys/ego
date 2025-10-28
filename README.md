@@ -6,7 +6,6 @@
 [![GitHub license][license-badge]](LICENSE)
 [![Go Report Card][go-report-card-badge]][go-report-card]
 [![PkgGoDev][go-pkg-badge]][go-pkg]
-[![Discord Chat][discord-badge]][discord]
 
 [EGo](https://www.edgeless.systems/products/ego/) is a framework for building *confidential apps* in Go. Confidential apps run in always-encrypted and verifiable enclaves on Intel SGX-enabled hardware. EGo simplifies enclave development by providing two user-friendly tools:
 
@@ -117,7 +116,7 @@ Now you're ready to build applications with EGo! To start, check out the followi
 
 ## Community & help
 
-* Got a question? Please get in touch via [Discord][discord] or file an [issue](https://github.com/edgelesssys/ego/issues).
+* Got a question? Please file an [issue](https://github.com/edgelesssys/ego/issues).
 * If you see an error message or run into an issue, please make sure to create a [bug report](https://github.com/edgelesssys/ego/issues).
 * Get the latest news and announcements on [Twitter](https://twitter.com/EdgelessSystems), [LinkedIn](https://www.linkedin.com/company/edgeless-systems/) or sign up for our monthly [newsletter](https://www.edgeless.systems/#newsletter-signup).
 * Visit our [blog](https://blog.edgeless.systems/) for technical deep-dives and tutorials.
@@ -137,5 +136,3 @@ Now you're ready to build applications with EGo! To start, check out the followi
 [go-report-card]: https://goreportcard.com/report/github.com/edgelesssys/ego
 [go-report-card-badge]: https://goreportcard.com/badge/github.com/edgelesssys/ego
 [license-badge]: https://img.shields.io/github/license/edgelesssys/ego
-[discord]: https://discord.gg/rH8QTH56JN
-[discord-badge]: https://img.shields.io/badge/chat-on%20Discord-blue

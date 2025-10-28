@@ -94,10 +94,6 @@ const config = {
                 href: 'https://github.com/edgelesssys/ego',
               },
               {
-                label: 'Discord',
-                href: 'https://discord.gg/rH8QTH56JN',
-              },
-              {
                 label: 'Newsletter',
                 href: 'https://www.edgeless.systems/#footer'
               },
