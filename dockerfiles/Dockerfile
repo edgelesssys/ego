@@ -13,7 +13,7 @@ RUN apt-get install -y --no-install-recommends \
 
 ARG erttag=v0.4.13
 ARG egotag=v1.8.0
-RUN wget -qO- https://go.dev/dl/go1.25.1.linux-amd64.tar.gz | tar -C /usr/local -xz \
+RUN wget -qO- https://go.dev/dl/go1.25.6.linux-amd64.tar.gz | tar -C /usr/local -xz \
   && git clone -b $erttag --depth=1 https://github.com/edgelesssys/edgelessrt \
   && git clone -b $egotag --depth=1 https://github.com/edgelesssys/ego \
   && mkdir ertbuild egobuild
