@@ -176,19 +176,33 @@ func TestCheckHeapMode(t *testing.T) {
 			want:     ErrNoLargeHeapWithLargeHeapSize,
 		},
 		"large heap, small": {
+			symbols:  []elf.Symbol{{}},
 			heapSize: 511,
 			want:     ErrLargeHeapWithSmallHeapSize,
 		},
 		"large heap, lower bound": {
+			symbols:  []elf.Symbol{{}},
 			heapSize: 512,
 			want:     nil,
 		},
 		"large heap, upper bound": {
+			symbols:  []elf.Symbol{{}},
 			heapSize: 16384,
 			want:     nil,
 		},
 		"large heap, large": {
+			symbols:  []elf.Symbol{{}},
 			heapSize: 16385,
+			want:     nil,
+		},
+		"default heap, large, no symbols": {
+			symbols:  []elf.Symbol{},
+			heapSize: 16385,
+			want:     nil,
+		},
+		"large heap, small, no symbols": {
+			symbols:  []elf.Symbol{},
+			heapSize: 511,
 			want:     nil,
 		},
 	}

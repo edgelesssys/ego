@@ -7,6 +7,7 @@
 package cli
 
 import (
+	"debug/buildinfo"
 	"debug/elf"
 	"encoding/binary"
 	"errors"
@@ -114,19 +115,30 @@ func getPayloadInformation(f io.ReaderAt) (uint64, int64, int64, error) {
 	return payloadSize, int64(payloadOffset), int64(oeInfo.Offset), nil
 }
 
-func (c *Cli) getSymbolsFromELF(path string) ([]elf.Symbol, error) {
+func (c *Cli) getMetadataFromELF(path string) (*buildinfo.BuildInfo, []elf.Symbol, error) {
 	file, err := c.fs.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("opening file: %w", err)
 	}
 	defer file.Close()
 
-	elfFile, err := elf.NewFile(file)
+	buildInfo, err := buildinfo.Read(file)
 	if err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("reading buildinfo: %w", err)
 	}
 
-	return elfFile.Symbols()
+	elfFile, err := elf.NewFile(file)
+	if err != nil {
+		return nil, nil, fmt.Errorf("accessing ELF: %w", err)
+	}
+	symbols, err := elfFile.Symbols()
+	if errors.Is(err, elf.ErrNoSymbols) {
+		return buildInfo, nil, nil
+	}
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading symbols: %w", err)
+	}
+	return buildInfo, symbols, nil
 }
 
 func (c *Cli) readDataFromELF(path string, section string, offset int, size int) ([]byte, error) {
@@ -155,15 +167,12 @@ func (c *Cli) readDataFromELF(path string, section string, offset int, size int)
 }
 
 // checkUnsupportedImports checks whether the to-be-signed or to-be-executed binary uses Go imports which are not supported.
-func (c *Cli) checkUnsupportedImports(path string) error {
-	symbols, err := c.getSymbolsFromELF(path)
-	if err == nil {
-		return checkUnsupportedImports(symbols)
+func (c *Cli) checkUnsupportedImports(path string) (*buildinfo.BuildInfo, error) {
+	buildInfo, symbols, err := c.getMetadataFromELF(path)
+	if err != nil {
+		return nil, err
 	}
-	if errors.Is(err, elf.ErrNoSymbols) {
-		return nil
-	}
-	return fmt.Errorf("getting symbols: %w", err)
+	return buildInfo, checkUnsupportedImports(symbols)
 }
 
 func checkUnsupportedImports(symbols []elf.Symbol) error {
@@ -181,6 +190,9 @@ func checkUnsupportedImports(symbols []elf.Symbol) error {
 // If it is built without this tag, heapSize must be <= 16384.
 // (If 512 <= heapSize <= 16384, both modes work.)
 func checkHeapMode(symbols []elf.Symbol, heapSize int) error {
+	if len(symbols) == 0 {
+		return nil // Can't check. Will fail on startup if heapSize isn't compatible.
+	}
 	for _, symbol := range symbols {
 		if symbol.Name == "runtime.arenaBaseOffset" {
 			// if this symbol is found, the binary wasn't built with ego_largeheap

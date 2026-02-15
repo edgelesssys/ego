@@ -118,6 +118,11 @@ func (c *Cli) checkIfBundable(filename string) error {
 
 // buildImage builds a gzip-compressed tarball containing the EGo runtime.
 func (c *Cli) buildImage(enclaveFilename string) (tempFileName string, reterr error) {
+	buildInfo, _, err := c.getMetadataFromELF(enclaveFilename)
+	if err != nil {
+		return "", err
+	}
+
 	// Create the tar file
 	tempFile, err := c.fs.TempFile("", "ego-runtime")
 	if err != nil {
@@ -140,7 +145,7 @@ func (c *Cli) buildImage(enclaveFilename string) (tempFileName string, reterr er
 	if err := c.addToArchive(tarWriter, c.getEgoHostPath(), "ego-host"); err != nil {
 		return "", err
 	}
-	if err := c.addToArchive(tarWriter, c.getEgoEnclavePath(), "ego-enclave"); err != nil {
+	if err := c.addToArchive(tarWriter, c.getEgoEnclavePath(buildInfo), "ego-enclave"); err != nil {
 		return "", err
 	}
 
