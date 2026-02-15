@@ -225,7 +225,7 @@ func oeError(errno syscall.Errno, res uintptr) error {
 	if errno != 0 {
 		return errno
 	}
-	return errors.New(C.GoString((*C.char)(unsafe.Pointer(resStr))))
+	return errors.New(C.GoString((*C.char)(unsafe.Pointer(resStr)))) //nolint:govet
 }
 
 func getBytesPointer(data []byte) uintptr {

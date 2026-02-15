@@ -143,11 +143,12 @@ func (a *assertionMounter) Mount(source string, target string, filesystem string
 		}
 	}
 
-	if filesystem == mountTypeHostFS {
+	switch filesystem {
+	case mountTypeHostFS:
 		a.assert.EqualValues(currentMountPoint.Source, source)
 		a.assert.EqualValues(currentMountPoint.Target, target)
 		a.assert.EqualValues("hostfs", currentMountPoint.Type)
-	} else if filesystem == mountTypeMemFS {
+	case mountTypeMemFS:
 		if !a.remountAsHostFS {
 			a.assert.EqualValues(memfsMountSourceDirectory+currentMountPoint.Target, source)
 		} else {
@@ -155,15 +156,16 @@ func (a *assertionMounter) Mount(source string, target string, filesystem string
 		}
 		a.assert.EqualValues(currentMountPoint.Target, target)
 		a.assert.EqualValues("memfs", currentMountPoint.Type)
-	} else {
+	default:
 		return errors.New("encountered a call to an unknown filesystem type")
 	}
 
-	if flags == syscall.MS_RDONLY {
+	switch flags {
+	case syscall.MS_RDONLY:
 		a.assert.True(currentMountPoint.ReadOnly)
-	} else if flags == 0 {
+	case 0:
 		a.assert.False(currentMountPoint.ReadOnly)
-	} else {
+	default:
 		return fmt.Errorf("unexpected flag supplied to mount: %d", flags)
 	}
 
