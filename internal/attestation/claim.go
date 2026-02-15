@@ -21,7 +21,7 @@ import (
 
 func ParseClaims(claims uintptr, claimsLength uintptr) (Report, error) {
 	// https://github.com/golang/go/wiki/cgo#turning-c-arrays-into-go-slices
-	return parseClaims((*[1 << 28]C.oe_claim_t)(unsafe.Pointer(claims))[:claimsLength:claimsLength])
+	return parseClaims((*[1 << 28]C.oe_claim_t)(unsafe.Pointer(claims))[:claimsLength:claimsLength]) //nolint:govet
 }
 
 func parseClaims(claims []C.oe_claim_t) (Report, error) {
