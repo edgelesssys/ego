@@ -1,6 +1,6 @@
 module github.com/edgelesssys/ego/ego
 
-go 1.23.3
+go 1.25
 
 require (
 	github.com/edgelesssys/marblerun v1.7.0

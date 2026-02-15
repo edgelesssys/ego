@@ -48,6 +48,10 @@ type Mounter interface {
 
 // PreMain runs before the App's actual main routine and initializes the EGo enclave.
 func PreMain(payload string, mounter Mounter, fs afero.Fs, hostEnviron []string) error {
+	if err := checkFIPS140(); err != nil {
+		return err
+	}
+
 	// Convert host environment string array to key-value map
 	hostEnvironMap := make(map[string]string, len(hostEnviron))
 	for _, envVar := range hostEnviron {
