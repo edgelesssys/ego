@@ -39,6 +39,7 @@ static char** _merge_argv_env(int argc, char** argv, char** envp);
 extern "C" __thread char ert_reserved_tls[11264];
 extern "C" const char* oe_sgx_get_td();
 extern "C" uint64_t oe_get_num_tcs();
+extern "C" int oe_is_symcrypt_provider_available();
 
 extern "C" void __libc_start_main(int payload_main(...))
 {
@@ -111,6 +112,15 @@ int emain()
         _log("ert_reserved_tls failure");
         return EXIT_FAILURE;
     }
+
+#ifdef EGO_FIPS140
+    if (oe_is_symcrypt_provider_available() != 1)
+    {
+        _log("symcrypt provider is not available");
+        return EXIT_FAILURE;
+    }
+    _log("FIPS 140 enabled");
+#endif // EGO_FIPS140
 
     // load oe modules
     if (oe_load_module_host_epoll() != OE_OK ||

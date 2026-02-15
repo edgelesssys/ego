@@ -33,18 +33,29 @@ endif()
 # ego-enclave
 #
 
-add_library(ego-enclave-lib
+configure_file(${ERT_SYMCRYPT_SO} . COPYONLY)
+
+set(EGO_ENCLAVE_LIB_SRC
   src/enc.cpp
   src/exception_handler.cpp
   src/go_runtime_cleanup.cpp)
+add_library(ego-enclave-lib ${EGO_ENCLAVE_LIB_SRC})
 target_link_libraries(ego-enclave-lib PRIVATE openenclave::oe_includes)
+add_library(ego-enclave-lib-fips140 ${EGO_ENCLAVE_LIB_SRC})
+target_compile_definitions(ego-enclave-lib-fips140 PRIVATE EGO_FIPS140)
+target_link_libraries(ego-enclave-lib-fips140 PRIVATE openenclave::oe_includes)
 
 add_custom_command(
   OUTPUT premain.a
   DEPENDS ego/premain/main.go ego/premain/core/core.go
   COMMAND ertgo build -buildmode=c-archive -o ${CMAKE_BINARY_DIR} ${TRIMPATH} ${PREMAIN_DEBUG_FLAGS}
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/premain)
-add_custom_target(premainbuild DEPENDS premain.a)
+add_custom_command(
+  OUTPUT premain-fips140.a
+  DEPENDS ego/premain/main.go ego/premain/core/core.go
+  COMMAND GOFIPS140=latest ertgo build -buildmode=c-archive -tags=ego_fips140 -o ${CMAKE_BINARY_DIR}/premain-fips140.a ${TRIMPATH} ${PREMAIN_DEBUG_FLAGS}
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/premain)
+add_custom_target(premainbuild DEPENDS premain.a premain-fips140.a)
 
 # Both ego-enclave and the payload use the local-exec TLS model. This means that TLS memory
 # will overlap. Quick fix is to reserve space in ego-enclave that we won't touch.
@@ -55,23 +66,41 @@ add_library(reserved_tls src/reserved_tls.c)
 add_library(reserved_tls_last INTERFACE)
 target_link_libraries(reserved_tls_last INTERFACE reserved_tls)
 
-add_executable(ego-enclave src/gcc_libinit.c src/gcc_mmap.c)
-add_dependencies(ego-enclave premainbuild)
-target_link_libraries(ego-enclave
-  openenclave::oeenclave
+set(EGO_ENCLAVE_SRC
+  src/gcc_libinit.c
+  src/gcc_mmap.c)
+set (EGO_ENCLAVE_LIB
   openenclave::ertcalls
-  ego-enclave-lib
   openenclave::oehostepoll
   openenclave::oehostfs
   openenclave::oehostresolver
   openenclave::oehostsock
-  ${CMAKE_BINARY_DIR}/premain.a
   openenclave::ertlibc
   openenclave::ertttls
   -Wl,--whole-archive
   openenclave::oelibc
   -Wl,--no-whole-archive
   reserved_tls_last)
+
+add_executable(ego-enclave ${EGO_ENCLAVE_SRC})
+add_dependencies(ego-enclave premainbuild)
+target_link_libraries(ego-enclave
+  openenclave::oeenclave
+  ego-enclave-lib
+  ${CMAKE_BINARY_DIR}/premain.a
+  ${EGO_ENCLAVE_LIB})
+
+add_executable(ego-enclave-fips140 ${EGO_ENCLAVE_SRC})
+add_dependencies(ego-enclave-fips140 premainbuild)
+target_link_libraries(ego-enclave-fips140
+  openenclave::oeenclave
+  openenclave::oesymcryptprovider
+  -Wl,-Bdynamic ${CMAKE_BINARY_DIR}/libsymcrypt.so.103 -Wl,-Bstatic
+  ego-enclave-lib-fips140
+  ${CMAKE_BINARY_DIR}/premain-fips140.a
+  ${EGO_ENCLAVE_LIB})
+# Add fips140 verification checksum, which is usually added by the Go linker, which is not used with -buildmode=c-archive
+add_custom_command(TARGET ego-enclave-fips140 POST_BUILD COMMAND go run github.com/edgelesssys/goelffips@latest $<TARGET_FILE:ego-enclave-fips140>)
 
 #
 # ego cli
@@ -99,14 +128,14 @@ add_custom_target(egobundle ALL DEPENDS ego-bundle)
 # install
 #
 
-install(TARGETS ego-enclave DESTINATION ${CMAKE_INSTALL_DATADIR})
+install(TARGETS ego-enclave ego-enclave-fips140 DESTINATION ${CMAKE_INSTALL_DATADIR})
 install(
   PROGRAMS
   src/ego-gdb
   src/ego-go
   ${CMAKE_BINARY_DIR}/ego
   DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES ${CMAKE_BINARY_DIR}/ego-bundle DESTINATION ${CMAKE_INSTALL_DATADIR})
+install(FILES ${CMAKE_BINARY_DIR}/ego-bundle ${CMAKE_BINARY_DIR}/libsymcrypt.so.103 DESTINATION ${CMAKE_INSTALL_DATADIR})
 install(
   PROGRAMS ${OpenEnclave_DIR}/../../../bin/erthost
   RENAME ego-host
