@@ -86,6 +86,15 @@ cd /tmp/ego-integration-test
 run ego sign
 run ego run integration-test
 
+# Test FIPS 140
+cd "$egoPath/ego/cmd/integration-test"
+cp enclave.json /tmp/ego-integration-test/enclave.json
+GOFIPS140=latest run ego-go build -o /tmp/ego-integration-test/integration-test
+cd /tmp/ego-integration-test
+run ego sign
+run ego run integration-test
+run ego run integration-test | grep 'FIPS 140 enabled'
+
 # Test unsupported import detection on sign & run
 mkdir "$tPath/unsupported-import-test"
 cd "$egoPath/ego/cmd/unsupported-import-test"

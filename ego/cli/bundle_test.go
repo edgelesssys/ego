@@ -121,7 +121,6 @@ func TestBuildImage(t *testing.T) {
 
 	fakeContentEgoHost := []byte("this-is-no-real-elf: ego-host")
 	fakeContentEgoEnclave := []byte("this-is-no-real-elf: ego-enclave")
-	fakeContentMyEnclave := []byte("this-is-no-real-elf: my-enclave")
 
 	binPath := filepath.Join(cli.egoPath, "bin")
 	sharePath := filepath.Join(cli.egoPath, "share")
@@ -129,7 +128,7 @@ func TestBuildImage(t *testing.T) {
 	require.NoError(fs.MkdirAll(sharePath, 0o777))
 	require.NoError(fs.WriteFile(filepath.Join(binPath, "ego-host"), fakeContentEgoHost, 0o644))
 	require.NoError(fs.WriteFile(filepath.Join(sharePath, "ego-enclave"), fakeContentEgoEnclave, 0o644))
-	require.NoError(fs.WriteFile("my-enclave", fakeContentMyEnclave, 0o644))
+	require.NoError(fs.WriteFile("my-enclave", elfUnsigned, 0o644))
 
 	// Run the prepare bundle command
 	pathToBundle, err := cli.buildImage("my-enclave")
@@ -153,7 +152,7 @@ func TestBuildImage(t *testing.T) {
 	assert.Equal(fakeContentEgoEnclave, unpackedShareFileContent)
 	unpackedEnclaveFileContent, err := fs.ReadFile("/unpacked/enclave")
 	assert.NoError(err)
-	assert.Equal(fakeContentMyEnclave, unpackedEnclaveFileContent)
+	assert.Equal(elfUnsigned, unpackedEnclaveFileContent)
 }
 
 func TestPrepareBundle(t *testing.T) {
