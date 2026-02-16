@@ -25,3 +25,16 @@ ego run <executable>
 You can set the `OE_SIMULATION=1` environment variable if you want to simulate the enclave, e.g. for development on hardware that doesn't support enclaves.
 
 Look at the [example collection](../getting-started/examples.md) if you want to see the build process in action.
+
+## FIPS 140 cryptography
+
+EGo optionally supports FIPS 140-compliant cryptography.
+
+Build your app with the Go FIPS 140 module enabled:
+
+```bash
+GOFIPS140=latest ego-go build
+```
+
+Then sign and run as usual.
+EGo automatically uses the corresponding FIPS 140-enabled runtime.
