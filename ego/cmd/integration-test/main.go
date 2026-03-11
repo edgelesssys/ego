@@ -7,8 +7,10 @@
 package main
 
 import (
+	"crypto/rand"
 	"io"
 	"log"
+	"math"
 	"os"
 
 	"github.com/edgelesssys/ego/ego/test"
@@ -28,6 +30,7 @@ func main() {
 	testFileSystemMounts(assert, require)
 	testEnvVars(assert, require)
 	testCpuid(assert, require)
+	testRand(assert, require)
 }
 
 func testFileSystemMounts(assert *assert.Assertions, require *require.Assertions) {
@@ -103,4 +106,33 @@ func testEnvVars(assert *assert.Assertions, require *require.Assertions) {
 
 func testCpuid(assert *assert.Assertions, require *require.Assertions) {
 	assert.True(cpuid.CPU.Has(cpuid.CMOV))
+}
+
+func testRand(assert *assert.Assertions, require *require.Assertions) {
+	// This test
+	// - does a sanity check of returned randomness
+	// - implicitly verifies that FIPS entropy initialization succeeds when built with GOFIPS140
+	buf := make([]byte, 8192)
+	n, err := rand.Read(buf)
+	require.NoError(err)
+	require.Equal(8192, n)
+	assert.Greater(entropy(buf), 7.9)
+}
+
+func entropy(data []byte) float64 {
+	var freq [256]int
+	for _, b := range data {
+		freq[b]++
+	}
+
+	lenData := float64(len(data))
+	var entropy float64
+	for _, n := range freq {
+		if n > 0 {
+			p := float64(n) / lenData
+			entropy -= p * math.Log2(p)
+		}
+	}
+
+	return entropy
 }
