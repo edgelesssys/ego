@@ -31,6 +31,12 @@ func (t *T) FailNow() {
 
 // Exit exits the program with an appropriate exit code.
 func (t *T) Exit() {
+	// This func is usually run deferred, so repanic on panic
+	// because otherwise the test would be marked as passed.
+	if e := recover(); e != nil {
+		panic(e)
+	}
+
 	var msg string
 	if t.exitCode == 0 {
 		msg = "passed"
