@@ -7,7 +7,7 @@
 [![Go Report Card][go-report-card-badge]][go-report-card]
 [![PkgGoDev][go-pkg-badge]][go-pkg]
 
-[EGo](https://www.edgeless.systems/products/ego/) is a framework for building *confidential apps* in Go. Confidential apps run in always-encrypted and verifiable enclaves on Intel SGX-enabled hardware. EGo simplifies enclave development by providing two user-friendly tools:
+[EGo](https://www.edgeless.systems/products/ego) is a framework for building *confidential apps* in Go. Confidential apps run in always-encrypted and verifiable enclaves on Intel SGX-enabled hardware. EGo simplifies enclave development by providing two user-friendly tools:
 
 * `ego-go`, an adapted Go compiler that builds enclave-compatible executables from a given Go project - while providing the same CLI as the original Go compiler.
 * `ego`, a CLI tool that handles all enclave-related tasks such as signing and enclave creation.
@@ -114,7 +114,12 @@ Now you're ready to build applications with EGo! To start, check out the followi
 * Use [EStore](https://github.com/edgelesssys/estore) to securely persist your application's data.
 * Not only using Go? Check out [Contrast](https://github.com/edgelesssys/contrast) to run your confidential containers on Kubernetes.
 
-## Community & help
+## License and support
+
+EGo is available under the [MPL](LICENSE).
+For enterprise support, you can [get a commercial license](https://www.edgeless.systems/products/ego).
+
+## Community and help
 
 * Got a question? Please file an [issue](https://github.com/edgelesssys/ego/issues).
 * If you see an error message or run into an issue, please make sure to create a [bug report](https://github.com/edgelesssys/ego/issues).
