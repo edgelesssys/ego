@@ -9,6 +9,7 @@
 #include <openenclave/ert.h>
 #include <sys/mount.h>
 #include <unistd.h>
+#include <atomic>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -104,6 +105,11 @@ static void _set_concurrency_limits()
 
 int emain()
 {
+    // emain must not be called more than once
+    static atomic<bool> already_called;
+    if (already_called.exchange(true))
+        abort();
+
     _log_verbose("entered emain");
 
     // Assert that the variable is located at the end of the TLS block.
