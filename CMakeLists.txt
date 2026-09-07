@@ -67,8 +67,9 @@ add_library(reserved_tls_last INTERFACE)
 target_link_libraries(reserved_tls_last INTERFACE reserved_tls)
 
 set(EGO_ENCLAVE_SRC
-  src/gcc_libinit.c
-  src/gcc_mmap.c)
+  src/gcc_libinit_unix.c
+  src/gcc_mmap.c
+  src/pthread_unix.c)
 set (EGO_ENCLAVE_LIB
   openenclave::ertcalls
   openenclave::oehostepoll
