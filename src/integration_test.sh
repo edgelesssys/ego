@@ -95,6 +95,19 @@ run ego sign
 run ego run integration-test
 run ego run integration-test | grep 'FIPS 140 enabled'
 
+# Test marble
+mkdir "$tPath/marble-test"
+cd "$egoPath/ego/cmd/test-marble"
+run ego-go build -o "$tPath/marble-test"
+cd "$egoPath/ego/cmd/marble-test"
+run ego-go build -o "$tPath/marble-test"
+cd "$tPath/marble-test"
+run ego sign test-marble
+run ego marblerun test-marble |& grep 'refusing to run as marble'
+sed -i 's/"marble": false,/"marble": true,/' enclave.json
+run ego sign test-marble
+run ./marble-test
+
 # Test unsupported import detection on sign & run
 mkdir "$tPath/unsupported-import-test"
 cd "$egoPath/ego/cmd/unsupported-import-test"

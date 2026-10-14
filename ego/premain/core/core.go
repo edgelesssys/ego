@@ -90,6 +90,13 @@ func PreMain(payload string, mounter Mounter, fs afero.Fs, hostEnviron []string)
 		}
 	}
 
+	if isMarble && !config.Marble {
+		return errors.New("refusing to run as marble. Set `marble` to `true` in enclave.json to enable.")
+	}
+	if !isMarble && config.Marble && !config.Debug {
+		return errors.New("refusing to run a production marble enclave in standalone mode")
+	}
+
 	// Extract new environment variables
 	if err := addEnvVars(config, hostEnvironMap); err != nil {
 		return err

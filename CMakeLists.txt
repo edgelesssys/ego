@@ -197,29 +197,10 @@ add_custom_command(
     --payload ${CMAKE_BINARY_DIR}/concurrency-test
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/cmd/concurrency-test)
 
-# build the test marble with ertgo and sign it with oesign
-add_custom_command(
-  OUTPUT test-marble
-  DEPENDS ego-enclave test_private.pem ego/cmd/test-marble/enclave.conf ego/cmd/test-marble/main.go ego/test/t.go
-  COMMAND ${CMAKE_COMMAND} -E env GOROOT=${CMAKE_SOURCE_DIR}/_ertgo ${CMAKE_SOURCE_DIR}/_ertgo/bin/go build -o ${CMAKE_BINARY_DIR}
-  COMMAND oesign sign
-    -e ${CMAKE_BINARY_DIR}/ego-enclave
-    -c ${CMAKE_SOURCE_DIR}/ego/cmd/test-marble/enclave.conf
-    -k ${CMAKE_BINARY_DIR}/test_private.pem
-    --payload ${CMAKE_BINARY_DIR}/test-marble
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/cmd/test-marble)
-
-add_custom_command(
-  OUTPUT marble-test
-  DEPENDS ego/cmd/marble-test/main.go ego/test/t.go
-  COMMAND CGO_ENABLED=0 go build -o ${CMAKE_BINARY_DIR}
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego/cmd/marble-test)
-
-add_custom_target(testexes ALL DEPENDS concurrency-test test-marble marble-test)
+add_custom_target(testexes ALL DEPENDS concurrency-test)
 
 enable_testing()
 add_test(NAME api-unit-tests COMMAND go test -race --count=3 ./... WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME ego-unit-tests COMMAND go test -race --count=3 ./... WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ego)
 add_test(integration ${CMAKE_SOURCE_DIR}/src/integration_test.sh)
 add_test(concurrency erthost ego-enclave:concurrency-test)
-add_test(marble marble-test)

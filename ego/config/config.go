@@ -19,6 +19,7 @@ type Config struct {
 	Exe             string            `json:"exe"`
 	Key             string            `json:"key"`
 	Debug           bool              `json:"debug"`
+	Marble          bool              `json:"marble"`
 	HeapSize        int               `json:"heapSize"`
 	ExecutableHeap  bool              `json:"executableHeap"`
 	ProductID       int               `json:"productID"`

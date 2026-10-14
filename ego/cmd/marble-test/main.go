@@ -57,9 +57,8 @@ func main() {
 	require.NoError(err)
 	defer os.RemoveAll(uuidDir)
 
-	cmd := exec.Command("erthost", "ego-enclave:test-marble")
+	cmd := exec.Command("ego", "marblerun", "test-marble")
 	cmd.Env = append(os.Environ(),
-		"EDG_EGO_PREMAIN=1",
 		"EDG_MARBLE_COORDINATOR_ADDR="+listener.Addr().String(),
 		"EDG_MARBLE_TYPE=type",
 		"EDG_MARBLE_DNS_NAMES=localhost",

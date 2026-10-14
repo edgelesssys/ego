@@ -9,6 +9,7 @@ Here's an example configuration:
     "exe": "helloworld",
     "key": "private.pem",
     "debug": true,
+    "marble": false,
     "heapSize": 512,
     "executableHeap": false,
     "productID": 1,
@@ -59,6 +60,8 @@ openssl genrsa -out private.pem -3 3072
 ```
 
 If `debug` is true, the enclave can be inspected with a debugger.
+
+If `marble` is true, the enclave can be started with `ego marblerun`.
 
 `heapSize` specifies the heap size available to the enclave in MB. It should be at least 512 MB.
 
