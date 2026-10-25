@@ -124,7 +124,6 @@ For enterprise support, you can [get a commercial license](https://www.edgeless.
 * Got a question? Please file an [issue](https://github.com/edgelesssys/ego/issues).
 * If you see an error message or run into an issue, please make sure to create a [bug report](https://github.com/edgelesssys/ego/issues).
 * Get the latest news and announcements on [Twitter](https://twitter.com/EdgelessSystems), [LinkedIn](https://www.linkedin.com/company/edgeless-systems/) or sign up for our monthly [newsletter](https://www.edgeless.systems/#newsletter-signup).
-* Visit our [blog](https://blog.edgeless.systems/) for technical deep-dives and tutorials.
 
 ## Contribute
 

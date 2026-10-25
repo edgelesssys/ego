@@ -104,10 +104,6 @@ const config = {
             title: 'Social',
             items: [
               {
-                label: 'Blog',
-                href: 'https://www.edgeless.systems/blog/',
-              },
-              {
                 label: 'Twitter',
                 href: 'https://twitter.com/EdgelessSystems',
               },

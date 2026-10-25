@@ -13,9 +13,9 @@ jobs:
   vale:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: errata-ai/vale-action@reviewdog
+      - uses: errata-ai/vale-action@v2.1.2
         with:
           files: docs/docs
           fail_on_error: true
