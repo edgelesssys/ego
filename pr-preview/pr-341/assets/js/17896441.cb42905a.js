@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[401],{1807:(s,c,e)=>{e.d(c,{A:()=>k});e(6540);var t=e(2927),a=e(9489),b=e(7227);const k={...t.A,tabs:a.A,tabItem:b.A}}}]);
