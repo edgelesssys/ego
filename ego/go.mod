@@ -1,9 +1,9 @@
 module github.com/edgelesssys/ego/ego
 
-go 1.25.0
+go 1.26.0
 
 require (
-	github.com/edgelesssys/marblerun v1.8.0
+	github.com/edgelesssys/marblerun v1.9.0
 	github.com/google/go-cmp v0.7.0
 	github.com/klauspost/cpuid/v2 v2.4.1
 	github.com/spf13/afero v1.15.0
@@ -14,7 +14,7 @@ require (
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
-	github.com/edgelesssys/ego v1.10.0 // indirect
+	github.com/edgelesssys/ego v1.10.1 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.6 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -23,10 +23,9 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
-	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260911204522-f61a6ca850bd // indirect
+	golang.org/x/net v0.61.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261019180522-ce908d29299b // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
