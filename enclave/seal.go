@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/binary"
+	"errors"
 )
 
 const (
@@ -26,7 +27,7 @@ func GetSealKeyID() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return GetSealKey(keyRequest)
+	return getSealKey(keyRequest)
 }
 
 // GetRandomUniqueSealKey gets a key derived from a measurement of the enclave.
@@ -36,38 +37,32 @@ func GetSealKeyID() ([]byte, error) {
 // This key will change if the UniqueID of the enclave changes. If you want
 // the key to be the same across enclave versions, use GetRandomProductSealKey.
 func GetRandomUniqueSealKey() (key, keyInfo []byte, err error) {
-	return getSealKeyByPolicy(sgxKeypolicyMRENCLAVE, true)
+	return getSealKeyByPolicy(sgxKeypolicyMRENCLAVE)
 }
 
 // GetRandomProductSealKey gets a key derived from the signer and product id of the enclave.
 //
 // keyInfo can be used to retrieve the same key later.
 func GetRandomProductSealKey() (key, keyInfo []byte, err error) {
-	return getSealKeyByPolicy(sgxKeypolicyMRSIGNER, true)
+	return getSealKeyByPolicy(sgxKeypolicyMRSIGNER)
 }
 
-// GetUniqueSealKey gets a key derived from a measurement of the enclave.
-//
-// Deprecated: use GetRandomUniqueSealKey
-//
-// keyInfo can be used to retrieve the same key later, on a newer CPU security version.
-//
-// This key will change if the UniqueID of the enclave changes. If you want
-// the key to be the same across enclave versions, use GetProductSealKey.
-func GetUniqueSealKey() (key, keyInfo []byte, err error) {
-	return getSealKeyByPolicy(sgxKeypolicyMRENCLAVE, false)
+// GetSealKey gets a key from the enclave platform using existing key information.
+func GetSealKey(keyInfo []byte) ([]byte, error) {
+	var req sgxKeyRequest
+	if err := req.UnmarshalBinary(keyInfo); err != nil {
+		return nil, err
+	}
+	flags, xfrm, miscMask := getSealMasks()
+	if req.KeyName != sgxKeyselectSeal ||
+		!(req.KeyPolicy == sgxKeypolicyMRENCLAVE || req.KeyPolicy == sgxKeypolicyMRSIGNER) ||
+		req.Flags != flags || req.XFRM != xfrm || req.MiscMask != miscMask {
+		return nil, errors.New("invalid keyInfo")
+	}
+	return getSealKey(keyInfo)
 }
 
-// GetProductSealKey gets a key derived from the signer and product id of the enclave.
-//
-// Deprecated: use GetRandomProductSealKey
-//
-// keyInfo can be used to retrieve the same key later, on a newer CPU security version.
-func GetProductSealKey() (key, keyInfo []byte, err error) {
-	return getSealKeyByPolicy(sgxKeypolicyMRSIGNER, false)
-}
-
-func getSealKeyByPolicy(sealPolicy uint16, random bool) (key, keyInfo []byte, err error) {
+func getSealKeyByPolicy(sealPolicy uint16) (key, keyInfo []byte, err error) {
 	// https://github.com/openenclave/openenclave/blob/v0.19.13/enclave/core/sgx/keys.c#L191
 	report, err := GetLocalReport(nil, nil)
 	if err != nil {
@@ -85,18 +80,15 @@ func getSealKeyByPolicy(sealPolicy uint16, random bool) (key, keyInfo []byte, er
 	copy(req.CPUSVN[:], report[offsetReportCPUSVN:])
 	req.Flags, req.XFRM, req.MiscMask = getSealMasks()
 
-	// https://github.com/openenclave/openenclave/issues/4665
-	if random {
-		if _, err := rand.Read(req.KeyID[:]); err != nil {
-			return nil, nil, err
-		}
+	if _, err := rand.Read(req.KeyID[:]); err != nil {
+		return nil, nil, err
 	}
 
 	keyInfo, err = req.MarshalBinary()
 	if err != nil {
 		return nil, nil, err
 	}
-	key, err = GetSealKey(keyInfo)
+	key, err = getSealKey(keyInfo)
 	return key, keyInfo, err
 }
 
@@ -133,4 +125,20 @@ func (k sgxKeyRequest) MarshalBinary() ([]byte, error) {
 	bin = append(bin, k.KeyID[:]...)
 	bin = binary.LittleEndian.AppendUint32(bin, k.MiscMask)
 	return bin[:cap(bin)], nil
+}
+
+func (k *sgxKeyRequest) UnmarshalBinary(keyInfo []byte) error {
+	if len(keyInfo) != 512 {
+		return errors.New("invalid keyInfo size")
+	}
+	k.KeyName = binary.LittleEndian.Uint16(keyInfo[0:2])
+	k.KeyPolicy = binary.LittleEndian.Uint16(keyInfo[2:4])
+	k.ISVSVN = binary.LittleEndian.Uint16(keyInfo[4:6])
+	k.reserved1 = binary.LittleEndian.Uint16(keyInfo[6:8])
+	copy(k.CPUSVN[:], keyInfo[8:24])
+	k.Flags = binary.LittleEndian.Uint64(keyInfo[24:32])
+	k.XFRM = binary.LittleEndian.Uint64(keyInfo[32:40])
+	copy(k.KeyID[:], keyInfo[40:72])
+	k.MiscMask = binary.LittleEndian.Uint32(keyInfo[72:76])
+	return nil
 }

@@ -184,8 +184,8 @@ func VerifyLocalReport(reportBytes []byte) (attestation.Report, error) {
 	}, nil
 }
 
-// GetSealKey gets a key from the enclave platform using existing key information.
-func GetSealKey(keyInfo []byte) ([]byte, error) {
+// getSealKey gets a key from the enclave platform using existing key information.
+func getSealKey(keyInfo []byte) ([]byte, error) {
 	var keyBuffer *C.uint8_t
 	var keySize C.size_t
 
