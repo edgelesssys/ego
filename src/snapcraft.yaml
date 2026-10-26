@@ -1,6 +1,6 @@
 name: ego-dev
 base: core20
-version: "1.10.1"
+version: "1.11.0"
 summary: EGo lets you build, debug und run Go apps on Intel SGX!
 description: EGo is a framework for building confidential apps in Go. Confidential apps run in always-encrypted and verifiable enclaves on Intel SGX-enabled hardware.
 
@@ -26,8 +26,8 @@ apps:
 
 parts:
   ego:
-    source: https://github.com/edgelesssys/ego/releases/download/v1.10.1/ego_1.10.1_amd64_ubuntu-20.04.deb
-    source-checksum: "sha256/5601088c978f59255aef432436d407c48cd9f3570c58f3259ee70b3d9bb79f45"
+    source: https://github.com/edgelesssys/ego/releases/download/v1.11.0/ego_1.11.0_amd64_ubuntu-20.04.deb
+    source-checksum: "sha256/6738456607c72c3704bb478085ed31a0970ce696805f48c1b367335584498af8"
     source-type: deb
     plugin: dump
     build-attributes: [no-patchelf] # needed otherwise Snap breaks the go binary, causing it to segfault on launch
